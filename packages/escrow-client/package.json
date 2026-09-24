@@ -1,0 +1,29 @@
+{
+  "name": "@stumari/escrow-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Codama-generated @solana/kit client for stumari_escrow, PDA helpers and server-side transaction builders.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "generate": "tsx scripts/generate.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@solana/kit": "^8.3.0",
+    "@solana-program/system": "latest",
+    "@solana-program/token": "latest",
+    "@stumari/core": "workspace:*"
+  },
+  "devDependencies": {
+    "codama": "latest",
+    "@codama/nodes-from-anchor": "latest",
+    "@codama/renderers-js": "latest",
+    "litesvm": "latest",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.0",
+    "@types/node": "^24.0.0"
+  }
+}

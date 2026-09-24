@@ -1,0 +1,16 @@
+{
+  "name": "@stumari/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server exposing Stumari search/quote/book/cancel/status tools to AI agents.",
+  "bin": { "stumari-mcp": "./src/index.ts" },
+  "scripts": { "start": "tsx src/index.ts", "test": "vitest run", "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest",
+    "@solana/kit": "^8.3.0",
+    "@stumari/core": "workspace:*",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": { "tsx": "^4.20.0", "typescript": "^5.9.0", "vitest": "^5.0.0", "@types/node": "^24.0.0" }
+}

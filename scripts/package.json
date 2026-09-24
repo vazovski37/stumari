@@ -1,0 +1,17 @@
+{
+  "name": "@stumari/scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Devnet bootstrap, end-to-end loop, operational scripts.",
+  "scripts": { "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": {
+    "@solana/kit": "^8.3.0",
+    "@solana-program/system": "latest",
+    "@solana-program/token": "latest",
+    "@stumari/core": "workspace:*",
+    "@stumari/escrow-client": "workspace:*",
+    "dotenv": "^16.5.0"
+  },
+  "devDependencies": { "tsx": "^4.20.0", "typescript": "^5.9.0", "@types/node": "^24.0.0" }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@stumari/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure TS domain logic: refund math, tiers, windows, model evaluator, pricing engine, quote canonicalization and Ed25519 signing. No Solana SDK dependencies.",
+  "exports": { ".": "./src/index.ts", "./model/*": "./model/*" },
+  "scripts": { "test": "vitest run", "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": { "@noble/curves": "^1.9.0", "@noble/hashes": "^1.8.0", "@scure/base": "^1.2.0" },
+  "devDependencies": { "typescript": "^5.9.0", "vitest": "^5.0.0", "@types/node": "^24.0.0" }
+}

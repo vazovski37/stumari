@@ -96,7 +96,31 @@ This is a **prior** learned from Portugal 2015–2017. Tbilisi guests, channels 
 
 Tree semantics (numeric only, no missing values ever): internal node `{f, t, l, r}` → go to `l` if `x[f] <= t` else `r`; leaf `{v}`. Root is node 0. `raw = init_score + Σ tree(x)`; `p = 1/(1+e^−raw)`; hazard = isotonic(p) with linear interpolation and clipping at the ends (`numpy.interp` semantics).
 
-`packages/core/model/parity.json` holds ≥ 500 feature vectors with Python's calibrated hazard; the TS evaluator must match to `1e-9` absolute.
+`packages/core/model/parity.json` holds ≥ 500 feature vectors with Python's calibrated hazard; the TS evaluator must match to `1e-9` absolute. Format:
+
+```jsonc
+{
+  "format": "stumari-parity/1",
+  "model_version": "hazard-gbdt-YYYY-MM-DD",
+  "vectors": [ { "x": [/* numbers in feature_order */], "raw": 0.0, "p": 0.0, "hazard": 0.0 } ],
+  "requests": [
+    {
+      "request": {
+        "today": "2026-10-01", "checkin_date": "2026-11-05", "checkout_date": "2026-11-08",
+        "adults": 2, "children": 0, "buyer_type": "guest",
+        "adr": 80.0, "hotel_type": "City Hotel", "meal": "BB",
+        "is_repeated_guest": 0, "previous_cancellations": 0, "previous_bookings_not_canceled": 0
+      },
+      "features": { "lead_time": 35, "arrival_month": 11, "arrival_week": 45, "arrival_dow": 3, "weekend_nights": 1, "week_nights": 2, "...": "..." },
+      "hazard": [0.01, 0.02, null, null, null, null],   // null = unreachable window
+      "q": [0.01, 0.0198, 0, 0, 0, 0],
+      "p_cancel": 0.0298
+    }
+  ]
+}
+```
+
+`requests` (≥ 30, covering same-day, 1–400-day leads, weekend/weekday arrivals, children, repeat guests, agent buyers, unknown meal) pin down the **feature adapter** as well as the evaluator: `packages/core` must reproduce `features`, `hazard`, `q` and `p_cancel` from `request` (numbers to `1e-9`). The Python pipeline implements the same adapter as the single reference (`ml/stumari_ml/adapter.py`).
 
 ## 4. Contract templates (MVP)
 
