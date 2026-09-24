@@ -1,0 +1,264 @@
+{
+  "meta": {
+    "title": "Stumari — stablecoin checkout for independent hotels",
+    "description": "Get paid in USDC 24 hours after check-in, with cancellation terms priced for each guest. Founding-hotel pilot for 10 independent hotels in Tbilisi.",
+    "applyTitle": "Apply for the founding-hotel pilot — Stumari",
+    "applyDescription": "Tell us about your hotel. We reply on WhatsApp or Telegram within 24 hours to book a 20-minute setup call."
+  },
+  "nav": {
+    "sections": "On this page",
+    "skip": "Skip to content",
+    "how": "How it works",
+    "model": "Pricing",
+    "trust": "Trust",
+    "pilot": "Pilot offer",
+    "faq": "FAQ",
+    "apply": "Apply for the pilot",
+    "language": "Language",
+    "home": "Stumari home"
+  },
+  "hero": {
+    "eyebrow": "Stablecoin checkout for independent hotels · Tbilisi pilot",
+    "title": "Get paid 24 hours after check-in.",
+    "titleAccent": "Set cancellation terms that fit each guest.",
+    "lead": "Guests pay in USDC into an escrow that holds your terms. You receive the money in your own wallet 24 hours after they check in, and each guest's cancellation terms are priced for that request.",
+    "caveat": "Unless the guest opens a dispute in those 24 hours. Disputes are decided by Stumari's arbiter, which during the pilot is a single Stumari key.",
+    "ctaPrimary": "Apply for the pilot",
+    "ctaSecondary": "See how it works",
+    "card": {
+      "label": "Example booking",
+      "room": "Double room · 3 nights",
+      "dates": "Check-in Sat 14 Nov, 14:00",
+      "amount": "240.00 USDC",
+      "held": "held in this booking's escrow",
+      "contract": "Standard contract",
+      "timelineTitle": "What happens next",
+      "steps": [
+        { "when": "Until 7 Nov, 14:00", "what": "Guest cancels → full refund" },
+        { "when": "Until 11 Nov, 14:00", "what": "Guest cancels → 50% back, 50% to you" },
+        { "when": "After 11 Nov, 14:00", "what": "No refund" },
+        { "when": "15 Nov, 14:00", "what": "240.00 USDC paid to your wallet" }
+      ]
+    }
+  },
+  "problems": {
+    "title": "Three ways independent hotels lose money today",
+    "items": [
+      {
+        "stat": "15–25%",
+        "title": "OTA commission on every booking",
+        "body": "Big booking sites take 15–25% base commission, more with visibility boosters, and pay out weeks later."
+      },
+      {
+        "stat": "37%",
+        "title": "of bookings cancel, all under one policy",
+        "body": "A family booking six months ahead and a speculative booking two days out get the same blanket terms, so you either lose guests or carry the risk.",
+        "source": "Hotel Booking Demand dataset, 119,390 bookings (Antonio, Almeida & Nunes, 2019)"
+      },
+      {
+        "stat": "1.58M",
+        "title": "visitors whose cards don't work here",
+        "body": "Russia sent 1.58 million of Georgia's 5.5 million visitors in 2025, and Russian-issued cards don't work abroad. Stripe has never supported Georgia. Many of these guests already pay in crypto, straight to an owner's personal wallet, with no receipt and no refund rule."
+      }
+    ]
+  },
+  "how": {
+    "title": "How it works",
+    "steps": [
+      {
+        "title": "Connect in one call",
+        "body": "On a free 20-minute call we connect your Booking.com and Airbnb calendars over iCal where available, set your room rates and choose the contracts you want to offer."
+      },
+      {
+        "title": "Guests choose their terms",
+        "body": "Your booking link shows each guest a short menu (Flexible, Standard, Non-refundable), each priced for their request. They pay in USDC from a wallet such as Phantom. AI agents can book the same way."
+      },
+      {
+        "title": "Get paid after check-in",
+        "body": "USDC reaches your wallet 24 hours after check-in. If a guest cancels earlier, the escrow refunds them by their schedule and pays you the rest in the same step."
+      }
+    ]
+  },
+  "model": {
+    "eyebrow": "Pricing",
+    "title": "The model writes the contract",
+    "lead": "Most hotels have one cancellation policy for everyone. Stumari's model estimates how likely each request is to be cancelled, and when, then prices every contract so that you expect to earn the same from this guest as under your current policy.",
+    "points": [
+      "Your current policy always costs your normal rate.",
+      "A more generous contract costs more, by exactly this guest's risk. A stricter one costs less.",
+      "You choose which contracts to offer and the price bounds."
+    ],
+    "compare": {
+      "illustrative": "Illustrative",
+      "caption": "Base rate 100.00 USDC · your current policy: Standard",
+      "guests": [
+        { "label": "Books 60 days ahead", "detail": "Model estimate: about 31% chance of cancelling" },
+        { "label": "Books 2 days ahead", "detail": "Model estimate: about 8% chance of cancelling" }
+      ],
+      "contract": "Contract",
+      "price": "Guest pays",
+      "vsBase": "vs. your rate",
+      "notShown": "Not shown: this close to check-in it has the same terms as Standard",
+      "footnote": "Numbers from the worked examples in our pricing spec, using default resale settings. Real prices depend on your rates, your settings and each request. Every option shown earns you the same expected revenue as your current policy."
+    },
+    "templates": {
+      "flexible": { "name": "Flexible", "terms": "Full refund until 24 h before check-in, then 50%" },
+      "standard": { "name": "Standard", "terms": "Full refund until 7 days before, 50% until 3 days, then none" },
+      "nonrefundable": { "name": "Non-refundable", "terms": "No refund" }
+    }
+  },
+  "trust": {
+    "eyebrow": "Trust",
+    "title": "Where the money sits",
+    "lead": "Nobody has to hold the guest's money on trust, including us.",
+    "items": [
+      {
+        "title": "One escrow per booking",
+        "body": "The guest's USDC goes into an escrow on Solana created for that booking alone. It can pay out only to the guest, to your wallet, or a fee capped by the rate written into the booking."
+      },
+      {
+        "title": "Terms fixed before payment",
+        "body": "Price, refund schedule, check-in time and fee are written into the escrow before the guest pays. After that, neither you, the guest nor Stumari can change them."
+      },
+      {
+        "title": "A disclosed arbiter",
+        "body": "If a guest opens a dispute in the 24 hours after check-in, Stumari's arbiter decides how the escrow is split. During the pilot the arbiter is a single Stumari key. We say so openly, and moving to a multi-signature group is on our roadmap."
+      },
+      {
+        "title": "Unconfirmed means refunded",
+        "body": "Each booking stays pending until we re-check your calendars. If it isn't confirmed within 2 hours, the guest can take a full refund, so a double booking never costs the guest their money."
+      }
+    ]
+  },
+  "pilot": {
+    "eyebrow": "Pilot offer",
+    "title": "Founding-hotel pilot",
+    "lead": "The exact terms, with nothing hidden in the small print.",
+    "terms": [
+      "Founding-hotel pilot for the first 10 independent hotels in Tbilisi.",
+      "0% Stumari fee on every booking until 31 December 2026. After that, a flat 1.5% of what the hotel receives, written into each booking on-chain before the guest pays.",
+      "Paid in USDC on Solana to a wallet you control, automatically 24 hours after the guest checks in — unless the guest opens a dispute in that window, which Stumari's arbiter decides.",
+      "Guest refunds follow the contract the guest chose, automatically.",
+      "Guests need only USDC — no SOL, no network fees. Guests holding USDT swap to USDC inside Phantom.",
+      "Free 20-minute setup call: we connect your Booking.com/Airbnb calendars (iCal) where available and set your room rates and the contracts you want to offer.",
+      "You keep all your existing channels. Stumari adds a direct booking link for guests who pay in stablecoins, and a channel AI agents can book through. We don't bring you guests.",
+      "You choose which contracts to offer and your price bounds; the model prices each request to target your current expected revenue.",
+      "Per-booking limit of 1,500 USDC during the pilot.",
+      "No exclusivity, no minimums, leave anytime.",
+      "We help you set up a wallet and point you to licensed providers for converting USDC to lari. We don't give legal, tax or financial advice."
+    ],
+    "cta": "Apply for one of 10 places"
+  },
+  "faq": {
+    "title": "Questions hotels ask",
+    "items": [
+      {
+        "q": "How do I get lari?",
+        "a": "Payouts arrive as USDC in a wallet you control. To convert USDC to lari, use a licensed provider. We'll point you to options on the setup call. We don't convert funds for you, and this is not financial advice."
+      },
+      {
+        "q": "Is it legal for my hotel to accept USDC?",
+        "a": "Ask your accountant. How you accept and declare stablecoin income depends on how your business is registered. We don't give legal, tax or financial advice."
+      },
+      {
+        "q": "What if the room is booked on Booking.com at the same moment?",
+        "a": "Every Stumari booking starts as pending. We re-check your calendars before confirming it. If it can't be confirmed within 2 hours, the guest gets a full refund. Confirmed bookings appear in the calendar feed you paste into Booking.com and Airbnb, so the dates close there too."
+      },
+      {
+        "q": "What happens if a guest disputes?",
+        "a": "A guest can open a dispute only in the 24 hours after check-in. The payout then waits for Stumari's arbiter, who can split the escrow between the guest and you. During the pilot the arbiter is a single Stumari key. Outside that window nobody can redirect the money."
+      },
+      {
+        "q": "What do guests need?",
+        "a": "Only USDC on Solana in a wallet such as Phantom. No SOL and no network fees: Stumari pays them. Guests holding USDT swap to USDC inside Phantom first."
+      },
+      {
+        "q": "I sell several identical rooms as one room type. Does the calendar sync work?",
+        "a": "Booking.com and Airbnb usually export one iCal calendar per listing, so identical rooms sold as one room type may share a single calendar. We check your extranet together on the setup call before connecting anything. Rooms that are their own listing connect in minutes."
+      },
+      {
+        "q": "Do you bring guests?",
+        "a": "No. We're not an OTA and you keep all your channels. Stumari adds a booking link for guests who pay in stablecoins, and a channel AI agents can book through."
+      }
+    ]
+  },
+  "cta": {
+    "title": "Be one of the first 10 hotels",
+    "body": "Tell us about your property. We'll message you on WhatsApp or Telegram within 24 hours to book a 20-minute setup call.",
+    "button": "Apply for the pilot"
+  },
+  "footer": {
+    "tagline": "Stablecoin checkout for merchants with cancellable inventory. Starting with independent hotels in Tbilisi.",
+    "privacy": "Privacy",
+    "apply": "Apply",
+    "disclaimer": "Stumari does not give legal, tax or financial advice.",
+    "georgian": "სტუმარი means “guest” in Georgian."
+  },
+  "apply": {
+    "title": "Apply for the founding-hotel pilot",
+    "lead": "Takes about three minutes. We'll message you on WhatsApp or Telegram within 24 hours to book a 20-minute setup call.",
+    "back": "Back to the home page",
+    "required": "required",
+    "optional": "optional",
+    "sections": {
+      "property": "Your property",
+      "you": "About you",
+      "contact": "How we reach you",
+      "channels": "How you sell today",
+      "more": "Anything else"
+    },
+    "fields": {
+      "hotelName": "Hotel or guesthouse name",
+      "city": "City",
+      "roomsCount": "Number of rooms",
+      "contactName": "Your name",
+      "role": "Your role",
+      "roles": { "owner": "Owner", "manager": "Manager", "other": "Other" },
+      "phone": "WhatsApp phone number",
+      "phoneHint": "With country code, e.g. +995 5XX XXX XXX",
+      "telegram": "Telegram username",
+      "telegramHint": "e.g. @yourhotel",
+      "email": "Email",
+      "contactHint": "Give us a WhatsApp number, a Telegram username, or both.",
+      "channels": "Where do guests book you now?",
+      "channelOptions": {
+        "booking.com": "Booking.com",
+        "airbnb": "Airbnb",
+        "expedia": "Expedia",
+        "direct": "Direct (phone, WhatsApp)",
+        "instagram": "Instagram",
+        "other": "Other"
+      },
+      "channelManager": "Channel manager",
+      "channelManagerHint": "e.g. none, Exely, Channex",
+      "hasIcal": "Can you export an iCal calendar link from Booking.com or Airbnb?",
+      "icalSingleUnit": "Is each room you sell on Booking.com or Airbnb its own listing or room type?",
+      "icalSingleUnitHint": "If several identical rooms share one room type, we'll check your extranet together before connecting.",
+      "yesNo": { "yes": "Yes", "no": "No", "unsure": "Not sure" },
+      "acceptsCrypto": "Do guests ask to pay in crypto today?",
+      "cryptoOptions": { "no": "No", "sometimes": "Sometimes", "often": "Often" },
+      "message": "Anything we should know?",
+      "messagePlaceholder": "Questions, best time to call, languages you prefer…",
+      "consent": "I agree that Stumari may contact me about this pilot by WhatsApp, Telegram or email, and I have read the privacy notice.",
+      "privacyLink": "Privacy notice"
+    },
+    "submit": "Send application",
+    "submitting": "Sending…",
+    "success": {
+      "title": "Application received. Thank you!",
+      "body": "We'll message you on WhatsApp or Telegram within 24 hours to book a 20-minute setup call.",
+      "home": "Back to the home page"
+    },
+    "errors": {
+      "validation": "Please check the highlighted fields.",
+      "contactRequired": "Add a WhatsApp number or a Telegram username.",
+      "rateLimited": "Too many applications from this connection. Please try again in 10 minutes.",
+      "generic": "Something went wrong. Please try again in a minute."
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The page you're looking for doesn't exist or has moved.",
+    "home": "Go to the home page"
+  }
+}
