@@ -37,7 +37,7 @@
 |---|---|
 | `STUMARI_API_URL` | base URL of the web app, e.g. `http://localhost:3000` |
 | `AGENT_SECRET_KEY` | optional (devnet only): lets the MCP server sign as the agent wallet — same formats as `OPERATOR_SECRET_KEY` |
-| `AGENT_MAX_AMOUNT_MINOR` | max price the MCP server will sign for (default 200 USDC) |
+| `AGENT_MAX_AMOUNT_MINOR` | max price the MCP server will sign for (default `500000000` = 500 USDC, above any demo-hotel stay) |
 
 ## Demo data (seeded by `scripts/bootstrap.ts`)
 

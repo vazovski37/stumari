@@ -4,7 +4,7 @@ Anchor **1.1.2** program. This document is the contract: the Rust program, `pack
 
 ## Crate setup
 
-`anchor-lang = "=1.1.2"`, `anchor-spl = { version = "=1.1.2", default-features = false, features = ["token", "associated_token"] }`, `[features] idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]`. Keep every `anchor-*` crate on the same exact version (if `=1.1.2` cannot resolve, use `=1.2.0` for all and record it in CLAUDE.md). Commit `onchain/Cargo.lock`.
+`anchor-lang = "=1.1.2"`, `anchor-spl = { version = "=1.1.2", default-features = false, features = ["token", "token_2022", "associated_token"] }` (`token_2022` is required for Anchor 1.1.2's `init` + `token::` codegen even though only classic SPL Token is accepted), `[features] idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]`. Keep every `anchor-*` crate on the same exact version (if `=1.1.2` cannot resolve, use `=1.2.0` for all and record it in CLAUDE.md). Commit `onchain/Cargo.lock`.
 
 **Token program: classic SPL Token only** (USDC mainnet and the devnet mock mint are classic). Use `Program<'info, Token>`, `Account<'info, Mint>`, `Account<'info, TokenAccount>`. CPIs: `token::transfer_checked` and `token::close_account` via `CpiContext::new_with_signer(Token::id(), …, &[&[b"booking", booking.booking_id.as_ref(), &[booking.bump]]])`. Never use the `close =` constraint on the vault.
 
@@ -72,7 +72,7 @@ Anchor **1.1.2** program. This document is the contract: the Rust program, `pack
 | `closed_ts` | i64 | 0 while open |
 | `bump`, `vault_bump` | u8 | |
 
-The `Booking` account is **never closed** — it is the durable public outcome label. Only the vault is closed. (~320 bytes incl. discriminator, rent ≈ 0.0031 SOL, paid by the operator — an accepted per-booking cost.)
+The `Booking` account is **never closed** — it is the durable public outcome label. Only the vault is closed. (351 bytes incl. discriminator, rent ≈ 0.00334 SOL, paid by the operator — an accepted per-booking cost.)
 
 ### Vault — PDA token account `["vault", booking]`
 
@@ -187,6 +187,9 @@ Requires `Pending`, and (`now ≥ confirm_deadline_ts` **or** `authority == conf
 Escrowed funds can only ever move to **ATA(mint, `booking.guest`)**, **ATA(mint, `booking.hotel_authority`)**, or the **treasury** — and the treasury share is bounded by the booking's own `fee_bps` snapshot (≤ 10%). Both recipient owners are fixed at creation, so no Stumari key can redirect escrow afterwards. The admin key can only choose the guest/hotel split of a **disputed** booking and void **unconfirmed** bookings (refund only). Tokens sent directly to a vault outside `create_booking` are swept to the treasury on close.
 
 ## Errors
+
+`rent_payer ≠ booking.rent_payer` and a `confirm_booking` hotel ≠ `booking.hotel` return `Unauthorized`; a recipient that is not the snapshot owner's ATA fails Anchor's `ConstraintTokenOwner` / `ConstraintAssociated`. `MAX_TIERS` is a plain Rust const (the IDL carries it as the `tiers` array length). Logic tests read the vectors via `scripts/program.sh`, which copies `spec/vectors` next to the workspace.
+
 
 `Paused, HotelInactive, QuoteExpired, InvalidTimes, InvalidAmount, InvalidTiers, InvalidStatus, TooLateToCancel, RefundBelowMinimum, NotReleasable, DisputeWindowClosed, ConfirmWindowClosed, VoidTooEarly, Unauthorized, InvalidBps, FeeTooHigh, InvalidMint, InvalidTreasury, MathOverflow`
 

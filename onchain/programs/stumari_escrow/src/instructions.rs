@@ -1,0 +1,23 @@
+pub mod cancel_booking;
+pub mod confirm_booking;
+pub mod create_booking;
+pub mod flag_dispute;
+pub mod initialize_config;
+pub mod register_hotel;
+pub mod release;
+pub mod resolve_dispute;
+pub mod update_config;
+pub mod update_hotel;
+pub mod void_booking;
+
+pub use cancel_booking::*;
+pub use confirm_booking::*;
+pub use create_booking::*;
+pub use flag_dispute::*;
+pub use initialize_config::*;
+pub use register_hotel::*;
+pub use release::*;
+pub use resolve_dispute::*;
+pub use update_config::*;
+pub use update_hotel::*;
+pub use void_booking::*;

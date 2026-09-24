@@ -17,7 +17,8 @@
 | 7 | Units per room type | `rooms` (label per unit, e.g. "101") | One unit = one physical room |
 | 8 | iCal **export** link per unit from Booking.com / Airbnb | `rooms.ical_import_urls` (≤ 5, https) | The hotel logs in to their own extranet; we never ask for their password. First check that each unit is its own listing (`ical_single_unit`). **Multi-unit room types: do not promise iCal.** Use manual blocks in the dashboard, or pause onboarding ([inventory-ical.md](../architecture/inventory-ical.md#known-limitation--multi-unit-room-types)). |
 | 9 | Payout wallet | `hotels.payout_wallet` | Self-custody Phantom on the owner's phone. **Never an exchange deposit address.** The same wallet signs in to the dashboard. |
-| 10 | Contract choices | `hotels.policy` | Which contracts to offer (`flexible`, `standard`, `nonrefundable`), the reference contract (the policy they use today, default `standard`), and price bounds (default 0.85×–1.30× of the base rate) |
+| 10 | Contract choices | `hotels.policy` | `enabled_templates`: which contracts to offer (`flexible`, `standard`, `nonrefundable`; at least one). `reference_template`: the policy they use today, default `standard`, which is always priced at exactly the base rate. Price bounds `min_mult_bps` / `max_mult_bps`: default 8500 / 13000, i.e. 0.85×–1.30× of the base rate ([pricing-and-risk-model.md §5](../architecture/pricing-and-risk-model.md#5-pricing-price-room-and-terms-together)). |
+| 10b | Typical occupancy | `hotels.policy.resale_bps` | Ask: "What is your typical occupancy over the next few months?" 70% or more: keep the default `[9000, 8000, 6500, 4500, 2500, 1000]`. Below 70%: use `[5000, 4000, 3000, 2000, 1000, 0]`. This is the chance that a cancelled night gets resold. |
 | 11 | Contact email / Telegram | `hotels.contact_email`, `contact_telegram` | For conflict and dispute notices |
 | 12 | Pilot-hotel permission | [leads.csv](leads.csv) `notes` | "May we name you as a pilot hotel?" Record yes or no. |
 
@@ -26,13 +27,13 @@
 1. Install Phantom from the official App Store / Google Play listing only. Check that the publisher is Phantom.
 2. Create a new wallet. **The owner writes the recovery phrase on paper, alone.** We never see, type or photograph it.
 3. Ask the owner to copy the Solana address (Receive → Solana) and send it to you by message. Read it back to them and compare the first and last 4 characters.
-4. If you will test on devnet with their wallet: Settings → Developer Settings → Testnet Mode → Solana Devnet ([runbook](../plan/runbook.md#phantom-on-devnet)).
+4. If you will test on devnet with their wallet: Settings → Developer Settings → Testnet Mode → Solana Devnet ([runbook](../plan/runbook.md#9-phantom-on-devnet)).
 
 ## 2. Admin setup (`/admin`)
 
 Follow this order. Each step matches an admin endpoint in [api.md](../architecture/api.md#admin).
 
-- [ ] **Convert** the application into a draft hotel (`POST /api/admin/applications/{id}/convert`). Fill in items 1–4 and 9–11.
+- [ ] **Convert** the application into a draft hotel (`POST /api/admin/applications/{id}/convert`). Fill in items 1–4 and 9–11 (including 10b).
 - [ ] **Room types** with nightly rates (`POST /api/admin/hotels/{id}/room-types`).
 - [ ] **Units** per room type, with iCal import URLs (`POST …/room-types/{rtId}/units`). Each unit returns its **export URL**.
 - [ ] Run a **sync** (`POST /api/dashboard/{hotelId}/sync`). Check that each unit shows `last_synced_at` and no `sync_error`, and that blocked dates match the hotel's Booking.com/Airbnb calendar for the next few weeks.

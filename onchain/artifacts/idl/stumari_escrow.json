@@ -1,0 +1,2142 @@
+{
+  "address": "6Y17gFD9dWPJF6GtpzABJZY7Pk8j5CLh268zZyW5U6nf",
+  "metadata": {
+    "name": "stumari_escrow",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Stumari USDC booking escrow: per-booking vault enforcing a signed cancellation schedule"
+  },
+  "instructions": [
+    {
+      "name": "cancel_booking",
+      "discriminator": [
+        139,
+        162,
+        116,
+        202,
+        78,
+        140,
+        139,
+        90
+      ],
+      "accounts": [
+        {
+          "name": "guest",
+          "signer": true
+        },
+        {
+          "name": "booking",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking.booking_id",
+                "account": "Booking"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking"
+              }
+            ]
+          }
+        },
+        {
+          "name": "guest_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "booking.guest",
+                "account": "Booking"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "hotel_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "booking.hotel_authority",
+                "account": "Booking"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "min_refund",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "confirm_booking",
+      "discriminator": [
+        215,
+        0,
+        3,
+        37,
+        218,
+        82,
+        144,
+        184
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The quote signer (after inventory write-back) or the hotel's current authority."
+          ],
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "hotel"
+        },
+        {
+          "name": "booking",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking.booking_id",
+                "account": "Booking"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_booking",
+      "discriminator": [
+        19,
+        223,
+        181,
+        90,
+        124,
+        206,
+        73,
+        169
+      ],
+      "accounts": [
+        {
+          "name": "quote_signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "guest",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "hotel",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  116,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "hotel.hotel_id",
+                "account": "Hotel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "guest_token_account",
+          "writable": true
+        },
+        {
+          "name": "booking",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "args.booking_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "CreateBookingArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "flag_dispute",
+      "discriminator": [
+        150,
+        222,
+        78,
+        72,
+        117,
+        140,
+        2,
+        75
+      ],
+      "accounts": [
+        {
+          "name": "guest",
+          "signer": true
+        },
+        {
+          "name": "booking",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking.booking_id",
+                "account": "Booking"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_config",
+      "discriminator": [
+        208,
+        127,
+        21,
+        1,
+        194,
+        190,
+        196,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "treasury"
+        },
+        {
+          "name": "program",
+          "address": "6Y17gFD9dWPJF6GtpzABJZY7Pk8j5CLh268zZyW5U6nf"
+        },
+        {
+          "name": "program_data",
+          "docs": [
+            "Only the program's upgrade authority may initialize (no front-running)."
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "quote_signer",
+          "type": "pubkey"
+        },
+        {
+          "name": "fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "confirm_window_secs",
+          "type": "u32"
+        },
+        {
+          "name": "release_delay_secs",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "register_hotel",
+      "discriminator": [
+        34,
+        83,
+        58,
+        184,
+        59,
+        220,
+        13,
+        165
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "hotel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  116,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "hotel_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "hotel_id",
+          "type": {
+            "array": [
+              "u8",
+              16
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "release",
+      "discriminator": [
+        253,
+        249,
+        15,
+        206,
+        28,
+        127,
+        193,
+        241
+      ],
+      "accounts": [
+        {
+          "name": "booking",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking.booking_id",
+                "account": "Booking"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking"
+              }
+            ]
+          }
+        },
+        {
+          "name": "hotel_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "booking.hotel_authority",
+                "account": "Booking"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "resolve_dispute",
+      "discriminator": [
+        231,
+        6,
+        202,
+        6,
+        96,
+        103,
+        12,
+        230
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "booking",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking.booking_id",
+                "account": "Booking"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking"
+              }
+            ]
+          }
+        },
+        {
+          "name": "guest_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "booking.guest",
+                "account": "Booking"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "hotel_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "booking.hotel_authority",
+                "account": "Booking"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "guest_bps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "update_config",
+      "discriminator": [
+        29,
+        158,
+        252,
+        191,
+        10,
+        83,
+        219,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "docs": [
+            "When present, becomes the new treasury (its mint must be `config.mint`)."
+          ],
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "UpdateConfigArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_hotel",
+      "discriminator": [
+        117,
+        22,
+        184,
+        51,
+        81,
+        97,
+        47,
+        110
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "hotel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  116,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "hotel.hotel_id",
+                "account": "Hotel"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "authority",
+          "type": {
+            "option": "pubkey"
+          }
+        },
+        {
+          "name": "active",
+          "type": {
+            "option": "bool"
+          }
+        }
+      ]
+    },
+    {
+      "name": "void_booking",
+      "discriminator": [
+        207,
+        168,
+        223,
+        28,
+        87,
+        145,
+        237,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "booking",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking.booking_id",
+                "account": "Booking"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "booking"
+              }
+            ]
+          }
+        },
+        {
+          "name": "guest_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "booking.guest",
+                "account": "Booking"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "treasury",
+          "docs": [
+            "Receives only swept vault excess, never a fee."
+          ],
+          "writable": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Booking",
+      "discriminator": [
+        147,
+        50,
+        61,
+        138,
+        208,
+        21,
+        254,
+        156
+      ]
+    },
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    },
+    {
+      "name": "Hotel",
+      "discriminator": [
+        106,
+        159,
+        170,
+        202,
+        103,
+        172,
+        199,
+        81
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "BookingCancelled",
+      "discriminator": [
+        110,
+        78,
+        189,
+        66,
+        49,
+        189,
+        33,
+        196
+      ]
+    },
+    {
+      "name": "BookingConfirmed",
+      "discriminator": [
+        60,
+        241,
+        49,
+        151,
+        249,
+        51,
+        34,
+        76
+      ]
+    },
+    {
+      "name": "BookingCreated",
+      "discriminator": [
+        114,
+        67,
+        234,
+        15,
+        8,
+        86,
+        184,
+        118
+      ]
+    },
+    {
+      "name": "BookingDisputed",
+      "discriminator": [
+        62,
+        218,
+        183,
+        246,
+        254,
+        17,
+        80,
+        138
+      ]
+    },
+    {
+      "name": "BookingReleased",
+      "discriminator": [
+        56,
+        80,
+        106,
+        75,
+        51,
+        76,
+        162,
+        27
+      ]
+    },
+    {
+      "name": "BookingVoided",
+      "discriminator": [
+        116,
+        240,
+        7,
+        2,
+        164,
+        116,
+        16,
+        226
+      ]
+    },
+    {
+      "name": "DisputeResolved",
+      "discriminator": [
+        121,
+        64,
+        249,
+        153,
+        139,
+        128,
+        236,
+        187
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Paused",
+      "msg": "New bookings are paused"
+    },
+    {
+      "code": 6001,
+      "name": "HotelInactive",
+      "msg": "Hotel is not active"
+    },
+    {
+      "code": 6002,
+      "name": "QuoteExpired",
+      "msg": "Quote has expired"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidTimes",
+      "msg": "Invalid timestamps or window lengths"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidAmount",
+      "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidTiers",
+      "msg": "Invalid refund tiers"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidStatus",
+      "msg": "Booking is not in a status that allows this action"
+    },
+    {
+      "code": 6007,
+      "name": "TooLateToCancel",
+      "msg": "Cancellation is only possible before check-in"
+    },
+    {
+      "code": 6008,
+      "name": "RefundBelowMinimum",
+      "msg": "Refund is below the guest's minimum"
+    },
+    {
+      "code": 6009,
+      "name": "NotReleasable",
+      "msg": "Booking is not releasable yet"
+    },
+    {
+      "code": 6010,
+      "name": "DisputeWindowClosed",
+      "msg": "Disputes are only possible between check-in and release"
+    },
+    {
+      "code": 6011,
+      "name": "ConfirmWindowClosed",
+      "msg": "Confirmation window has closed"
+    },
+    {
+      "code": 6012,
+      "name": "VoidTooEarly",
+      "msg": "Only the admin can void before the confirmation deadline"
+    },
+    {
+      "code": 6013,
+      "name": "Unauthorized",
+      "msg": "Signer or account is not authorized for this action"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidBps",
+      "msg": "Basis points must not exceed 10000"
+    },
+    {
+      "code": 6015,
+      "name": "FeeTooHigh",
+      "msg": "Fee exceeds the maximum"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidMint",
+      "msg": "Mint does not match"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidTreasury",
+      "msg": "Treasury does not match"
+    },
+    {
+      "code": 6018,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
+    }
+  ],
+  "types": [
+    {
+      "name": "Booking",
+      "docs": [
+        "Never closed: the durable public outcome of a booking."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "booking_id",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "hotel",
+            "type": "pubkey"
+          },
+          {
+            "name": "hotel_authority",
+            "docs": [
+              "Snapshot of `hotel.authority` at creation; payouts go to its ATA."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "guest",
+            "docs": [
+              "Token authority that paid; refunds go to its ATA."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "rent_payer",
+            "docs": [
+              "Quote signer at creation; receives the vault rent on close."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee_bps",
+            "docs": [
+              "Snapshot of `config.fee_bps` at creation."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "checkin_ts",
+            "type": "i64"
+          },
+          {
+            "name": "checkout_ts",
+            "type": "i64"
+          },
+          {
+            "name": "created_ts",
+            "type": "i64"
+          },
+          {
+            "name": "confirm_deadline_ts",
+            "type": "i64"
+          },
+          {
+            "name": "release_after_ts",
+            "type": "i64"
+          },
+          {
+            "name": "quote_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "option_index",
+            "type": "u8"
+          },
+          {
+            "name": "tier_count",
+            "type": "u8"
+          },
+          {
+            "name": "tiers",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "Tier"
+                  }
+                },
+                8
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "docs": [
+              "`BookingStatus` as u8."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "refund_amount",
+            "type": "u64"
+          },
+          {
+            "name": "hotel_amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee_amount",
+            "type": "u64"
+          },
+          {
+            "name": "closed_ts",
+            "docs": [
+              "0 while open."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vault_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BookingCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "booking",
+            "type": "pubkey"
+          },
+          {
+            "name": "secs_before",
+            "type": "i64"
+          },
+          {
+            "name": "refund_bps",
+            "type": "u16"
+          },
+          {
+            "name": "refund",
+            "type": "u64"
+          },
+          {
+            "name": "hotel_amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "name": "excess",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BookingConfirmed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "booking",
+            "type": "pubkey"
+          },
+          {
+            "name": "by",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BookingCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "booking",
+            "type": "pubkey"
+          },
+          {
+            "name": "booking_id",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "hotel",
+            "type": "pubkey"
+          },
+          {
+            "name": "hotel_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "guest",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "checkin_ts",
+            "type": "i64"
+          },
+          {
+            "name": "checkout_ts",
+            "type": "i64"
+          },
+          {
+            "name": "option_index",
+            "type": "u8"
+          },
+          {
+            "name": "quote_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "fee_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BookingDisputed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "booking",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BookingReleased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "booking",
+            "type": "pubkey"
+          },
+          {
+            "name": "hotel_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "hotel_amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "name": "excess",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BookingVoided",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "booking",
+            "type": "pubkey"
+          },
+          {
+            "name": "by_admin",
+            "type": "bool"
+          },
+          {
+            "name": "refund",
+            "type": "u64"
+          },
+          {
+            "name": "excess",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "docs": [
+              "Arbiter stub: registers hotels, resolves disputes, voids pending bookings, updates config."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_signer",
+            "docs": [
+              "Must co-sign `create_booking`; may confirm; pays booking and vault rent."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "docs": [
+              "The one accepted stablecoin (immutable)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "docs": [
+              "Token account (mint = `mint`) receiving fees and swept vault excess."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_bps",
+            "docs": [
+              "Applies to new bookings only (snapshotted on each booking)."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "confirm_window_secs",
+            "type": "u32"
+          },
+          {
+            "name": "release_delay_secs",
+            "type": "u32"
+          },
+          {
+            "name": "paused",
+            "docs": [
+              "Blocks `create_booking` only; exits always work."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateBookingArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "booking_id",
+            "docs": [
+              "`sha256(\"stumari-booking-v1\" || quote.id)[0..16]`: one booking per quote."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "checkin_ts",
+            "type": "i64"
+          },
+          {
+            "name": "checkout_ts",
+            "type": "i64"
+          },
+          {
+            "name": "quote_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "option_index",
+            "type": "u8"
+          },
+          {
+            "name": "tiers",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Tier"
+                }
+              }
+            }
+          },
+          {
+            "name": "quote_expires_ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DisputeResolved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "booking",
+            "type": "pubkey"
+          },
+          {
+            "name": "guest_bps",
+            "type": "u16"
+          },
+          {
+            "name": "refund",
+            "type": "u64"
+          },
+          {
+            "name": "hotel_amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "name": "excess",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Hotel",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "hotel_id",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "authority",
+            "docs": [
+              "Payout wallet; new bookings snapshot it as `hotel_authority`."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tier",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "secs_before",
+            "type": "u32"
+          },
+          {
+            "name": "refund_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "quote_signer",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "fee_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "confirm_window_secs",
+            "type": {
+              "option": "u32"
+            }
+          },
+          {
+            "name": "release_delay_secs",
+            "type": {
+              "option": "u32"
+            }
+          },
+          {
+            "name": "paused",
+            "type": {
+              "option": "bool"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "BOOKING_SEED",
+      "type": "bytes",
+      "value": "[98, 111, 111, 107, 105, 110, 103]"
+    },
+    {
+      "name": "BPS_DENOM",
+      "type": "u16",
+      "value": "10000"
+    },
+    {
+      "name": "CONFIG_SEED",
+      "type": "bytes",
+      "value": "[99, 111, 110, 102, 105, 103]"
+    },
+    {
+      "name": "HOTEL_SEED",
+      "type": "bytes",
+      "value": "[104, 111, 116, 101, 108]"
+    },
+    {
+      "name": "MAX_FEE_BPS",
+      "type": "u16",
+      "value": "1000"
+    },
+    {
+      "name": "MIN_WINDOW_SECS",
+      "docs": [
+        "Lower bound for `confirm_window_secs` and `release_delay_secs`."
+      ],
+      "type": "u32",
+      "value": "60"
+    },
+    {
+      "name": "VAULT_SEED",
+      "type": "bytes",
+      "value": "[118, 97, 117, 108, 116]"
+    }
+  ]
+}

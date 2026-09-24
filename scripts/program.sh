@@ -4,7 +4,7 @@
 # From Git Bash on Windows:
 #   MSYS_NO_PATHCONV=1 wsl -d Ubuntu-24.04 -- bash /mnt/c/Users/User/Workspace/colosseum/scripts/program.sh build
 #
-# Commands: build | test | deploy <cluster> | id | shell-path
+# Commands: build | test | fmt | deploy <cluster> | id | shell-path
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 . "$REPO/scripts/wsl-env.sh"
@@ -45,6 +45,9 @@ case "$cmd" in
     echo "artifacts: $ART" ;;
   test)
     sync_in; (cd "$WORK" && anchor build && cargo test -- --nocapture); sync_out ;;
+  fmt)
+    # rustfmt only rewrites sources in place; nothing is built on /mnt/c
+    (cd "$REPO/onchain" && cargo fmt --all) ;;
   deploy)
     cluster="${2:-devnet}"
     sync_in; (cd "$WORK" && anchor build)

@@ -1,6 +1,6 @@
 # Pilot offer — founding hotels
 
-> **DRAFT — founders confirm before sending.** This file is the single source of truth for what we offer hotels ([ADR-0013](../decisions/README.md)). The landing page, [one-pager](one-pager.md), [call script](call-script.md) and [objection answers](objections.md) must match it word for word. Change the offer here first, then everywhere else.
+> **DRAFT — founders confirm before sending.** This file is the single source of truth for what we offer hotels ([ADR-0013](../decisions/README.md)). The landing page, [one-pager](one-pager.md), [call script](call-script.md) and [objection answers](objections.md) must not contradict it. The pilot terms below are copied word for word. Change the offer here first, then everywhere else.
 
 ## Who it is for
 
@@ -25,11 +25,11 @@
 
 ## What the hotel gets
 
-| | |
+| Feature | What it means |
 |---|---|
 | A booking page | `/h/{your-hotel}`. Guests see your rooms, pick dates and choose a contract (Flexible / Standard / Non-refundable). |
 | Enforceable terms | Every booking's refund schedule is written into its own Solana escrow before the guest pays. It is the same for both sides and neither side can change it. |
-| Automatic payouts | USDC reaches your wallet 24 h after check-in, with no invoice and no chasing. |
+| Automatic payouts | USDC reaches your wallet 24 h after check-in unless the guest opens a dispute, with no invoice and no chasing. |
 | Automatic refunds | If a guest cancels, the escrow refunds them by the schedule and pays you the rest in the same transaction. |
 | Calendar sync | Stumari reads your Booking.com/Airbnb calendars (iCal) and gives you a feed to paste back, so a room sold on Stumari is blocked there too. |
 | A dashboard | Sign in with your wallet. See bookings, payouts, calendars and contract settings. |
@@ -45,7 +45,7 @@
 
 ## We promise / We do not promise
 
-From [ADR-0013](../decisions/README.md). If a sentence in any sales material is not covered by the left column, do not say it.
+From [ADR-0013](../decisions/README.md). Never say or imply anything in the right column.
 
 | We promise | We do not promise |
 |---|---|

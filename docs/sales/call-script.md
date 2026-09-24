@@ -30,8 +30,8 @@ Lead with their answer to question 2.
 Skip it if they are short on time. Send the link in the follow-up instead.
 
 1. **Landing page** (`/`, `/ka` or `/ru`): "This is what a hotel sees. Here are the pilot terms and the Apply button."
-2. **Demo hotel checkout** (`/h/{demo-slug}`): pick dates about 3 weeks out → **See prices** → three contracts with different prices. "Flexible costs a bit more and non-refundable costs less. Each price is set to target what you earn on average today, and the guest gets a choice. You set the limits on how far prices can move." Pick **Standard**, then pay with the **Test wallet (devnet, not real money)**.
-3. **Booking page** (`/b/{id}`): show status, the terms timeline, and "refund if you cancel now". Open the **Explorer link**: "That is the escrow account. It holds this booking's money and rules."
+2. **Demo hotel checkout** (`/h/{demo-slug}`): pick dates about 5 days out, so the cancellation shows a 50% refund → **See prices** → three contracts with different prices. "Your current policy costs exactly your normal rate. Flexible costs a bit more and non-refundable costs less, by as much as this guest's cancellation risk is worth, so you expect to earn the same whichever one they choose. It's a target, not a guarantee. You set how far prices can move." Pick **Standard**, then pay with the **Test wallet (devnet, not real money)**.
+3. **Booking page** (`/b/{id}`): show status, the terms timeline, and "refund if you cancel now". Open the **Explorer link**: "That is the escrow account. It holds this booking's money and rules." Wait until the status shows **Confirmed**; a pending booking always refunds 100%.
 4. **Cancel**: click Cancel → the refund arrives at once by the schedule. Standard gives 100% more than 7 days before check-in and 50% between 7 and 3 days. Show the transaction on Explorer: "The guest's refund and the hotel's share are paid in one transaction. Nobody had to approve it."
 
 Say plainly that this is a devnet demo with test money. Real bookings start after our security review. Do not give a date that the founders have not confirmed.
