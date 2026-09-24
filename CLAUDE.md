@@ -23,6 +23,7 @@ Stumari (სტუმარი, "guest"): stablecoin checkout for merchants with
 - Host: Node 24, pnpm 9, Python 3.11, Docker Desktop. C: drive nearly full (~25 GB free) — avoid large installs.
 - WSL Ubuntu-24.04 (root): Rust 1.98 (+1.89 via rust-toolchain), Agave/Solana CLI 3.1.10, Anchor 1.1.2, Surfpool 1.6 at `~/.local/bin/surfpool`. PATH is NOT set for non-interactive shells — source `scripts/wsl-env.sh`.
 - Calling WSL from Git Bash: variables inside `wsl bash -lc '...'` get mangled and `/mnt/c/...` paths get rewritten. **Write a script file and run `MSYS_NO_PATHCONV=1 wsl -d Ubuntu-24.04 -- bash /mnt/c/...script.sh`.**
+- **Local chain:** `scripts/localnet.sh start` → Surfpool in Docker at `http://127.0.0.1:8899` (WSL ports are unreachable from Windows here — ADR-0015). Deploy via `surfnet_writeProgram`, time travel via `surfnet_timeTravel`.
 - Program build: `scripts/program.sh build|test|deploy` (rsyncs `onchain/` to `~/stumari-onchain` in WSL, builds there, copies `.so` + IDL to `onchain/artifacts/`).
 - Solana reference docs (current as of Sep 2026: Kit 8, Codama, Anchor 1.x, Surfpool, tx v1): `~/.agents/skills/solana-dev/` inside WSL. Prefer them over memory for API details.
 - Prefix Anchor/Surfpool commands with `NO_DNA=1`.

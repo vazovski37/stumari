@@ -23,7 +23,8 @@ All endpoints are Next.js route handlers under `apps/web/app/api`. JSON in/out. 
 |---|---|---|
 | `/`, `/ka`, `/ru` | hotels | landing (i18n) |
 | `/apply` (`/ka/apply`, `/ru/apply`) | hotels | pilot application |
-| `/h/[slug]` | guests | hotel page + dates + "See prices" → quote menu → pay |
+| `/h/[slug]` | guests | hotel page + dates + "See prices" → quote menu (each option has a "Why this price" drawer with the explain block: P(cancel), per-window q, risk cost, multiplier, resale assumptions) → pay. If a wallet is already connected, the quote request includes it as `buyer_wallet` (history pricing); otherwise the wallet is chosen at pay time. |
+| `/model` | everyone | "How pricing works": renders `ml/reports/reliability.json` (calibration chart), the metrics summary and the honest limitations; linked from every explain drawer and from the landing page |
 | `/b/[bookingId]` | guests | booking status, terms timeline, refund-if-cancel-now, cancel / dispute |
 | `/my` | guests | connect wallet → "Find my bookings" |
 | `/dashboard/[hotelId]` | hotel (or admin) | bookings, payouts, units + iCal, manual blocks, policy |

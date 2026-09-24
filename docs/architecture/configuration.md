@@ -36,8 +36,12 @@
 | Variable | Purpose |
 |---|---|
 | `STUMARI_API_URL` | base URL of the web app, e.g. `http://localhost:3000` |
-| `AGENT_SECRET_KEY` | optional (devnet only): lets the MCP server sign as the agent wallet |
+| `AGENT_SECRET_KEY` | optional (devnet only): lets the MCP server sign as the agent wallet — same formats as `OPERATOR_SECRET_KEY` |
 | `AGENT_MAX_AMOUNT_MINOR` | max price the MCP server will sign for (default 200 USDC) |
+
+## Demo data (seeded by `scripts/bootstrap.ts`)
+
+Demo hotel slug **`stumari-demo`** — "Stumari Demo Guesthouse", Sololaki, Tbilisi; `checkin_time` 14:00, `checkout_time` 12:00, `City Hotel`; room types: Double room (BB) 65.00 USDC / Fri–Sat 75.00, 2 units; Twin room (BB) 60.00, 1 unit; Family suite (BB) 110.00, 1 unit; default policy. Payout wallet: a generated devnet keypair (`onchain/keys/demo-hotel.json`, gitignored) unless `DEMO_HOTEL_WALLET` is set (e.g. a founder's Phantom address, so the dashboard can be shown signed in as the hotel).
 
 ## Scripts
 

@@ -43,3 +43,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# local surfpool binary cache (scripts/localnet.sh)
+.localnet/
