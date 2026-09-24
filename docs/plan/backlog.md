@@ -46,6 +46,10 @@ Owned by the lead engineer; agents read the section for their component. Tick it
 - [x] quote.json drift test must fail when the fixture is missing (regenerate only with `UPDATE_VECTORS=1`).
 - [x] `buildQuoteBody`: enforce MVP constants — `decimals == 6`, `deposit_bps == 10000`, unique option ids, non-empty `hotel_slug`.
 
+## scripts
+- [ ] Add `drizzle-orm` and `@libsql/client` to `scripts/package.json` (today `scripts/lib/db.ts` imports `apps/web/lib/db` by relative path and resolves the libraries from `apps/web/node_modules`).
+- [ ] E2E: time travel only after every create in a run (quotes are stamped with wall-clock time; a chain ahead of the wall clock fails `create_booking` with `QuoteExpired`), and `bootstrap --cluster localnet --reset` at the start of each E2E run.
+
 ## packages/escrow-client
 - [ ] Pin `latest` dependency specifiers (`@solana-program/*`, `codama`, `@codama/*`, `litesvm`) to the locked versions once no agent is installing.
 - [ ] `sendAndConfirm`: periodic rebroadcast until `lastValidBlockHeight` if devnet drops transactions.

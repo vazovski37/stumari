@@ -89,26 +89,31 @@ For `OPERATOR_SECRET_KEY`, open `onchain/keys/operator-devnet.json` in an editor
 
 ## 3. Local development
 
-From the repo root in Git Bash:
+From the repo root in Git Bash, with Docker Desktop running:
 
 ```bash
 pnpm install
-cp apps/web/.env.example apps/web/.env.local     # then fill it in (section 2)
-pnpm --filter web db:migrate                     # creates apps/web/.data/stumari.db
-pnpm dev                                         # http://localhost:3000
-pnpm --filter web cron                           # second terminal: runs sync + release every 60 s
+MSYS_NO_PATHCONV=1 wsl -d Ubuntu-24.04 -- bash /mnt/c/Users/User/Workspace/colosseum/scripts/program.sh build   # only if onchain/ changed (section 4)
+pnpm --filter @stumari/scripts bootstrap --cluster localnet   # chain + program + mint + config + DB + demo hotel + .env.local
+pnpm --filter @stumari/scripts smoke                          # optional: book, confirm, cancel on the chain
+pnpm dev                                                      # http://localhost:3000
+pnpm --filter web cron                                        # second terminal: runs sync + release every 60 s
 ```
 
-Tests: `pnpm test` (all workspaces) and `pnpm typecheck`. The ML pipeline lives in `ml/`. If Windows Application Control blocks a compiled wheel (e.g. `sklearn.metrics`), run `ml/` in WSL ([pricing-and-risk-model.md](../architecture/pricing-and-risk-model.md)).
+The bootstrap writes `apps/web/.env.local` for you (from `.env.example`, merged in place; `AUTH_SECRET` / `CRON_SECRET` generated once). Fill in the rest by hand only when you need it (section 2). All commands and flags: [scripts/README.md](../../scripts/README.md).
 
-**Local chain (optional, for time travel).** Surfpool runs in Docker, not in WSL: on this machine ports inside WSL are not reachable from Windows ([ADR-0015](../decisions/README.md)). Docker Desktop must be running.
+Tests: `pnpm test` (all workspaces) and `pnpm typecheck`. `packages/escrow-client` tests start their own Surfpool container on port 18899 (Docker needed). The ML pipeline lives in `ml/`. If Windows Application Control blocks a compiled wheel (e.g. `sklearn.metrics`), run `ml/` in WSL ([pricing-and-risk-model.md](../architecture/pricing-and-risk-model.md)).
+
+**Local chain.** Surfpool runs in Docker, not in WSL: on this machine ports inside WSL are not reachable from Windows ([ADR-0015](../decisions/README.md)). The bootstrap starts it; you can also drive it directly:
 
 ```bash
-scripts/localnet.sh start     # Surfpool 1.6 in an ubuntu:24.04 container: RPC http://127.0.0.1:8899, ws 8900, offline
-scripts/localnet.sh status    # also: logs [n] | stop | reset (reset starts a fresh, empty chain)
+scripts/localnet.sh status    # also: start | logs [n] | stop | reset (reset starts a fresh, empty chain)
+pnpm --filter @stumari/scripts bootstrap --cluster localnet --reset   # fresh chain, same DB (demo hotel re-registered)
+pnpm --filter @stumari/scripts fund --to <wallet> --amount 500        # mock USDC to any wallet (no SOL needed)
+pnpm --filter @stumari/scripts timetravel --to +3d                    # move the chain clock (tiers, confirm deadline, release)
 ```
 
-The first start copies the Linux `surfpool` binary from WSL into `.localnet/bin/` (gitignored). Set `STUMARI_CLUSTER=localnet` and `SOLANA_RPC_URL=http://127.0.0.1:8899`, build the program (section 4), then run the bootstrap (section 5) against it. On localnet the bootstrap does not use `program.sh deploy`: it writes `onchain/artifacts/stumari_escrow.so` with the `surfnet_writeProgram` cheatcode (operator as upgrade authority) and funds accounts with `surfnet_setAccount` / `surfnet_setTokenAccount`. Jump the clock with the `surfnet_timeTravel` cheatcode to demonstrate tiers and release.
+The first start copies the Linux `surfpool` binary from WSL into `.localnet/bin/` (gitignored). On localnet the bootstrap writes `onchain/artifacts/stumari_escrow.so` with `surfnet_writeProgram` (operator as upgrade authority) and funds keys with `surfnet_setAccount`. **Time travel only goes forward:** afterwards the chain runs ahead of wall-clock time and new quotes fail with `QuoteExpired` until `bootstrap --cluster localnet --reset`. For an empty database, stop the web app and delete `apps/web/.data/stumari.db` before bootstrapping.
 
 ## 4. Program: build, test, deploy
 
@@ -132,17 +137,17 @@ Afterwards, commit `onchain/artifacts/idl/stumari_escrow.json` if it changed, an
 
 ## 5. Devnet bootstrap
 
-`scripts/bootstrap.ts` is **being built**. Check `scripts/package.json` for the final command. It will:
-1. on localnet only, deploy the program with `surfnet_writeProgram` (section 3);
-2. create the mock USDC mint (6 decimals, operator = mint authority) and the treasury token account;
-3. run `initialize_config` with the devnet values in section 2 (signed by the upgrade authority);
-4. seed the demo hotel in the DB and register it on-chain ([configuration.md](../architecture/configuration.md#demo-data-seeded-by-scriptsbootstrapts)): slug **`stumari-demo`**, "Stumari Demo Guesthouse", Sololaki, Tbilisi; check-in 14:00, check-out 12:00; Double room (BB) 65.00 USDC, Fri–Sat 75.00, 2 units; Twin room (BB) 60.00, 1 unit; Family suite (BB) 110.00, 1 unit; default policy. Payout wallet: `DEMO_HOTEL_WALLET` if set, otherwise a generated `onchain/keys/demo-hotel.json`.
+1. Fund the operator `HUmeQqxXXNsXXZkXtXHWfJqmuWNsdDo81e92ER8Spxet` with ~10 SOL at [faucet.solana.com](https://faucet.solana.com) (GitHub login). Without it the bootstrap stops with "fund … at faucet.solana.com" before sending anything.
+2. Deploy the program as the operator (section 4, `DEPLOYER_KEYPAIR` = `operator-devnet.json`), so the operator is the upgrade authority `initialize_config` requires. The bootstrap checks this and explains a wrong authority.
+3. Point the scripts at the database the web app will use — for Vercel, the Turso URL and token (section 6) in `scripts/.env` or the process env (precedence: process env > `scripts/.env` > `apps/web/.env.local`).
+4. Run:
 
 ```bash
-pnpm --filter @stumari/scripts exec tsx bootstrap.ts   # expected shape; confirm once the script lands
+pnpm --filter @stumari/scripts bootstrap --cluster devnet
+pnpm --filter @stumari/scripts smoke    # optional; costs ≈ 0.0034 SOL of Booking rent
 ```
 
-Copy the printed mint into `STUMARI_MINT` (locally and on Vercel). The demo hotel is at `/h/stumari-demo`. Run it **against the same DB the web app uses**. For Vercel, that means the Turso URL and token (section 6).
+It creates the mock USDC mint (6 decimals, operator = mint authority; address derived from the operator with seed `stumari-mock-usdc-v1`, so it is the same on every cluster: `4rzT3ft7dAnwZgTMkfFydr5VwDiGHaMEW3gxS6u933wH` for this operator), the treasury ATA, runs `initialize_config` (fee 0, confirm window 7200 s, release delay 120 s), migrates and seeds the demo hotel `stumari-demo` ([configuration.md](../architecture/configuration.md#demo-data-seeded-by-scriptsbootstrapts)), registers it on-chain (payout wallet: `DEMO_HOTEL_WALLET` if set, else `onchain/keys/demo-hotel.json`), tops up the MCP agent wallet with 1,000 mock USDC, and merges the devnet values into `apps/web/.env.local`. Every step checks before it acts; a second run prints `already up to date (0 changes)`. Copy `STUMARI_MINT` and the other values to Vercel (section 6). Mainnet is refused. The demo hotel is at `/h/stumari-demo`.
 
 ## 6. Deploy the web app (Vercel + Turso)
 

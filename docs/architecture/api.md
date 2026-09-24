@@ -54,7 +54,19 @@ Checkout, booking, dashboard and admin are English-only in the MVP. `booking_url
 | `GET /api/ical/{export_token}` | | `text/calendar` (inventory-ical.md) |
 | `POST /api/demo/faucet` | `{ wallet }` | demo mode only, never mainnet: mints 500 mock USDC to the wallet's ATA (operator is mint authority); 3/hour/wallet and 10/hour/IP |
 
-**Public booking view** fields: `id, status, hotel {name, address, phone, checkin_time}, room_type, checkin_date, checkout_date, amount_minor, option_id, terms (tiers + plain language), refund_if_cancel_now_minor, can_cancel, can_dispute (status confirmed && checkin_ts ≤ now < release_after_ts), can_void, confirm_deadline_ts, release_after_ts, booking_pda, explorer links`. **Never** includes guest name/email/phone.
+**Public booking view** (JSON, snake_case; `apps/mcp/src/schemas.ts` parses exactly this):
+
+```
+{ id: "<32 hex>", status: "awaiting_signature"|"pending"|"confirmed"|"cancelled"|"released"|"disputed"|"resolved"|"voided"|"failed",
+  hotel: { name, address, phone, checkin_time: "HH:MM" }, room_type: { id, name },
+  checkin_date, checkout_date, amount_minor: "<u64>", option_id,
+  terms: { tiers: [{ secs_before, refund_bps }], text: ["<plain-language line>", …] },
+  refund_if_cancel_now_minor: "<u64>" | null, can_cancel, can_dispute, can_void,
+  confirm_deadline_ts: int | null, release_after_ts: int | null, booking_pda,
+  explorer: { booking, create_tx, exit_tx } }
+```
+
+`can_dispute` = status confirmed && checkin_ts ≤ now < release_after_ts. **Never** includes guest name/email/phone or the guest wallet. Other conventions: `lastValidBlockHeight` is a JSON number (a safe integer); hotel slugs match `^[a-z0-9][a-z0-9-]{0,63}$`; error bodies are `{ error: { code: "UPPER_SNAKE", message } }`.
 
 ## Auth (Sign-In With Solana)
 
@@ -109,12 +121,12 @@ Scheduling: Vercel Hobby runs cron at most once a day, so production uses an ext
 
 ## MCP server (`apps/mcp`)
 
-`@modelcontextprotocol/sdk` `McpServer` + `StdioServerTransport`; **log only to stderr** (stdout is the protocol). Wraps the public REST API at `STUMARI_API_URL`. Optional `AGENT_SECRET_KEY` (devnet demo) lets it sign as the agent's wallet: then `get_quote` defaults `wallet` to the agent pubkey, and `book` refuses unless `cluster != mainnet-beta` and `price_minor ≤ AGENT_MAX_AMOUNT_MINOR`; before signing it decodes the tx and checks the fee payer is the configured `quote_signer` and that it contains exactly one `stumari_escrow` instruction.
+`@modelcontextprotocol/sdk` `McpServer` + `StdioServerTransport`; **log only to stderr** (stdout is the protocol). Wraps the public REST API at `STUMARI_API_URL`. Optional `AGENT_SECRET_KEY` (devnet/localnet demo) lets it sign as the agent's wallet: then `get_quote` and `cancel` default `wallet` to the agent pubkey, and `book`/`cancel` refuse unless `cluster != mainnet-beta`, `program_id` is the fixed id (ADR-0008) and `price_minor ≤ AGENT_MAX_AMOUNT_MINOR` (default 500 USDC). Before signing it decodes the tx and requires: v0 without lookup tables; fee payer = the configured `quote_signer`; the agent among the signers; **exactly one** `stumari_escrow` instruction of the expected kind whose guest is the agent and whose booking account is the PDA of the booking id; `create_booking` escrowing exactly the option price and recording exactly the verified quote's hash, option index, tiers, check-in/out, expiry, hotel PDA and mint; `cancel_booking` with `min_refund` = the API's `refund_minor` (a response without it is refused); every other instruction a compute-budget instruction or an idempotent ATA creation paid by the fee payer. Quotes are verified with `@stumari/core` `verifyQuote` against `quote_signer`; `book` refuses unverified quotes (a `null` `quote_signer` means unverifiable). Text from the API reaching the model is typed or length-clipped; terms and links are rebuilt locally.
 
 | Tool | Input | Output |
 |---|---|---|
 | `search_availability` | `{ city?, hotel_slug?, checkin, checkout, adults, children? }` | available room types with base prices |
 | `get_quote` | `{ hotel_slug, room_type_id, checkin, checkout, adults, children?, wallet? }` | signed envelope + plain-language summary per option; verifies the signature against `/api/config/public.quote_signer` and says so |
 | `book` | `{ quote_id, option_index, wallet? }` | with agent key: `{ booking_id, signature, booking_url }`; without: `{ booking_id, tx, signer }` |
-| `cancel` | `{ booking_id }` | refund preview + signature (agent key) or tx |
+| `cancel` | `{ booking_id, wallet? }` | refund preview + signature (agent key) or tx; without an agent key `wallet` is required (the public booking view omits it) |
 | `booking_status` | `{ booking_id }` | status, terms, refund-if-cancel-now, booking_url, explorer link |
