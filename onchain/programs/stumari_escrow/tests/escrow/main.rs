@@ -7,6 +7,7 @@
 mod attacks;
 mod cancel;
 mod config;
+mod devnet_topology;
 mod dispute_void;
 mod harness;
 mod lifecycle;

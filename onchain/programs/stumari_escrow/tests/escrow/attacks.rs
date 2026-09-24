@@ -1,12 +1,17 @@
-//! Account substitution on every exit, vault donation griefing, and aliased payout accounts.
+//! Account substitution on every exit, vault donation griefing, a vault configured as the
+//! treasury, and aliased payout accounts.
 
 use {
     crate::harness::*,
     anchor_lang::{error::ErrorCode as AnchorError, prelude::Pubkey},
-    litesvm::types::TransactionResult,
+    litesvm::types::{TransactionMetadata, TransactionResult},
     solana_keypair::Keypair,
     solana_signer::Signer,
-    stumari_escrow::{error::EscrowError, BookingStatus, UpdateConfigArgs},
+    stumari_escrow::{
+        error::EscrowError,
+        events::{BookingCancelled, BookingReleased, BookingVoided, DisputeResolved},
+        BookingStatus, UpdateConfigArgs,
+    },
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -58,6 +63,22 @@ fn send_exit(env: &mut Env, exit: Exit, guest: &Keypair, k: &ExitKeys) -> Transa
             env.send_op(&[ix], &[&admin])
         }
     }
+}
+
+/// The `excess` reported by the exit's event.
+fn event_excess(exit: Exit, meta: &TransactionMetadata) -> u64 {
+    match exit {
+        Exit::Cancel => event::<BookingCancelled>(meta).excess,
+        Exit::Release => event::<BookingReleased>(meta).excess,
+        Exit::Resolve => event::<DisputeResolved>(meta).excess,
+        Exit::Void => event::<BookingVoided>(meta).excess,
+    }
+}
+
+fn set_treasury(env: &mut Env, treasury: Pubkey) {
+    let admin = env.admin.insecure_clone();
+    let ix = env.update_config_ix(&admin.pubkey(), UpdateConfigArgs::default(), Some(treasury));
+    ok(env.send(&[ix], &admin, &[]));
 }
 
 #[test]
@@ -186,7 +207,12 @@ fn vault_donation_is_swept_on_every_exit() {
         assert_eq!(env.balance(&keys.vault), 100 * USDC + 1);
 
         let treasury_before = env.balance(&env.treasury);
-        ok(send_exit(&mut env, exit, &guest, &keys));
+        let meta = ok(send_exit(&mut env, exit, &guest, &keys));
+        assert_eq!(
+            event_excess(exit, &meta),
+            1,
+            "{exit:?}: excess in the event"
+        );
         assert!(env.is_closed(&keys.vault), "{exit:?}: vault closed");
         let b = env.booking(&booking);
         assert_eq!(
@@ -203,6 +229,32 @@ fn vault_donation_is_swept_on_every_exit() {
 }
 
 #[test]
+fn a_vault_as_treasury_is_rejected_on_every_exit() {
+    let mut env = Env::new();
+    let guest = env.new_guest(1_000 * USDC);
+    let treasury = env.treasury;
+
+    for exit in EXITS {
+        let booking = prepare(&mut env, exit, &guest);
+        let vault = vault_pda(&booking);
+        // update_config accepts it: the vault is a token account of the right mint
+        set_treasury(&mut env, vault);
+        let keys = env.exit_keys(booking);
+        assert_eq!(keys.treasury, vault);
+        assert_err(
+            send_exit(&mut env, exit, &guest, &keys),
+            EscrowError::InvalidTreasury,
+        );
+
+        set_treasury(&mut env, treasury);
+        let keys = env.exit_keys(booking);
+        let meta = ok(send_exit(&mut env, exit, &guest, &keys));
+        assert_eq!(event_excess(exit, &meta), 0, "{exit:?}");
+        assert!(env.is_closed(&vault), "{exit:?}: vault closed");
+    }
+}
+
+#[test]
 fn guest_as_hotel_and_treasury_owner_dup_accounts() {
     let mut env = Env::new();
     let funds = 300 * USDC;
@@ -210,12 +262,7 @@ fn guest_as_hotel_and_treasury_owner_dup_accounts() {
     let founder_ata = ata(&founder.pubkey(), &env.mint);
     let hotel = env.register_hotel([0xEE; 16], founder.pubkey());
     let admin = env.admin.insecure_clone();
-    let ix = env.update_config_ix(
-        &admin.pubkey(),
-        UpdateConfigArgs::default(),
-        Some(founder_ata),
-    );
-    ok(env.send(&[ix], &admin, &[]));
+    set_treasury(&mut env, founder_ata);
 
     let book = |env: &mut Env| {
         env.set_time(T0);

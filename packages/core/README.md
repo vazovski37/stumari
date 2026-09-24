@@ -23,10 +23,10 @@ pnpm --filter @stumari/core typecheck
 | `tiers` | `Tier`, `TEMPLATES` (flexible / standard / nonrefundable, with plain-language descriptions), `TEMPLATE_IDS`, `validateTiers` (same rules and error as the program), `refundBpsFor` (i64 compare, accepts `bigint`), `perWindowRefund`, `matchTemplate` |
 | `payout` | `splitCancel`, `splitRelease`, `splitResolve` (exact on-chain math, typed errors), `minRefundForCancel({ booking, now })` (refund by the tier schedule at now + 90 s — the `cancel_booking(min_refund)` argument), `BOOKING_STATUS_CODES` |
 | `dates` | Intl-only: `checkinTs(date, "HH:MM", tz)`, `localDate(ts, tz)`, `nightsBetween`, `weekendNights` (nights starting Fri/Sat), `weekdayMon0`, `monthOf`, `addDays`, `leadTimeDays` |
-| `features` | the adapter: `ModelRequest` → `adaptRequest` → `RequestFeatures`; `walletHistoryFeatures(buyerWallet, releasedCount)`; `oneHotColumnName`; `windowFeatures` |
-| `model` | `loadModel(json)` (validates `stumari-gbdt-hazard/2`), `featureVector`, `rawScore`, `hazardFromRaw` (`numpy.interp` semantics), `qVector`, `pCancel`, `logistic`, `assessRisk(model, request)` |
+| `features` | the adapter: `ModelRequest` → `adaptRequest` → `RequestFeatures` (throws unless `is_repeated_guest == (previous_bookings_not_canceled ≥ 1)`, as `adapter.py` does for serving requests); `walletHistoryFeatures(buyerWallet, releasedCount)` builds both consistently; `oneHotColumnName`; `windowFeatures` |
+| `model` | `loadModel(json)` (validates `stumari-gbdt-hazard/2`), `featureVector`, `rawScore`, `hazardFromRaw` (Platt `1/(1+exp(-(a·raw+b)))` by default per ADR-0016; isotonic `isotonic_on_raw_margin` with `numpy.interp` semantics also supported), `qVector`, `pCancel`, `logistic`, `assessRisk(model, request)` |
 | `pricing` | `PricingPolicy`, `DEFAULT_POLICY`, `validatePolicy`, `riskCost`, `modelProvider(model)`, `priceMenu({ provider, request, policy, basePriceMinor })` → `{ options, explain }` |
-| `quote` | `buildQuoteBody`, `canonicalize`, `hashQuote`, `signQuote(body, secretKey)` (32-byte seed or 64-byte Solana keypair), `verifyQuote(envelope, expectedSigner?)`, `publicKeyBase58`, `QUOTE_TTL_SECS` |
+| `quote` | `buildQuoteBody` (enforces the MVP constants: `decimals == 6`, `deposit_bps == 10000` per ADR-0002, unique option ids, non-empty `hotel_slug`), `canonicalize`, `hashQuote`, `signQuote(body, secretKey)` (32-byte seed or 64-byte Solana keypair), `verifyQuote(envelope, expectedSigner?)`, `publicKeyBase58`, `QUOTE_TTL_SECS` |
 | `errors` | `CoreError` with `code`; on-chain names (`InvalidTiers`, `TooLateToCancel`, `InvalidBps`, `InvalidStatus`, `InvalidAmount`, `MathOverflow`) plus `InvalidInput`, `InvalidPolicy`, `InvalidModel`, `NonCanonical` |
 
 ### Quote flow (server)
@@ -56,9 +56,10 @@ order). Every enabled template appears in `explain.options` with `withheld` /
   tier-validation case runs in `test/refund.test.ts`.
 - `spec/vectors/quote.json` — produced by `test/quote.test.ts` from a fixed body and the seed
   `0x01 × 32`: canonical string, sha256, signature, uuid bytes and booking ids. The test fails
-  if the file drifts; regenerate deliberately with `UPDATE_VECTORS=1 pnpm --filter @stumari/core test`.
+  if the file drifts **or is missing**; regenerate deliberately with `UPDATE_VECTORS=1 pnpm --filter @stumari/core test`.
 - `test/fixtures/tiny-model.json` — a hand-built model with dyadic leaf values, duplicate
-  calibration knots and non-preorder child indices; expected hazards are numpy's outputs.
+  isotonic calibration knots and non-preorder child indices; expected hazards are numpy's outputs.
+  The Platt path (the exported default) is tested on the same trees with an overridden `calibration`.
 
 ## Parity with `ml/`
 

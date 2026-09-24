@@ -34,21 +34,24 @@ Owned by the lead engineer; agents read the section for their component. Tick it
 - [x] docs/README.md links runbook.md and backlog.md.
 
 ## onchain
-- [ ] Decode emitted events in tests (`excess`, `by_admin`, `secs_before`, `refund_bps`).
-- [ ] Regression test with the devnet topology: `quote_signer == admin == rent_payer == fee payer` through admin void and `resolve_dispute`.
-- [ ] Exits: constraint `treasury.key() != vault.key()` (an admin setting a vault as treasury would otherwise block that booking's close).
-- [ ] Restore `skip_local_validator = true` in Anchor.toml (or document); note that bare `cargo test` needs a prior `anchor build`.
+- [x] Decode emitted events in tests (`excess`, `by_admin`, `secs_before`, `refund_bps`).
+- [x] Regression test with the devnet topology: `quote_signer == admin == rent_payer == fee payer` through admin void and `resolve_dispute`.
+- [x] Exits: constraint `treasury.key() != vault.key()` (an admin setting a vault as treasury would otherwise block that booking's close).
+- [x] Restore `skip_local_validator = true` in Anchor.toml (or document); note that bare `cargo test` needs a prior `anchor build`.
 
 ## packages/core
-- [ ] README: hazard is Platt by default (ADR-0016), isotonic supported.
-- [ ] quote.json drift test must fail when the fixture is missing (regenerate only with `UPDATE_VECTORS=1`).
-- [ ] `buildQuoteBody`: enforce MVP constants — `decimals == 6`, `deposit_bps == 10000`, unique option ids, non-empty `hotel_slug`.
+- [x] README: hazard is Platt by default (ADR-0016), isotonic supported.
+- [x] quote.json drift test must fail when the fixture is missing (regenerate only with `UPDATE_VECTORS=1`).
+- [x] `buildQuoteBody`: enforce MVP constants — `decimals == 6`, `deposit_bps == 10000`, unique option ids, non-empty `hotel_slug`.
+
+## onchain (later)
+- [ ] Optionally reject in `update_config` a treasury whose token authority is a Booking PDA (fail at set time instead of at exit).
 
 ## ml
 - [x] Platt calibration (ADR-0016) — 2d3e9a4
 - [x] Representative parity sample (377/600 City Hotel) — 2d3e9a4
 - [x] Missing artifacts fail the export tests unless `STUMARI_ALLOW_MISSING_ARTIFACTS=1` — 2d3e9a4
-- [ ] Adapter: assert `is_repeated_guest == (previous_bookings_not_canceled ≥ 1)` or derive one from the other.
+- [x] Adapter: assert `is_repeated_guest == (previous_bookings_not_canceled ≥ 1)` (Python + TS).
 
 ## Founders (only you can do)
 - [ ] Fund the devnet operator `HUmeQqxXXNsXXZkXtXHWfJqmuWNsdDo81e92ER8Spxet` with ~10 SOL from faucet.solana.com (GitHub login).

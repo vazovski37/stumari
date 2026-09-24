@@ -6,8 +6,8 @@ import { dayNumber, nightsBetween } from "./dates";
 import { CoreError } from "./errors";
 import { bytesToHex, isUuid, uuidV4 } from "./ids";
 import { assertSafeInt } from "./int";
-import { parseMinor } from "./money";
-import type { Explain, QuoteOption } from "./pricing";
+import { parseMinor, USDC_DECIMALS } from "./money";
+import { DEPOSIT_BPS, type Explain, type QuoteOption } from "./pricing";
 import { isTemplateId, validateTiers } from "./tiers";
 
 /** Quote protocol v1 (docs/architecture/quote-protocol.md). */
@@ -198,6 +198,7 @@ export function buildQuoteBody(input: QuoteBodyInput): QuoteBody {
   assertPubkey(input.mint, "mint");
   if (input.buyer_wallet !== null) assertPubkey(input.buyer_wallet, "buyer_wallet");
   if (!isUuid(input.hotel_id) || !isUuid(input.room_type_id)) fail("hotel_id and room_type_id must be UUIDs");
+  if (typeof input.hotel_slug !== "string" || input.hotel_slug.trim() === "") fail("hotel_slug must be non-empty");
   if (input.buyer_type !== "guest" && input.buyer_type !== "agent") fail("buyer_type must be guest or agent");
   dayNumber(input.checkin_date);
   const nights = nightsBetween(input.checkin_date, input.checkout_date);
@@ -208,13 +209,17 @@ export function buildQuoteBody(input: QuoteBodyInput): QuoteBody {
   assertSafeInt(input.issued_at, "issued_at");
   assertSafeInt(input.adults, "adults", 1);
   assertSafeInt(input.children, "children");
-  assertSafeInt(input.decimals, "decimals", 0, 18);
+  // MVP constants: USDC only (6 decimals) and full prepay into escrow (ADR-0002).
+  if (input.decimals !== USDC_DECIMALS) fail(`decimals must be ${USDC_DECIMALS}`);
   parseMinor(input.base_price_minor);
   if (input.options.length === 0) fail("a quote needs at least one option");
+  const optionIds = new Set<string>();
   for (const o of input.options) {
     if (!isTemplateId(o.id)) fail(`unknown option id ${o.id}`);
+    if (optionIds.has(o.id)) fail(`duplicate option id ${o.id}`);
+    optionIds.add(o.id);
     if (parseMinor(o.price_minor) === 0n) fail("option price must be positive");
-    assertSafeInt(o.deposit_bps, "deposit_bps", 0, 10_000);
+    if (o.deposit_bps !== DEPOSIT_BPS) fail(`deposit_bps must be ${DEPOSIT_BPS} (full prepay)`);
     validateTiers(o.tiers);
   }
   return {

@@ -2,7 +2,11 @@ use {
     crate::harness::*,
     solana_keypair::Keypair,
     solana_signer::Signer,
-    stumari_escrow::{error::EscrowError, BookingStatus},
+    stumari_escrow::{
+        error::EscrowError,
+        events::{BookingVoided, DisputeResolved},
+        BookingStatus,
+    },
 };
 
 #[test]
@@ -53,9 +57,20 @@ fn dispute_at_checkin_then_resolve_odd_split() {
 
     let treasury_before = env.balance(&env.treasury);
     let ix = env.resolve_ix(&admin.pubkey(), &keys, 3_333);
-    ok(env.send(&[ix], &admin, &[]));
+    let resolved: DisputeResolved = event(&ok(env.send(&[ix], &admin, &[])));
     // spec/vectors/refund.json resolve_odd_split_rounding
     let (refund, fee, hotel_net) = (41_148_147, 1_234_629, 81_074_013);
+    assert_eq!(resolved.booking, booking);
+    assert_eq!(
+        (
+            resolved.guest_bps,
+            resolved.refund,
+            resolved.hotel_amount,
+            resolved.fee,
+            resolved.excess
+        ),
+        (3_333, refund, hotel_net, fee, 0)
+    );
     assert_eq!(env.balance(&ata(&guest.pubkey(), &env.mint)), refund);
     assert_eq!(
         env.balance(&ata(&env.hotel_owner.pubkey(), &env.mint)),
@@ -132,7 +147,10 @@ fn void_after_deadline_by_anyone() {
     let vault_rent = env.lamports(&keys.vault);
     let treasury_before = env.balance(&env.treasury);
     let ix = env.void_ix(&stranger.pubkey(), &keys);
-    ok(env.send(&[ix], &stranger, &[]));
+    let voided: BookingVoided = event(&ok(env.send(&[ix], &stranger, &[])));
+    assert_eq!(voided.booking, booking);
+    assert!(!voided.by_admin);
+    assert_eq!((voided.refund, voided.excess), (100 * USDC, 0));
 
     assert_eq!(env.balance(&ata(&guest.pubkey(), &env.mint)), 100 * USDC);
     assert_eq!(env.balance(&env.treasury), treasury_before);
@@ -158,7 +176,9 @@ fn admin_void_before_deadline() {
     let keys = env.exit_keys(booking);
     let admin = env.admin.insecure_clone();
     let ix = env.void_ix(&admin.pubkey(), &keys);
-    ok(env.send(&[ix], &admin, &[]));
+    let voided: BookingVoided = event(&ok(env.send(&[ix], &admin, &[])));
+    assert!(voided.by_admin);
+    assert_eq!((voided.refund, voided.excess), (100 * USDC, 0));
     assert!(env.booking(&booking).has_status(BookingStatus::Voided));
     assert_eq!(env.balance(&ata(&guest.pubkey(), &env.mint)), 100 * USDC);
 }

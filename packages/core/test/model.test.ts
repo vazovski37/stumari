@@ -115,6 +115,12 @@ describe("adapter", () => {
     expect(code(() => adaptRequest({ ...illustrative, adults: 0 }))).toBe("InvalidInput");
     expect(code(() => adaptRequest({ ...illustrative, is_repeated_guest: 2 }))).toBe("InvalidInput");
   });
+
+  it("requires is_repeated_guest to agree with previous_bookings_not_canceled ≥ 1, as adapter.py", () => {
+    expect(code(() => adaptRequest({ ...illustrative, is_repeated_guest: 1, previous_bookings_not_canceled: 0 }))).toBe("InvalidInput");
+    expect(code(() => adaptRequest({ ...illustrative, is_repeated_guest: 0, previous_bookings_not_canceled: 2 }))).toBe("InvalidInput");
+    expect(adaptRequest({ ...illustrative, ...walletHistoryFeatures("Wallet111", 1) }).is_repeated_guest).toBe(1);
+  });
 });
 
 describe("evaluator (tiny fixture)", () => {

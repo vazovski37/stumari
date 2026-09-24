@@ -99,6 +99,12 @@ export function adaptRequest(req: ModelRequest): RequestFeatures {
   if (req.buyer_type !== "guest" && req.buyer_type !== "agent") {
     throw new CoreError("InvalidInput", `unknown buyer_type ${JSON.stringify(req.buyer_type)}`);
   }
+  const isRepeatedGuest = assertSafeInt(req.is_repeated_guest, "is_repeated_guest", 0, 1);
+  const previousBookings = assertSafeInt(req.previous_bookings_not_canceled, "previous_bookings_not_canceled");
+  // Both come from one count of released bookings (walletHistoryFeatures), as in adapter.py.
+  if (isRepeatedGuest !== (previousBookings >= 1 ? 1 : 0)) {
+    throw new CoreError("InvalidInput", "is_repeated_guest must be 1 exactly when previous_bookings_not_canceled >= 1");
+  }
   const weekend = weekendNights(req.checkin_date, req.checkout_date);
   return {
     lead_time: lead,
@@ -108,11 +114,8 @@ export function adaptRequest(req: ModelRequest): RequestFeatures {
     week_nights: nights - weekend,
     adults: assertSafeInt(req.adults, "adults", 1),
     children: assertSafeInt(req.children, "children"),
-    is_repeated_guest: assertSafeInt(req.is_repeated_guest, "is_repeated_guest", 0, 1),
-    previous_bookings_not_canceled: Math.min(
-      assertSafeInt(req.previous_bookings_not_canceled, "previous_bookings_not_canceled"),
-      PREVIOUS_BOOKINGS_CAP,
-    ),
+    is_repeated_guest: isRepeatedGuest,
+    previous_bookings_not_canceled: Math.min(previousBookings, PREVIOUS_BOOKINGS_CAP),
     // ADR-0014: agents buy for their own users, so both buyer types are Direct bookings.
     market_segment: "Direct",
     distribution_channel: "Direct",

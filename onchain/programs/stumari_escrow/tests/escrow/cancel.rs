@@ -2,7 +2,7 @@ use {
     crate::harness::*,
     solana_keypair::Keypair,
     solana_signer::Signer,
-    stumari_escrow::{error::EscrowError, BookingStatus},
+    stumari_escrow::{error::EscrowError, events::BookingCancelled, BookingStatus},
 };
 
 struct Balances {
@@ -19,8 +19,13 @@ fn balances(env: &Env, guest: &Keypair) -> Balances {
     }
 }
 
-/// Confirmed 100 USDC booking (fee 1.5%, standard tiers) cancelled `secs_before` check-in.
-fn cancel_confirmed_at(env: &mut Env, guest: &Keypair, secs_before: i64) -> (u64, u64, u64) {
+/// Confirmed 100 USDC booking (fee 1.5%, standard tiers) cancelled `secs_before` check-in;
+/// returns the (refund, hotel, fee) split and the emitted event.
+fn cancel_confirmed_at(
+    env: &mut Env,
+    guest: &Keypair,
+    secs_before: i64,
+) -> ((u64, u64, u64), BookingCancelled) {
     env.set_time(T0);
     let booking = env.book_confirmed(guest);
     let b = env.booking(&booking);
@@ -32,7 +37,8 @@ fn cancel_confirmed_at(env: &mut Env, guest: &Keypair, secs_before: i64) -> (u64
 
     // min_refund = 0 here; the exact guard is tested separately
     let ix = env.cancel_ix(&guest.pubkey(), &keys, 0);
-    let tx_fee = ok(env.send_op(&[ix], &[guest])).fee;
+    let meta = ok(env.send_op(&[ix], &[guest]));
+    let cancelled: BookingCancelled = event(&meta);
 
     let after = balances(env, guest);
     let split = (
@@ -49,18 +55,25 @@ fn cancel_confirmed_at(env: &mut Env, guest: &Keypair, secs_before: i64) -> (u64
     // the operator paid this tx fee and got the vault rent back
     assert_eq!(
         env.lamports(&b.rent_payer),
-        rent_payer_before + vault_rent - tx_fee
+        rent_payer_before + vault_rent - meta.fee
     );
-    split
+    assert_eq!(cancelled.booking, booking);
+    assert_eq!(cancelled.secs_before, secs_before);
+    assert_eq!(
+        (cancelled.refund, cancelled.hotel_amount, cancelled.fee),
+        split
+    );
+    assert_eq!(cancelled.excess, 0);
+    (split, cancelled)
 }
 
 #[test]
 fn cancel_at_each_tier_boundary() {
     let mut env = Env::new();
     let guest = env.new_guest(1_000 * USDC);
-    let full = (100 * USDC, 0, 0);
-    let half = (50 * USDC, 49_250_000, 750_000);
-    let none = (0, 98_500_000, 1_500_000);
+    let full = ((100 * USDC, 0, 0), 10_000);
+    let half = ((50 * USDC, 49_250_000, 750_000), 5_000);
+    let none = ((0, 98_500_000, 1_500_000), 0);
     let cases = [
         (604_801, full),
         (604_800, full),
@@ -70,10 +83,11 @@ fn cancel_at_each_tier_boundary() {
         (259_199, none),
         (1, none),
     ];
-    for (secs_before, expected) in cases {
+    for (secs_before, (split, refund_bps)) in cases {
+        let (actual, cancelled) = cancel_confirmed_at(&mut env, &guest, secs_before);
+        assert_eq!(actual, split, "secs_before = {secs_before}");
         assert_eq!(
-            cancel_confirmed_at(&mut env, &guest, secs_before),
-            expected,
+            cancelled.refund_bps, refund_bps,
             "secs_before = {secs_before}"
         );
     }
@@ -88,7 +102,15 @@ fn cancel_while_pending_refunds_everything() {
     env.set_time(b.checkin_ts - 1);
     let keys = env.exit_keys(booking);
     let ix = env.cancel_ix(&guest.pubkey(), &keys, 100 * USDC);
-    ok(env.send_op(&[ix], &[&guest]));
+    let cancelled: BookingCancelled = event(&ok(env.send_op(&[ix], &[&guest])));
+    assert_eq!(
+        (
+            cancelled.secs_before,
+            cancelled.refund_bps,
+            cancelled.refund
+        ),
+        (1, 10_000, 100 * USDC)
+    );
     assert_eq!(env.balance(&ata(&guest.pubkey(), &env.mint)), 100 * USDC);
     let b = env.booking(&booking);
     assert_eq!(

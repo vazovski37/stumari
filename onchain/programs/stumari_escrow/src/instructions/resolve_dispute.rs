@@ -39,7 +39,13 @@ pub struct ResolveDispute<'info> {
         associated_token::token_program = token_program
     )]
     pub hotel_token_account: Box<Account<'info, TokenAccount>>,
-    #[account(mut, dup, address = config.treasury @ EscrowError::InvalidTreasury)]
+    #[account(
+        mut,
+        dup,
+        address = config.treasury @ EscrowError::InvalidTreasury,
+        // its own vault as treasury would pay the fee and excess to itself and never close
+        constraint = treasury.key() != vault.key() @ EscrowError::InvalidTreasury
+    )]
     pub treasury: Box<Account<'info, TokenAccount>>,
     #[account(mut, address = booking.rent_payer @ EscrowError::Unauthorized)]
     pub rent_payer: SystemAccount<'info>,

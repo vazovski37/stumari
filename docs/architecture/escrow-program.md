@@ -127,7 +127,7 @@ Rounding dust goes to the hotel. Zero-value transfers are skipped.
 
 ## Instructions and accounts
 
-Common: `booking` is `mut, seeds = [b"booking", booking.booking_id.as_ref()], bump = booking.bump`; `config` has seeds `[b"config"]`; `mint` must equal `booking.mint`; `vault` has seeds `[b"vault", booking.key().as_ref()]`, `mut`; `guest_token_account` = ATA(mint, `booking.guest`); `hotel_token_account` = ATA(mint, `booking.hotel_authority`); `treasury` must equal `config.treasury`; `rent_payer` (`SystemAccount`, `mut`) must equal `booking.rent_payer`; `token_program: Program<'info, Token>`.
+Common: `booking` is `mut, seeds = [b"booking", booking.booking_id.as_ref()], bump = booking.bump`; `config` has seeds `[b"config"]`; `mint` must equal `booking.mint`; `vault` has seeds `[b"vault", booking.key().as_ref()]`, `mut`; `guest_token_account` = ATA(mint, `booking.guest`); `hotel_token_account` = ATA(mint, `booking.hotel_authority`); `treasury` must equal `config.treasury` **and differ from `vault`** (`InvalidTreasury` — an admin setting a booking's vault as treasury would otherwise block that booking's close); `rent_payer` (`SystemAccount`, `mut`) must equal `booking.rent_payer`; `token_program: Program<'info, Token>`.
 
 `guest_token_account`, `hotel_token_account` and `treasury` are declared **`#[account(mut, dup, …)]`** — Anchor 1.x rejects duplicate mutable accounts by default, and they legitimately alias when one wallet is both guest and hotel (founder demos) or owns the treasury. The handler never reads their balances, so aliasing is safe. Signer/SystemAccount overlaps (`quote_signer == admin == rent_payer == fee payer`) are not subject to the check.
 
@@ -201,7 +201,7 @@ Escrowed funds can only ever move to **ATA(mint, `booking.guest`)**, **ATA(mint,
 - `BookingReleased { booking, hotel_authority, hotel_amount: u64, fee: u64, excess: u64 }`
 - `BookingDisputed { booking }`
 - `DisputeResolved { booking, guest_bps: u16, refund: u64, hotel_amount: u64, fee: u64, excess: u64 }`
-- `BookingVoided { booking, by_admin: bool, refund: u64, excess: u64 }`
+- `BookingVoided { booking, by_admin: bool, refund: u64, excess: u64 }` — `by_admin` is `authority == config.admin`; in the devnet topology (admin = operator) the cron's post-deadline voids also report `true`, so indexers distinguish an admin override by `closed_ts < confirm_deadline_ts`
 
 ## Test plan (all must pass before devnet deploy)
 

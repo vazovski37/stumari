@@ -32,11 +32,11 @@ same commands in WSL: `python3 -m venv ~/stumari-ml && ~/stumari-ml/bin/pip inst
 
 | File | What |
 |---|---|
-| `packages/core/model/model.json` | `stumari-gbdt-hazard/2`: trees, isotonic table, encoding, headline metrics (~105 KB) |
+| `packages/core/model/model.json` | `stumari-gbdt-hazard/2`: trees, Platt calibration `{a, b}` (ADR-0016), encoding, headline metrics (~100 KB) |
 | `packages/core/model/parity.json` | `stumari-parity/2`: 600 raw vectors + 38 end-to-end request cases |
 | `reports/metrics.md` | 30-second plain-language summary for judges |
 | `reports/metrics.json` | full test and validation metrics, training metadata |
-| `reports/reliability.json` | 10 equal-count bins before/after isotonic (the web app renders this) |
+| `reports/reliability.json` | 10 equal-count bins uncalibrated / after Platt (the web app renders this) |
 | `reports/calibration.png`, `reports/hazard_by_window.png` | optional plots |
 
 ## Package layout (`stumari_ml/`)
@@ -48,7 +48,7 @@ same commands in WSL: `python3 -m venv ~/stumari-ml && ~/stumari-ml/bin/pip inst
 | `data.py` | load CSV, population filter, cleaning, reconstructed requests, split |
 | `periods.py` | person-period expansion (truncated for training, full for scoring) |
 | `model.py` | `lgb.train` on a float64 matrix in `feature_order`, monotone constraints, early stopping |
-| `calibrate.py` | `IsotonicRegression` on validation raw margins |
+| `calibrate.py` | Platt scaling (Newton-Raphson, numpy) on validation raw margins — the exported default; isotonic fit too and reported for comparison (ADR-0016) |
 | `jsonmodel.py` | pure-Python evaluator of `model.json` (sequential raw sum + `numpy.interp`) |
 | `export.py` | `dump_model` → JSON with every spec assertion; walker == booster on 6,000 rows |
 | `evaluate.py`, `metrics.py` | booking-level metrics on the full window expansion |
@@ -62,7 +62,7 @@ hotel_type, meal, is_repeated_guest, previous_bookings_not_canceled}`.
 
 Validation (throw): `issued_at`, `checkin_ts` integers ≥ 0 with `checkin_ts ≥ issued_at`; dates are
 `YYYY-MM-DD` with `checkout_date > checkin_date`; `buyer_type ∈ {guest, agent}`; `adults ≥ 1`,
-`children ≥ 0`, `previous_bookings_not_canceled ≥ 0` integers (booleans rejected); `is_repeated_guest ∈ {0, 1}`.
+`children ≥ 0`, `previous_bookings_not_canceled ≥ 0` integers (booleans rejected); `is_repeated_guest ∈ {0, 1}` and, for serving requests, `is_repeated_guest == (previous_bookings_not_canceled ≥ 1)` (training rows with the channel override are exempt).
 
 | Feature | Rule |
 |---|---|
@@ -120,8 +120,8 @@ Dataset cleaning (in `data.py`, not the adapter): `children` NaN → 0, meal `Un
 
 - Population: No Deposit, defined segment/channel, ≥ 1 adult, ≥ 1 night → 103,588 bookings (27.4% cancelled).
 - Split by arrival: train < 2016-07-01 ≤ validation < 2017-01-01 ≤ test. Early stopping on validation
-  person-period log loss (≤ 300 trees, 31 leaves); isotonic fit on validation raw margins.
+  person-period log loss (≤ 300 trees, 31 leaves); Platt calibration fit on validation raw margins.
 - Monotone constraint −1 on `is_repeated_guest` and `previous_bookings_not_canceled` (tested on the export).
-- The isotonic table is a step function, so nearby raw margins share a hazard (178 reachable request
-  windows in parity.json map to 19 distinct hazards). This is the spec's calibrator; see `reports/metrics.md`
-  for accuracy and drift.
+- Calibration is Platt scaling (ADR-0016): smooth and strictly increasing, so nearby requests get nearby prices
+  (the isotonic alternative mapped 178 reachable request windows to only 19 distinct hazards). Platt's expected
+  calibration error is 0.038 vs 0.029 for isotonic — a small, disclosed cost; see `reports/metrics.md`.

@@ -64,7 +64,8 @@ def adapt(request: Mapping[str, Any], *, channel: Mapping[str, str] | None = Non
     """Build the booking-level feature dict (window and exposure are added per period).
 
     `channel` overrides the buyer-type mapping and exists only for reconstructed training rows,
-    whose segment, channel and customer type come from the dataset. Serving never passes it.
+    whose segment, channel and customer type come from the dataset. Serving never passes it, and
+    only serving requests must have `is_repeated_guest == (previous_bookings_not_canceled >= 1)`.
     """
     issued_at = _int_field(request, "issued_at", 0)
     checkin_ts = _int_field(request, "checkin_ts", 0)
@@ -81,6 +82,14 @@ def adapt(request: Mapping[str, Any], *, channel: Mapping[str, str] | None = Non
     is_repeated_guest = _int_field(request, "is_repeated_guest", 0)
     if is_repeated_guest > 1:
         raise ValueError("is_repeated_guest must be 0 or 1")
+    previous_bookings = _int_field(request, "previous_bookings_not_canceled", 0)
+    # Serving derives both from one count of released bookings, so they must agree. The dataset's
+    # own columns disagree on ~1.6% of rows, which training (the `channel` override) keeps as is.
+    if channel is None and is_repeated_guest != int(previous_bookings >= 1):
+        raise ValueError(
+            "is_repeated_guest must be 1 exactly when previous_bookings_not_canceled >= 1, "
+            f"got {is_repeated_guest} and {previous_bookings}"
+        )
 
     weekend_nights = sum(
         1 for i in range(nights) if (checkin + timedelta(days=i)).weekday() in WEEKEND_START_WEEKDAYS
@@ -95,9 +104,7 @@ def adapt(request: Mapping[str, Any], *, channel: Mapping[str, str] | None = Non
         "adults": _int_field(request, "adults", 1),
         "children": _int_field(request, "children", 0),
         "is_repeated_guest": is_repeated_guest,
-        "previous_bookings_not_canceled": min(
-            _int_field(request, "previous_bookings_not_canceled", 0), HISTORY_CAP
-        ),
+        "previous_bookings_not_canceled": min(previous_bookings, HISTORY_CAP),
         "market_segment": segments["market_segment"],
         "distribution_channel": segments["distribution_channel"],
         "customer_type": segments["customer_type"],

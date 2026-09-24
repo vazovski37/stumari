@@ -4,7 +4,9 @@ use {
     anchor_spl::token::TokenAccount,
     solana_keypair::Keypair,
     solana_signer::Signer,
-    stumari_escrow::{error::EscrowError, BookingStatus, UpdateConfigArgs},
+    stumari_escrow::{
+        error::EscrowError, events::BookingReleased, BookingStatus, UpdateConfigArgs,
+    },
 };
 
 #[test]
@@ -75,9 +77,17 @@ fn gasless_create_confirm_release() {
     let operator_before = env.lamports(&env.operator.pubkey());
     let treasury_before = env.balance(&env.treasury);
     let ix = env.release_ix(&keys);
-    ok(env.send(&[ix], &cranker, &[]));
+    let released: BookingReleased = event(&ok(env.send(&[ix], &cranker, &[])));
 
     let fee = 1_500_000;
+    assert_eq!(
+        (released.booking, released.hotel_authority),
+        (booking, env.hotel_owner.pubkey())
+    );
+    assert_eq!(
+        (released.hotel_amount, released.fee, released.excess),
+        (amount - fee, fee, 0)
+    );
     assert_eq!(env.balance(&hotel_ata), amount - fee);
     assert_eq!(env.balance(&env.treasury), treasury_before + fee);
     assert_eq!(env.balance(&guest_ata), 150 * USDC);

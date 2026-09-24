@@ -118,3 +118,20 @@ def test_encoding_unknown_category_is_all_zero():
     assert vector["market_segment_direct"] == 1 and vector["market_segment_online_ta"] == 0
     assert vector["hotel_city_hotel"] == 1
     assert len(encode(f, encoding)) == len(order) - 7
+
+
+def test_repeat_guest_flag_must_match_history_when_serving():
+    ok = request("2026-09-01 10:00:00", "2026-10-15", "2026-10-17")
+    assert not raises(adapt, {**ok, "is_repeated_guest": 1, "previous_bookings_not_canceled": 1})
+    assert not raises(adapt, {**ok, "is_repeated_guest": 1, "previous_bookings_not_canceled": 7})
+    assert raises(adapt, {**ok, "is_repeated_guest": 1, "previous_bookings_not_canceled": 0})
+    assert raises(adapt, {**ok, "is_repeated_guest": 0, "previous_bookings_not_canceled": 1})
+    assert raises(adapt, {**ok, "is_repeated_guest": 0, "previous_bookings_not_canceled": 5})
+
+
+def test_training_rows_keep_the_dataset_repeat_columns():
+    channel = {"market_segment": "Online TA", "distribution_channel": "TA/TO", "customer_type": "Contract"}
+    row = request("2026-09-01 10:00:00", "2026-10-15", "2026-10-17",
+                  is_repeated_guest=1, previous_bookings_not_canceled=0)
+    f = adapt(row, channel=channel)
+    assert (f["is_repeated_guest"], f["previous_bookings_not_canceled"]) == (1, 0)

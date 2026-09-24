@@ -17,7 +17,7 @@ sync_in() {
   mkdir -p "$WORK"
   # remove source dirs so deleted files do not linger; keep target/ for incremental builds
   rm -rf "$WORK/programs" "$WORK/tests" "$WORK/Anchor.toml" "$WORK/Cargo.toml" "$WORK/Cargo.lock" "$WORK/rust-toolchain.toml"
-  (cd "$REPO/onchain" && tar cf - --exclude=./target --exclude=./.anchor --exclude=./node_modules --exclude=./artifacts --exclude=./keys .) | (cd "$WORK" && tar xf -)
+  (cd "$REPO/onchain" && tar cf - --exclude=./target --exclude=./.anchor --exclude=./node_modules --exclude=./artifacts --exclude=./keys .) | (cd "$WORK" && tar xmf -)
   # shared test vectors: Rust tests read $CARGO_MANIFEST_DIR/../../spec/vectors/*.json at runtime
   rm -rf "$WORK/spec" && mkdir -p "$WORK/spec" && cp -r "$REPO/spec/vectors" "$WORK/spec/vectors"
   mkdir -p "$WORK/target/deploy"

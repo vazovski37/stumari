@@ -26,7 +26,7 @@ onchain/
     │   └── instructions/*.rs   # one file per instruction (accounts + handler)
     └── tests/escrow/           # LiteSVM integration tests (one binary)
         ├── harness.rs          # Env: deploy with upgrade authority, mint, ATAs, ix builders
-        ├── config.rs  lifecycle.rs  cancel.rs  dispute_void.rs  attacks.rs
+        ├── config.rs  lifecycle.rs  cancel.rs  dispute_void.rs  attacks.rs  devnet_topology.rs
 ```
 
 ## Build, test, deploy
@@ -41,12 +41,12 @@ MSYS_NO_PATHCONV=1 wsl -d Ubuntu-24.04 -- bash /mnt/c/Users/User/Workspace/colos
 DEPLOYER_KEYPAIR=/path/in/wsl.json MSYS_NO_PATHCONV=1 wsl -d Ubuntu-24.04 -- bash .../scripts/program.sh deploy devnet
 ```
 
-`build` copies `onchain/keys/stumari_escrow-keypair.json` into `target/deploy/` first so the program id never changes. Deploy targets devnet by default; never mainnet without an explicit decision (security.md checklist). After the first deploy, the upgrade authority runs `initialize_config` once.
+`build` copies `onchain/keys/stumari_escrow-keypair.json` into `target/deploy/` first so the program id never changes. `Anchor.toml` sets `skip_local_validator = true`: the tests run the SVM in-process (LiteSVM), so `anchor test` must not start a validator. A bare `cargo test` in the WSL work dir needs a prior `anchor build`, because the integration tests load `target/deploy/stumari_escrow.so` at compile time (`program.sh test` does both). Deploy targets devnet by default; never mainnet without an explicit decision (security.md checklist). After the first deploy, the upgrade authority runs `initialize_config` once.
 
 Tests:
 
 - **Logic** (`src/logic.rs`): every case in `spec/vectors/refund.json`, read at run time from `$CARGO_MANIFEST_DIR/../../spec/vectors/refund.json` (exists only in the WSL work dir, where `program.sh` copies it). `packages/core` must pass the same file.
-- **Integration** (`tests/escrow/`, LiteSVM 0.10): the program is loaded through the upgradeable loader and its ProgramData header is given a real upgrade authority, so `initialize_config` gating is exercised. Time moves with `set_sysvar(Clock)`; every send expires the blockhash first. Covers the full positive and negative plan in the spec: gasless create (the guest has no SOL), confirm windows, every tier boundary ±1 s, pending cancel, `min_refund`, void (anyone after the deadline, admin before), dispute window edges, resolve with an odd split, fee and payout-authority snapshots, vault donations swept on every exit, aliased guest = hotel = treasury accounts, rent returned to `rent_payer`, and account substitution on all four exits.
+- **Integration** (`tests/escrow/`, LiteSVM 0.10): the program is loaded through the upgradeable loader and its ProgramData header is given a real upgrade authority, so `initialize_config` gating is exercised. Time moves with `set_sysvar(Clock)`; every send expires the blockhash first. Every emitted event is decoded from the `Program data:` log lines (8-byte event discriminator + borsh) and its fields asserted (`secs_before`, `refund_bps`, amounts, `excess`, `by_admin`). `devnet_topology.rs` runs admin void and `resolve_dispute` with one key as upgrade authority, admin, quote signer, fee payer, rent payer and treasury owner. Covers the full positive and negative plan in the spec: gasless create (the guest has no SOL), confirm windows, every tier boundary ±1 s, pending cancel, `min_refund`, void (anyone after the deadline, admin before), dispute window edges, resolve with an odd split, fee and payout-authority snapshots, vault donations swept on every exit, aliased guest = hotel = treasury accounts, rent returned to `rent_payer`, account substitution on all four exits, and a booking vault configured as the treasury (rejected with `InvalidTreasury`).
 
 ## Instructions
 
@@ -100,4 +100,4 @@ Money math (u128, floor, checked): `refund = amount·refund_bps/10000`, `fee = (
 | 6008 | RefundBelowMinimum | 6018 | MathOverflow |
 | 6009 | NotReleasable | | |
 
-Account substitutions surface either as these (`InvalidMint`, `InvalidTreasury`, `Unauthorized` for a wrong signer, `rent_payer` or confirm hotel) or as Anchor framework errors: `ConstraintSeeds` (another booking's vault), `ConstraintTokenOwner` / `ConstraintAssociated` (wrong owner / non-ATA recipient), `AccountDiscriminatorMismatch` (wrong account type), `AccountNotSigner`.
+Account substitutions surface either as these (`InvalidMint`, `InvalidTreasury` — also when the treasury is the booking's own vault, which would otherwise pay its fee and excess to itself and never close — `Unauthorized` for a wrong signer, `rent_payer` or confirm hotel) or as Anchor framework errors: `ConstraintSeeds` (another booking's vault), `ConstraintTokenOwner` / `ConstraintAssociated` (wrong owner / non-ATA recipient), `AccountDiscriminatorMismatch` (wrong account type), `AccountNotSigner`.

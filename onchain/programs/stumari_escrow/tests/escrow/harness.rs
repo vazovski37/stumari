@@ -7,7 +7,7 @@ use {
         solana_program::{
             bpf_loader_upgradeable, instruction::Instruction, system_instruction, system_program,
         },
-        AccountDeserialize, InstructionData, ToAccountMetas,
+        AccountDeserialize, Event, InstructionData, ToAccountMetas,
     },
     anchor_spl::{
         associated_token::{
@@ -106,12 +106,29 @@ pub fn ata(owner: &Pubkey, mint: &Pubkey) -> Pubkey {
 impl Env {
     /// Deployed program with an upgrade authority, a mint and a treasury; no config yet.
     pub fn deployed() -> Self {
+        Self::deploy(Keypair::new(), Keypair::new(), Keypair::new().pubkey())
+    }
+
+    /// Initialized config (fee 1.5%, 2 h confirm window, 24 h release delay) and one hotel.
+    pub fn new() -> Self {
+        Self::deployed().configured()
+    }
+
+    /// The devnet topology (security.md): one key is upgrade authority, admin, quote signer,
+    /// fee payer and rent payer, and owns the treasury.
+    pub fn single_key() -> Self {
+        let key = Keypair::new();
+        let owner = key.pubkey();
+        Self::deploy(key.insecure_clone(), key, owner).configured()
+    }
+
+    fn deploy(admin: Keypair, operator: Keypair, treasury_owner: Pubkey) -> Self {
         let mut svm = LiteSVM::new();
-        let admin = Keypair::new();
         deploy_with_upgrade_authority(&mut svm, &admin.pubkey());
-        let operator = Keypair::new();
         svm.airdrop(&admin.pubkey(), 100 * SOL).unwrap();
-        svm.airdrop(&operator.pubkey(), 100 * SOL).unwrap();
+        if operator.pubkey() != admin.pubkey() {
+            svm.airdrop(&operator.pubkey(), 100 * SOL).unwrap();
+        }
 
         let mut env = Env {
             svm,
@@ -128,14 +145,12 @@ impl Env {
         };
         env.set_time(T0);
         env.mint = env.create_mint(&env.mint_authority.pubkey());
-        let treasury_owner = Keypair::new().pubkey();
         env.treasury = env.create_ata(&treasury_owner);
         env
     }
 
-    /// Initialized config (fee 1.5%, 2 h confirm window, 24 h release delay) and one hotel.
-    pub fn new() -> Self {
-        let mut env = Self::deployed();
+    fn configured(self) -> Self {
+        let mut env = self;
         let ix = env.initialize_config_ix(
             &env.admin.pubkey(),
             env.operator.pubkey(),
@@ -666,6 +681,36 @@ pub fn assert_err(res: TransactionResult, expected: impl Into<u32> + std::fmt::D
             ),
         }
     }
+}
+
+/// The Anchor events of type `E` a transaction emitted, in order. `emit!` logs
+/// `Program data: <base64>`, where the bytes are the 8-byte event discriminator followed by the
+/// borsh-encoded event.
+pub fn events<E: Event>(meta: &TransactionMetadata) -> Vec<E> {
+    // anchor-lang re-exports its base64 (0.21) for its own macros; the version is pinned (=1.1.2)
+    use anchor_lang::__private::base64::{engine::general_purpose::STANDARD, Engine};
+    meta.logs
+        .iter()
+        .filter_map(|line| line.strip_prefix("Program data: "))
+        .map(|b64| STANDARD.decode(b64).expect("Program data is base64"))
+        .filter_map(|data| {
+            data.strip_prefix(E::DISCRIMINATOR)
+                .map(|body| E::try_from_slice(body).expect("borsh event body"))
+        })
+        .collect()
+}
+
+/// The single event of type `E` a transaction emitted.
+pub fn event<E: Event>(meta: &TransactionMetadata) -> E {
+    let mut found = events::<E>(meta);
+    assert_eq!(
+        found.len(),
+        1,
+        "expected one {} event\n{}",
+        std::any::type_name::<E>(),
+        meta.pretty_logs()
+    );
+    found.remove(0)
 }
 
 pub fn assert_fails(res: TransactionResult) {

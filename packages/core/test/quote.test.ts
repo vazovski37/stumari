@@ -96,9 +96,10 @@ const VECTOR_PATH = "spec/vectors/quote.json";
 describe("spec/vectors/quote.json", () => {
   it("matches the fixture exactly (fails on drift)", () => {
     const fresh = buildVectorFile();
-    if (process.env.UPDATE_VECTORS === "1" || !repoFileExists(VECTOR_PATH)) {
+    if (process.env.UPDATE_VECTORS === "1") {
       writeFileSync(repoPath(VECTOR_PATH), `${JSON.stringify(fresh, null, 2)}\n`);
     }
+    expect(repoFileExists(VECTOR_PATH), `${VECTOR_PATH} is missing; regenerate with UPDATE_VECTORS=1`).toBe(true);
     expect(readJson(VECTOR_PATH)).toEqual(fresh);
   });
 
@@ -212,5 +213,18 @@ describe("buildQuoteBody", () => {
     ["short nonce", { nonce: "00" }],
   ])("rejects %s", (_, over) => {
     expect(code(() => buildQuoteBody({ ...FIXED_INPUT, ...(over as Partial<QuoteBodyInput>) }))).toMatch(/InvalidInput|InvalidAmount|InvalidTiers/);
+  });
+
+  const option = (id: string, deposit_bps = 10_000) => ({ id, price_minor: "1", deposit_bps, tiers: tiers("standard") });
+
+  it.each([
+    ["decimals other than 6", { decimals: 9 }],
+    ["empty hotel_slug", { hotel_slug: "" }],
+    ["blank hotel_slug", { hotel_slug: "  " }],
+    ["partial deposit (ADR-0002)", { options: [option("standard", 5_000)] }],
+    ["deposit above 100%", { options: [option("standard", 10_001)] }],
+    ["duplicate option ids", { options: [option("standard"), option("flexible"), option("standard")] }],
+  ])("enforces the MVP constants: rejects %s", (_, over) => {
+    expect(code(() => buildQuoteBody({ ...FIXED_INPUT, ...(over as Partial<QuoteBodyInput>) }))).toBe("InvalidInput");
   });
 });
