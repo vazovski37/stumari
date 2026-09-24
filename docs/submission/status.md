@@ -48,8 +48,11 @@ Aim to submit on **2026-10-11** so there is a day of slack. Last updated: 2026-0
   ```bash
   git ls-files | grep -E '(^|/)\.env' | grep -v '\.env\.example$'   # committed .env files: must print nothing
   git ls-files onchain/keys                                          # committed keypairs: must print nothing
+  git log --all --name-only --format= | grep -E '(^|/)\.env|onchain/keys/' | grep -v '\.env\.example$' | sort -u   # same, anywhere in history
+  git rev-list --all | xargs git grep -lE '^(LIBSQL_AUTH_TOKEN|TELEGRAM_BOT_TOKEN|AUTH_SECRET|CRON_SECRET|OPERATOR_SECRET_KEY|ADMIN_SECRET_KEY|AGENT_SECRET_KEY)=.+'   # filled secret env lines
+  git rev-list --all | xargs git grep -liE 'helius-rpc\.com/\?api-key=[0-9a-f-]{8,}'   # RPC URLs with an API key
   git rev-list --all | xargs git grep -lE '\[ *([0-9]{1,3} *, *){63}[0-9]{1,3} *\]'   # 64-byte JSON keypair arrays: must print nothing
   git rev-list --all | xargs git grep -lE '(^|[^1-9A-HJ-NP-Za-km-z])[1-9A-HJ-NP-Za-km-z]{86,88}([^1-9A-HJ-NP-Za-km-z]|$)'   # base58 64-byte strings
   ```
-  The last command also matches signatures, which are 64 bytes too. On 2026-09-25 its only hits were `spec/vectors/quote.json` (a test quote signature). Open any other hit and confirm it is a signature, not a secret key. If a real key was ever committed, rotate it: rewriting history does not un-leak it.
+  Keypair arrays pretty-printed over several lines are not caught by the array regex, which is one more reason keypairs live only in gitignored `onchain/keys/`. The base58 command also matches signatures, which are 64 bytes too. On 2026-09-25 its only hits were `spec/vectors/quote.json` (a test quote signature). Open any other hit and confirm it is a signature, not a secret key. If a real key was ever committed, rotate it: rewriting history does not un-leak it.
 - [ ] Both teammates are on the submission.
