@@ -21,8 +21,8 @@ Deadline: Colosseum final submission 2026-10-12 11:59 PM PDT (submission opens 2
 - **Hotel dashboard** (Sign-In With Solana): bookings, payouts, iCal settings, policy bounds.
 - **Admin console**: applications pipeline, hotel creation + on-chain registration, dispute resolution, manual sync/release.
 - **Guest booking page**: status, terms timeline, "refund if you cancel now", cancel button, explorer links.
-- **void_unconfirmed**: booking is `Pending` until the operator confirms inventory write-back; guest can void for a full refund after the confirm deadline (2h).
-- **Dispute window**: guest can flag during the 24h before release; admin arbiter resolves with a split.
+- **Unconfirmed void** (`void_booking`): booking is `Pending` until the operator confirms inventory write-back; confirming is impossible after the 2 h deadline and anyone can then void for a full refund.
+- **Dispute window**: guest can flag between check-in and release (24 h); admin arbiter resolves with a split.
 - **MCP server** with five tools (`search_availability`, `get_quote`, `book`, `cancel`, `booking_status`) wrapping the public API — one short demo clip of an agent booking.
 - **Sales kit**: pilot offer, call script, objection handling, onboarding checklist, lead tracker.
 - **Submission kit**: demo video script, pitch video script, status tracker.

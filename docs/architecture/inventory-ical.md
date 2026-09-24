@@ -17,17 +17,21 @@ The MVP connects hotel inventory the way small properties already sync Booking.c
 
 ## Export
 
-`GET /api/ical/{export_token}` returns `VCALENDAR` with `PRODID:-//Stumari//Booking Feed//EN`, one all-day `VEVENT` per non-terminal booking (`UID:{booking_id}@stumari`, `SUMMARY:Stumari booking`, `DTSTART;VALUE=DATE`, `DTEND;VALUE=DATE`) and per manual block. No guest names or contact data. `Cache-Control: no-store`.
+`GET /api/ical/{export_token}` returns `VCALENDAR` with `PRODID:-//Stumari//Booking Feed//EN`, one all-day `VEVENT` per booking that **occupies** the unit (data-model.md) — excluding `awaiting_signature` — with `checkout_date` after today (hotel tz), (`UID:{booking_id}@stumari`, `SUMMARY:Stumari booking`, `DTSTART;VALUE=DATE`, `DTEND;VALUE=DATE`) and per manual block. No guest names or contact data. `Cache-Control: no-store`.
 
 ## Confirmation (write-back safety)
 
 OTAs poll imported calendars on their own schedule (often hourly), so a Stumari booking can collide with an OTA booking made in the gap. Therefore every booking starts `Pending` on-chain:
 
 1. After the payment transaction lands, the server re-syncs the unit's imports.
-2. No overlapping block → server sends `confirm_booking` (operator key) → `Confirmed`.
+2. No overlap with (a) any `blocks` row of the unit and (b) any other booking on the unit that occupies it and was created earlier → server sends `confirm_booking` (operator key) → `Confirmed`. This must happen before `confirm_deadline_ts` (the program rejects later confirms).
 3. Overlap found → booking stays `Pending`, a `sync_conflict` event is logged, the hotel dashboard and admin show it. The hotel can confirm manually (if it resolves the conflict by moving the other guest) or admin voids → full refund.
-4. If nobody confirms within the 2 h confirm window, `void_booking` becomes permissionless; the release cron voids it automatically → full refund.
+4. If nobody confirms within the 2 h confirm window, confirming becomes impossible and `void_booking` becomes permissionless; the release cron (or the next read of the booking) voids it → full refund.
 
 ## Manual blocks
 
-Hotels without any OTA calendars can block dates in the dashboard (the "native ledger"). These appear in the export feed too.
+Hotels without any OTA calendars can block dates in the dashboard (the "native ledger") via the blocks endpoints in api.md. These appear in the export feed too.
+
+## Known limitation — multi-unit room types
+
+Booking.com's calendar (iCal) sync is designed for single-unit listings; multi-unit room types may not offer iCal export/import. The application form asks `ical_single_unit`; hotels with multi-unit room types use manual blocks or a channel manager (a Channex adapter is roadmap). **Verify on a real extranet before promising iCal onboarding to a specific hotel.**

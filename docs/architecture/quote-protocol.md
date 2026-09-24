@@ -67,8 +67,8 @@ Bytes = UTF-8 of the canonical string. `hash = sha256(bytes)`; the same 32 bytes
 ## Lifecycle
 
 1. `POST /api/quotes` — server checks availability, prices the menu, stores the quote, places a **hold** on one room unit until `expires_at`, returns the envelope.
-2. `POST /api/quotes/{id}/pay { option_index, payer }` — server re-validates: quote `active`, `now < expires_at`, hold still owned by this quote, option exists, and `payer == buyer_wallet` when `buyer_wallet` is set. It generates a random 16-byte `booking_id`, builds the transaction, partially signs as fee payer + quote signer, and returns it. The quote can be paid **once**: the booking PDA derived from `booking_id` is unique, and the server marks the quote `used` when a booking is observed on-chain.
-3. The blockhash in a built transaction is short-lived (~60–90 s). If the wallet takes longer, the client simply calls `/pay` again while the quote is still valid.
+2. `POST /api/quotes/{id}/pay { option_index, payer }` — server re-validates: quote `active`, `now < expires_at`, hold still owned by this quote, option exists, `payer == buyer_wallet` when `buyer_wallet` is set, and price ≤ the pilot amount cap. The `booking_id` is **deterministic per quote**: `sha256("stumari-booking-v1" ‖ quote.id as UTF-8)[0..16]`. Before building, the server reads the booking PDA: if it exists → `409 ALREADY_PAID` with the booking view. Because the booking PDA is `init`, at most one `create_booking` per quote can ever succeed on-chain, whatever the option or retry. The server builds the transaction (api.md contract), partially signs as fee payer + quote signer, caches it and returns it; it marks the quote `used` when the booking is observed on-chain.
+3. The blockhash in a built transaction is short-lived (~60–90 s). Repeat `/pay` calls return the cached transaction while it is valid, then a freshly built one (same `booking_id`) while the quote is valid.
 4. Expired quotes release their hold (cron + lazy expiry on read).
 
 ## Explain block (unsigned)

@@ -5,18 +5,20 @@
 | Variable | Required | Example / default | Purpose |
 |---|---|---|---|
 | `STUMARI_CLUSTER` | yes | `devnet` | `localnet` \| `devnet` \| `mainnet-beta` |
-| `SOLANA_RPC_URL` | yes | `https://api.devnet.solana.com` | server RPC (reads + sends) |
+| `SOLANA_RPC_URL` | yes | `https://api.devnet.solana.com` locally; a **Helius/Triton devnet URL** on Vercel (the public endpoint rate-limits shared IPs) | server-only RPC (reads + sends); never `NEXT_PUBLIC_*` |
 | `STUMARI_PROGRAM_ID` | yes | `6Y17gFD9dWPJF6GtpzABJZY7Pk8j5CLh268zZyW5U6nf` | escrow program |
 | `STUMARI_MINT` | yes | devnet mock USDC mint from bootstrap | accepted stablecoin |
-| `OPERATOR_SECRET_KEY` | yes | base58 64-byte secret **or** JSON byte array | fee payer, rent payer, quote signer |
+| `OPERATOR_SECRET_KEY` | yes | base58 of the 64-byte secret (as Phantom exports) **or** a JSON byte array (as `solana-keygen` writes) — both accepted | fee payer, rent payer, quote signer |
 | `ADMIN_SECRET_KEY` | no | defaults to `OPERATOR_SECRET_KEY` | arbiter stub (config admin) |
 | `ADMIN_WALLETS` | yes | `Abc…,Def…` | wallets allowed into `/admin` |
 | `AUTH_SECRET` | yes | ≥ 32 random bytes (hex) | HMAC for session cookies |
 | `CRON_SECRET` | yes | random | bearer token for `/api/cron/*` |
-| `LIBSQL_URL` | yes | `file:./.data/stumari.db` | DB (Turso URL in prod) |
+| `LIBSQL_URL` | yes | `file:./.data/stumari.db` | DB. **Never `file:` on Vercel** (read-only, non-persistent FS) — use `libsql://…turso.io` |
 | `LIBSQL_AUTH_TOKEN` | prod | | Turso token |
 | `STUMARI_DEMO_MODE` | no | `true` on devnet | enables demo wallet + faucet; forced off on mainnet |
-| `NEXT_PUBLIC_SITE_URL` | yes | `http://localhost:3000` | absolute links (iCal feed URLs, booking links) |
+| `NEXT_PUBLIC_SITE_URL` | yes | `http://localhost:3000` | absolute links (iCal feed URLs, booking links); its host is checked in SIWS messages |
+| `AMOUNT_CAP_MINOR` | no | `1500000000` (1,500 USDC) | per-booking cap during the pilot (`/pay` → `422 AMOUNT_CAP`) |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | no | | notify founders of new applications |
 
 `.env.example` in `apps/web` lists all of them.
 
@@ -35,6 +37,7 @@
 |---|---|
 | `STUMARI_API_URL` | base URL of the web app, e.g. `http://localhost:3000` |
 | `AGENT_SECRET_KEY` | optional (devnet only): lets the MCP server sign as the agent wallet |
+| `AGENT_MAX_AMOUNT_MINOR` | max price the MCP server will sign for (default 200 USDC) |
 
 ## Scripts
 

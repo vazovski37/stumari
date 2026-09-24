@@ -6,7 +6,7 @@ The hotel's own model writes each booking's cancellation contract; a Solana USDC
 
 - A seller agent returns one signed quote per request: a menu of contracts (flexible / standard / non-refundable), each priced by a calibrated time-to-cancel model so the hotel's expected revenue stays at today's level.
 - The guest (or an AI agent) pays USDC into a per-booking escrow that encodes the exact refund schedule. Guests need no SOL — Stumari pays the fees.
-- Cancellations refund by the schedule automatically; the hotel is paid 24 hours after check-in.
+- Cancellations refund by the schedule automatically; the hotel is paid 24 hours after check-in unless the guest flags a problem.
 
 Built for the Colosseum **Crypto World's Fair** hackathon (2026). Not an OTA: the hotel owns the guest, the price bounds and the terms.
 

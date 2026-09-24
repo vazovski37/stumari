@@ -66,13 +66,13 @@ sequenceDiagram
   participant C as core
   participant DB
   participant S as Solana
-  G->>W: POST /api/quotes {hotel, roomType, dates, guests}
+  G->>W: POST /api/quotes {hotel_slug, room_type_id, checkin_date, checkout_date, adults, children}
   W->>DB: availability (iCal blocks, bookings, holds)
   W->>C: features → hazard → price menu
   C-->>W: options [{flexible, price, tiers}, …]
   W->>DB: insert quote + 10-min hold on a unit
   W-->>G: signed quote (Ed25519)
-  G->>W: POST /api/quotes/{id}/pay {optionId, payer}
+  G->>W: POST /api/quotes/{id}/pay {option_index, payer}
   W->>W: re-check hold/expiry, fresh iCal sync of the unit
   W->>W: build v0 tx create_booking(args…), fee payer = operator
   W->>W: partial-sign as fee payer + quote_signer
@@ -94,8 +94,16 @@ The server builds a `cancel_booking` transaction (operator = fee payer) and the 
 ## Flow 3 — Release / dispute / void
 
 - `release`: permissionless after `release_after_ts = checkin_ts + release_delay` if `Confirmed`. Cron (`/api/cron/release`) cranks it with the operator key paying the fee.
-- `flag_dispute`: guest, while `Confirmed`, before `release_after_ts` → `Disputed`. Admin resolves with `guest_bps`.
-- `void_unconfirmed`: if still `Pending` after `confirm_deadline_ts` (created + 2h), anyone may void → full refund. Admin may void a `Pending` booking at any time (e.g. double-booking detected).
+- `flag_dispute`: guest, while `Confirmed`, between check-in and `release_after_ts` → `Disputed`. Admin resolves with `guest_bps`.
+- `void_booking` (unconfirmed after deadline): if still `Pending` after `confirm_deadline_ts` (created + 2h), anyone may void → full refund. Admin may void a `Pending` booking at any time (e.g. double-booking detected). Confirming is impossible after the deadline.
+
+## i18n
+
+No library. Landing and apply pages exist per locale (`/`, `/ka`, `/ru`, and `/apply` per locale) with `generateStaticParams`; dictionaries `apps/web/messages/{en,ka,ru}.json` (EN is the source; KA/RU machine-drafted, proofread by founders before calls); `<html lang>` per locale; fonts via `next/font/google` with Latin, Cyrillic and **Georgian** subsets (e.g. Inter + Noto Sans Georgian). Checkout, booking page, dashboard and admin are English-only in the MVP. No middleware.
+
+## Package names
+
+`web` (apps/web), `@stumari/mcp`, `@stumari/core`, `@stumari/escrow-client`, `@stumari/scripts` (run with tsx). `apps/web/next.config.ts` sets `transpilePackages: ["@stumari/core", "@stumari/escrow-client"]`. Workspace packages export TypeScript source (no build step).
 
 ## Environments
 
