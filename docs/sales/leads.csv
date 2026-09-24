@@ -1,0 +1,4 @@
+hotel_name,district,rooms,contact_name,role,phone,telegram,email,source,channels,accepts_crypto,status,next_step,next_date,notes
+EXAMPLE - Fictional Guesthouse A,Sololaki,8,EXAMPLE Nino,owner,+995 000 000 001,@example_a,example-a@example.invalid,walk-in,booking.com;airbnb,often,qualified,20-min setup call,2026-09-29,EXAMPLE ROW (fictional) - delete before use; each room is its own Booking.com listing (ical_single_unit=yes); pilot-hotel permission: ask on setup call
+EXAMPLE - Fictional Hotel B,Vake,22,EXAMPLE Giorgi,manager,+995 000 000 002,,example-b@example.invalid,cold call,booking.com;direct,sometimes,contacted,send one-pager (RU),2026-09-27,EXAMPLE ROW (fictional) - delete before use; multi-unit room types - check extranet before promising iCal
+EXAMPLE - Fictional Hostel C,Fabrika area,15,EXAMPLE Ana,other,+995 000 000 003,@example_c,,referral,airbnb;instagram,no,new,first call,2026-09-26,EXAMPLE ROW (fictional) - delete before use

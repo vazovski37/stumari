@@ -74,7 +74,7 @@ Authorized when `session.wallet == hotels.payout_wallet` **or** `session.is_admi
 |---|---|
 | `GET /api/dashboard/{hotelId}/overview` | counts, upcoming arrivals, payouts released / pending, conflicts (lazily cranks due bookings) |
 | `GET /api/dashboard/{hotelId}/bookings?status=` | list incl. guest contact |
-| `PATCH /api/dashboard/{hotelId}/policy` | `{ enabled_templates, reference_template, resale_probs, min_mult, max_mult }` (validated bounds) |
+| `PATCH /api/dashboard/{hotelId}/policy` | `{ enabled_templates, reference_template, resale_bps[6], min_mult_bps, max_mult_bps }` (bounds in pricing-and-risk-model.md §5) |
 | `GET /api/dashboard/{hotelId}/units` | room types + units + export URLs + last sync |
 | `PUT /api/dashboard/{hotelId}/units/{unitId}/ical` | `{ import_urls: string[] }` (https, ≤ 5) |
 | `GET/POST /api/dashboard/{hotelId}/units/{unitId}/blocks` | manual blocks `{ start_date, end_date, summary? }` (end exclusive) |

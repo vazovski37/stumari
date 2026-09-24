@@ -51,7 +51,7 @@ The chain is the source of truth for money and booking status; the DB mirrors it
 | onchain_hotel | text | Hotel PDA once registered |
 | registered_sig | text | |
 | status | text | `draft` \| `active` \| `paused` |
-| policy | json | `{ reference_template, enabled_templates[], resale_probs[6], min_mult, max_mult }` |
+| policy | json | `{ reference_template, enabled_templates[], resale_bps[6], min_mult_bps, max_mult_bps }` — defaults `standard`, all three, `[9000,8000,6500,4500,2500,1000]`, `8500`, `13000`; validated per pricing-and-risk-model.md §5 |
 | contact_email, contact_telegram | text | |
 | application_id | text fk → applications | |
 | created_at, updated_at | int | |
@@ -135,7 +135,8 @@ A room type is available if at least one active unit is free. The quote endpoint
 
 ## Wallet history features (model inputs)
 
-For a `buyer_wallet`, across all hotels:
-- `previous_cancellations` = bookings with status `cancelled` (voids are the hotel's failure to confirm, never counted against the guest);
-- `previous_bookings_not_canceled` = bookings `released` or `resolved`;
-- `is_repeated_guest` = `previous_bookings_not_canceled > 0`.
+Only when the quote has a `buyer_wallet` (otherwise both are 0), across all hotels:
+- `previous_bookings_not_canceled` = count of the wallet's bookings with status `released` (not `resolved` — a dispute is not a clean stay), **capped at 3**;
+- `is_repeated_guest` = that count > 0.
+
+Cancellations are recorded but are **not** a model input (a fresh wallet would evade them, so they would only penalise honest wallets).

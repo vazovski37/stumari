@@ -76,12 +76,17 @@ Bytes = UTF-8 of the canonical string. `hash = sha256(bytes)`; the same 32 bytes
 ```json
 {
   "model_version": "hazard-gbdt-2026-09-25",
-  "p_cancel": 0.231,
+  "p_cancel": 0.2174,
   "hazard": [0.05, 0.04, 0.03, 0.05, 0.04, 0.03],
-  "q": [0.05, 0.038, 0.027, 0.043, 0.033, 0.024],
+  "q": [0.05, 0.038, 0.02736, 0.04423, 0.03362, 0.0242],
+  "lead_time": 45,
+  "buyer_type": "guest",
   "reference_template": "standard",
+  "resale_bps": [9000, 8000, 6500, 4500, 2500, 1000],
   "options": [
-    { "id": "flexible", "risk_cost": 0.105, "expected_revenue_minor": "…", "multiplier": 1.078, "clamped": false }
+    { "id": "flexible", "risk_cost": 0.0814, "multiplier": 1.0621, "m_bps": 10621, "expected_revenue_minor": "…", "clamped": null, "withheld": null },
+    { "id": "standard", "risk_cost": 0.0244, "multiplier": 1.0, "m_bps": 10000, "expected_revenue_minor": "…", "clamped": null, "withheld": null },
+    { "id": "nonrefundable", "risk_cost": 0.0, "multiplier": 0.9756, "m_bps": 9756, "expected_revenue_minor": "…", "clamped": null, "withheld": null }
   ],
   "features": { "lead_time": 34, "…": "…" }
 }
