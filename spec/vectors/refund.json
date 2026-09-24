@@ -1,0 +1,76 @@
+{
+  "description": "Shared refund/payout vectors. Rust (programs/stumari_escrow logic tests) and TS (packages/core) MUST both pass every case. All amounts are mint base units (USDC = 6 decimals). All values < 2^53 so plain JSON numbers are exact.",
+  "templates": {
+    "standard": [
+      { "secs_before": 604800, "refund_bps": 10000 },
+      { "secs_before": 259200, "refund_bps": 5000 },
+      { "secs_before": 0, "refund_bps": 0 }
+    ],
+    "flexible": [
+      { "secs_before": 86400, "refund_bps": 10000 },
+      { "secs_before": 0, "refund_bps": 5000 }
+    ],
+    "nonrefundable": [
+      { "secs_before": 0, "refund_bps": 0 }
+    ]
+  },
+  "cancel": [
+    { "name": "std_8_days_full", "status": "confirmed", "template": "standard", "amount": 100000000, "fee_bps": 150, "checkin_ts": 2000000000, "now": 1999300000,
+      "expect": { "secs_before": 700000, "refund_bps": 10000, "refund": 100000000, "fee": 0, "hotel_net": 0 } },
+    { "name": "std_exactly_7d_boundary_full", "status": "confirmed", "template": "standard", "amount": 100000000, "fee_bps": 150, "checkin_ts": 2000000000, "now": 1999395200,
+      "expect": { "secs_before": 604800, "refund_bps": 10000, "refund": 100000000, "fee": 0, "hotel_net": 0 } },
+    { "name": "std_7d_minus_1s_half", "status": "confirmed", "template": "standard", "amount": 100000000, "fee_bps": 150, "checkin_ts": 2000000000, "now": 1999395201,
+      "expect": { "secs_before": 604799, "refund_bps": 5000, "refund": 50000000, "fee": 750000, "hotel_net": 49250000 } },
+    { "name": "std_exactly_3d_boundary_half", "status": "confirmed", "template": "standard", "amount": 100000000, "fee_bps": 150, "checkin_ts": 2000000000, "now": 1999740800,
+      "expect": { "secs_before": 259200, "refund_bps": 5000, "refund": 50000000, "fee": 750000, "hotel_net": 49250000 } },
+    { "name": "std_3d_minus_1s_none", "status": "confirmed", "template": "standard", "amount": 100000000, "fee_bps": 150, "checkin_ts": 2000000000, "now": 1999740801,
+      "expect": { "secs_before": 259199, "refund_bps": 0, "refund": 0, "fee": 1500000, "hotel_net": 98500000 } },
+    { "name": "std_1s_before_checkin_none", "status": "confirmed", "template": "standard", "amount": 100000000, "fee_bps": 150, "checkin_ts": 2000000000, "now": 1999999999,
+      "expect": { "secs_before": 1, "refund_bps": 0, "refund": 0, "fee": 1500000, "hotel_net": 98500000 } },
+    { "name": "std_at_checkin_rejected", "status": "confirmed", "template": "standard", "amount": 100000000, "fee_bps": 150, "checkin_ts": 2000000000, "now": 2000000000,
+      "expect": { "error": "TooLateToCancel" } },
+    { "name": "std_after_checkin_rejected", "status": "confirmed", "template": "standard", "amount": 100000000, "fee_bps": 150, "checkin_ts": 2000000000, "now": 2000000010,
+      "expect": { "error": "TooLateToCancel" } },
+    { "name": "pending_always_full_refund", "status": "pending", "template": "standard", "amount": 100000000, "fee_bps": 150, "checkin_ts": 2000000000, "now": 1999999999,
+      "expect": { "secs_before": 1, "refund_bps": 10000, "refund": 100000000, "fee": 0, "hotel_net": 0 } },
+    { "name": "flex_last_day_odd_amount_rounding", "status": "confirmed", "template": "flexible", "amount": 123456789, "fee_bps": 150, "checkin_ts": 2000000000, "now": 1999996400,
+      "expect": { "secs_before": 3600, "refund_bps": 5000, "refund": 61728394, "fee": 925925, "hotel_net": 60802470 } },
+    { "name": "flex_exactly_24h_full", "status": "confirmed", "template": "flexible", "amount": 100000000, "fee_bps": 0, "checkin_ts": 2000000000, "now": 1999913600,
+      "expect": { "secs_before": 86400, "refund_bps": 10000, "refund": 100000000, "fee": 0, "hotel_net": 0 } },
+    { "name": "nonrefundable_far_out", "status": "confirmed", "template": "nonrefundable", "amount": 50000000, "fee_bps": 0, "checkin_ts": 2000000000, "now": 1990000000,
+      "expect": { "secs_before": 10000000, "refund_bps": 0, "refund": 0, "fee": 0, "hotel_net": 50000000 } },
+    { "name": "dust_amount_one_unit", "status": "confirmed", "template": "flexible", "amount": 1, "fee_bps": 150, "checkin_ts": 2000000000, "now": 1999999990,
+      "expect": { "secs_before": 10, "refund_bps": 5000, "refund": 0, "fee": 0, "hotel_net": 1 } },
+    { "name": "max_fee_10pct", "status": "confirmed", "template": "standard", "amount": 100000000, "fee_bps": 1000, "checkin_ts": 2000000000, "now": 1999999900,
+      "expect": { "secs_before": 100, "refund_bps": 0, "refund": 0, "fee": 10000000, "hotel_net": 90000000 } }
+  ],
+  "release": [
+    { "name": "release_fee_150", "amount": 100000000, "fee_bps": 150, "expect": { "refund": 0, "fee": 1500000, "hotel_net": 98500000 } },
+    { "name": "release_fee_floor", "amount": 99999999, "fee_bps": 150, "expect": { "refund": 0, "fee": 1499999, "hotel_net": 98500000 } },
+    { "name": "release_no_fee", "amount": 42000000, "fee_bps": 0, "expect": { "refund": 0, "fee": 0, "hotel_net": 42000000 } }
+  ],
+  "resolve": [
+    { "name": "resolve_quarter_to_guest", "amount": 100000000, "fee_bps": 150, "guest_bps": 2500, "expect": { "refund": 25000000, "fee": 1125000, "hotel_net": 73875000 } },
+    { "name": "resolve_all_to_guest", "amount": 100000000, "fee_bps": 150, "guest_bps": 10000, "expect": { "refund": 100000000, "fee": 0, "hotel_net": 0 } },
+    { "name": "resolve_all_to_hotel", "amount": 100000000, "fee_bps": 150, "guest_bps": 0, "expect": { "refund": 0, "fee": 1500000, "hotel_net": 98500000 } },
+    { "name": "resolve_bps_over_rejected", "amount": 100000000, "fee_bps": 150, "guest_bps": 10001, "expect": { "error": "InvalidBps" } }
+  ],
+  "tiers_validation": {
+    "valid": [
+      [ { "secs_before": 0, "refund_bps": 0 } ],
+      [ { "secs_before": 86400, "refund_bps": 10000 }, { "secs_before": 0, "refund_bps": 5000 } ],
+      [ { "secs_before": 604800, "refund_bps": 10000 }, { "secs_before": 259200, "refund_bps": 5000 }, { "secs_before": 0, "refund_bps": 0 } ],
+      [ { "secs_before": 700, "refund_bps": 100 }, { "secs_before": 600, "refund_bps": 200 }, { "secs_before": 500, "refund_bps": 300 }, { "secs_before": 400, "refund_bps": 400 },
+        { "secs_before": 300, "refund_bps": 500 }, { "secs_before": 200, "refund_bps": 600 }, { "secs_before": 100, "refund_bps": 700 }, { "secs_before": 0, "refund_bps": 800 } ]
+    ],
+    "invalid": [
+      { "name": "empty", "tiers": [] },
+      { "name": "nine_tiers", "tiers": [ { "secs_before": 800, "refund_bps": 1 }, { "secs_before": 700, "refund_bps": 1 }, { "secs_before": 600, "refund_bps": 1 }, { "secs_before": 500, "refund_bps": 1 },
+        { "secs_before": 400, "refund_bps": 1 }, { "secs_before": 300, "refund_bps": 1 }, { "secs_before": 200, "refund_bps": 1 }, { "secs_before": 100, "refund_bps": 1 }, { "secs_before": 0, "refund_bps": 1 } ] },
+      { "name": "last_not_zero", "tiers": [ { "secs_before": 86400, "refund_bps": 10000 } ] },
+      { "name": "ascending", "tiers": [ { "secs_before": 100, "refund_bps": 1 }, { "secs_before": 200, "refund_bps": 2 }, { "secs_before": 0, "refund_bps": 0 } ] },
+      { "name": "duplicate_threshold", "tiers": [ { "secs_before": 100, "refund_bps": 1 }, { "secs_before": 100, "refund_bps": 2 }, { "secs_before": 0, "refund_bps": 0 } ] },
+      { "name": "bps_over_max", "tiers": [ { "secs_before": 0, "refund_bps": 10001 } ] }
+    ]
+  }
+}

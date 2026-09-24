@@ -1,0 +1,45 @@
+# deps / builds
+node_modules/
+.pnpm-store/
+.next/
+dist/
+out/
+coverage/
+*.tsbuildinfo
+
+# env & secrets
+.env
+.env.*
+!.env.example
+onchain/keys/
+*.keypair.json
+id.json
+
+# local data
+.data/
+apps/web/.data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# anchor / rust (built inside WSL; artifacts copied to onchain/artifacts)
+onchain/target/
+onchain/.anchor/
+onchain/test-ledger/
+onchain/.surfpool/
+onchain/node_modules/
+
+# python
+ml/.venv/
+ml/data/raw/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# os / editors
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
