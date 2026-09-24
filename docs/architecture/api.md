@@ -67,7 +67,7 @@ Checkout, booking, dashboard and admin are English-only in the MVP. `booking_url
   settled: { refund_minor, hotel_minor, fee_minor } | null }   // null until the booking closes
 ```
 
-`can_dispute` = status confirmed && checkin_ts ≤ now < release_after_ts.
+`can_dispute` = status confirmed && checkin_ts ≤ now < release_after_ts. `refund_if_cancel_now_minor` is the refund by the tier schedule — what a cancel guarantees — also while `pending`: a pending booking gets everything back only if the hotel has not confirmed when the cancel lands, and the UI states that as conditional (ADR-0012). `/submitted` fills `create_sig` / `confirm_sig` / `final_sig` from the transaction's own escrow instruction, and a column is written once, only when the chain shows that step happened.
 
 **Clocks.** Quotes, holds and DB timestamps use wall-clock time. Everything the program will check against its `Clock` — lazy cranks, the `can_*` flags, `refund_if_cancel_now_minor` and `min_refund` — uses the chain's Clock sysvar (cached 2 s, wall time as fallback), so a surfnet after time travel behaves like the program. **Program id:** at startup the web app compares `STUMARI_PROGRAM_ID` with `onchain/artifacts/program-id.txt` (copied into the build); on a mismatch it logs an error and every chain route answers `503 PROGRAM_ID_MISMATCH`, while the landing page keeps serving. Routes that need unset chain settings answer `503 CHAIN_NOT_CONFIGURED`. **Never** includes guest name/email/phone or the guest wallet. Other conventions: `lastValidBlockHeight` is a JSON number (a safe integer); hotel slugs match `^[a-z0-9][a-z0-9-]{0,63}$`; error bodies are `{ error: { code: "UPPER_SNAKE", message } }`.
 

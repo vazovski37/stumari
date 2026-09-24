@@ -18,7 +18,7 @@ Owned by the lead engineer; agents read the section for their component. Tick it
 - [x] Features needing `OPERATOR_SECRET_KEY`, `STUMARI_MINT`, `CRON_SECRET` refuse clearly when they are null; a `libsql://` URL without `LIBSQL_AUTH_TOKEN` is an error in production.
 - [x] Copy (ADR-0013): "earns you the same expected revenue" → "priced to target the same expected revenue"; soften "by exactly this guest's risk" → "by this guest's estimated risk" (EN/KA/RU).
 - [x] Apply form placeholder contrast ≥ 4.5:1 (currently 3.66:1).
-- [x] **Security:** reject any `buyer_wallet` / guest wallet (quote, pay, cancel, dispute, MCP) that equals a server key address — operator, admin, `DEMO_HOTEL_WALLET`'s operator-held keys, the treasury owner — with 400 `INVALID_WALLET`. Otherwise the builders would sign the guest's token transfer with our own key (the escrow client also refuses this).
+- [x] **Security (done as: every key the web app holds — operator and admin; the demo hotel and treasury keys are not held by the web app):** reject any `buyer_wallet` / guest wallet (quote, pay, cancel, dispute, MCP) that equals a server key address — operator, admin, `DEMO_HOTEL_WALLET`'s operator-held keys, the treasury owner — with 400 `INVALID_WALLET`. Otherwise the builders would sign the guest's token transfer with our own key (the escrow client also refuses this).
 - [x] Before `buildCreateBookingTx`, `fetchMaybeBooking(bookingPda)` → 409 `ALREADY_PAID` (a duplicate create otherwise surfaces only as simulate `Custom(0)` / "already in use").
 - [ ] Founders proofread `messages/ka.json` and `messages/ru.json` before calls; confirm `/privacy` promises.
 
