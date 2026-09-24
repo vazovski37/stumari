@@ -39,22 +39,27 @@ Follow this order. Each step matches an admin endpoint in [api.md](../architectu
 - [ ] Run a **sync** (`POST /api/dashboard/{hotelId}/sync`). Check that each unit shows `last_synced_at` and no `sync_error`, and that blocked dates match the hotel's Booking.com/Airbnb calendar for the next few weeks.
 - [ ] Set the **payout wallet** (the hotel's Phantom address).
 - [ ] **Register on-chain** (`POST /api/admin/hotels/{id}/register`). This creates the wallet's USDC account and runs `register_hotel`, and the hotel becomes `active`. Save the Explorer link.
+- [ ] **Pause the hotel right away** (`PATCH /api/admin/hotels/{id}` with `status: paused`, which sends `update_hotel(active = false)`). On the devnet deployment a real pilot hotel stays `paused` except during a supervised test booking (section 4), so nobody can make a devnet booking on its real inventory.
 - [ ] Update the application status to `pilot`.
 
-## 3. Hotel pastes the export feeds (on the call)
+## 3. Export feeds wait for go-live
 
-- [ ] For each unit, the hotel pastes that unit's **export URL** into the matching Booking.com / Airbnb listing's "import calendar" / "sync calendars" setting. Menu names vary, so find it together on their screen.
-- [ ] Tell them: Booking.com/Airbnb read the feed on their own schedule, often hourly. Every Stumari booking starts *pending* and is confirmed only after we re-check their calendar ([objections.md](objections.md#what-about-double-bookings-with-bookingcom)).
+- [ ] Show the hotel each unit's **export URL** in the dashboard, but **do not paste it into Booking.com / Airbnb yet**. Every booking on Stumari, including devnet test bookings, blocks its nights in the export feed. Pasted now, a devnet test booking would block real nights on the OTAs. The feeds are pasted at go-live (section 5).
+- [ ] The import direction (their Booking.com/Airbnb calendars → Stumari) stays connected from item 8, so availability on Stumari is already correct.
 
-## 4. Test booking
+## 4. Test booking (supervised)
 
 - [ ] The owner signs in to their dashboard (`/dashboard/{hotelId}`) with their Phantom. Check that the rooms, rates and export URLs are right.
+- [ ] Set the hotel `active` for the test only (`status: active`).
 - [ ] Open `/h/{slug}` and make a **test booking with the devnet test wallet** ("Test wallet — devnet, not real money"). Use dates far in the future.
-- [ ] Show them the booking in the dashboard and in the export feed, then **cancel it right away**. A test booking blocks those nights in the export feed, and so on Booking.com, until it is cancelled.
+- [ ] Show them the booking in the dashboard and in the export feed (open the export URL in the browser), then **cancel it right away**.
 - [ ] Show the refund on Explorer.
+- [ ] Set the hotel back to `paused` before you hang up.
 
 ## 5. Go live
 
-- [ ] Real USDC bookings start only after the mainnet decision (roadmap M7: security review, pilot amount cap). Until then the hotel's page runs on devnet with test money. Tell the hotel this clearly.
-- [ ] When live: send the hotel their booking link `/h/{slug}` to share with guests who can't pay by card, and a short "how guests pay" note (USDC in Phantom; USDT holders swap to USDC in Phantom first).
+- [ ] Real USDC bookings start only after the mainnet decision (roadmap M7: security review, pilot amount cap). Until then the hotel stays `paused` on devnet and takes no real bookings. Tell the hotel this clearly.
+- [ ] At go-live, on the deployment that takes real bookings: set the hotel `active`, then the hotel pastes each unit's **export URL** into the matching Booking.com / Airbnb listing's "import calendar" / "sync calendars" setting. Menu names vary, so find it together on their screen.
+- [ ] Tell them: Booking.com/Airbnb read the feed on their own schedule, often hourly. Every Stumari booking starts *pending* and is confirmed only after we re-check their calendar ([objections.md](objections.md#what-about-double-bookings-with-bookingcom)).
+- [ ] Send the hotel their booking link `/h/{slug}` to share with guests who can't pay by card, and a short "how guests pay" note (USDC in Phantom; USDT holders swap to USDC in Phantom first).
 - [ ] Book the feedback call for after their first real bookings. Update [leads.csv](leads.csv).

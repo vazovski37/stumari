@@ -4,7 +4,7 @@
 
 **Who:** the owner or manager of an independent hotel or guesthouse in Tbilisi. Call in Georgian or Russian, whichever they answer in.
 **Goal of the call:** book the free 20-minute setup call. Do not try to onboard them on this call.
-**Have open before dialling:** the landing page, the demo hotel page (`/h/{demo-slug}`) with the devnet test wallet funded (click "Get 500 test USDC" beforehand), and Solana Explorer on devnet.
+**Have open before dialling:** the landing page, the demo hotel page (`/h/stumari-demo`) with the devnet test wallet funded (click "Get 500 test USDC" beforehand), and Solana Explorer on devnet.
 
 ## 1. Opener (30 s)
 
@@ -21,16 +21,18 @@ If they say no: "When is a better time?" Log `next_date` and hang up.
 
 ## 3. Pitch (30 s)
 
-Lead with their answer to question 2.
+Lead with their answer to question 2. About 75 words; say it, don't read it.
 
-> "Those guests already pay you in stablecoins, but straight to a personal wallet: no receipt, no clear terms, and refunds by hand. Send them your Stumari link instead. The guest picks a contract, for example Flexible, Standard or Non-refundable, and pays USDC into an escrow on Solana that holds your exact refund rules. If they cancel, the refund happens automatically by those rules. If they stay, the money reaches your own wallet 24 hours after check-in. They need no extra coins for fees; we pay those. We sync with your Booking.com and Airbnb calendars, so a room sold through us gets blocked there too. We check your calendar again right after each payment. If the dates are already taken, the booking isn't confirmed and the guest gets a full refund automatically. For the first 10 hotels in Tbilisi it's 0% until the end of the year, then 1.5%. You keep Booking.com; this is just an extra channel. We don't bring you guests."
+> "Today those guests pay a personal wallet: no receipt, refunds by hand. Send them your Stumari link instead. They pick a contract, say Flexible or Non-refundable, and pay USDC into an escrow holding your refund rules. Cancellations refund automatically. Otherwise the money reaches your wallet 24 hours after check-in, unless the guest opens a dispute in that window. You keep Booking.com; we don't bring you guests. First 10 Tbilisi hotels: 0% fee until the end of 2026, then 1.5%."
+
+Only if they ask: guests need no SOL (we pay network fees); calendars sync with Booking.com/Airbnb and every booking stays *pending* until we re-check the calendar ([double bookings](objections.md#what-about-double-bookings-with-bookingcom)).
 
 ## 4. Live demo (2–3 min, share screen or send the link)
 
 Skip it if they are short on time. Send the link in the follow-up instead.
 
 1. **Landing page** (`/`, `/ka` or `/ru`): "This is what a hotel sees. Here are the pilot terms and the Apply button."
-2. **Demo hotel checkout** (`/h/{demo-slug}`): pick dates about 5 days out, so the cancellation shows a 50% refund → **See prices** → three contracts with different prices. "Your current policy costs exactly your normal rate. Flexible costs a bit more and non-refundable costs less, by as much as this guest's cancellation risk is worth, so you expect to earn the same whichever one they choose. It's a target, not a guarantee. You set how far prices can move." Pick **Standard**, then pay with the **Test wallet (devnet, not real money)**.
+2. **Demo hotel checkout** (`/h/stumari-demo`): pick dates about 5 days out, so the cancellation shows a 50% refund → **See prices** → three contracts with different prices. "Your current policy costs exactly your normal rate. Flexible costs a bit more and non-refundable costs less, by this guest's estimated cancellation risk, priced to target the same expected revenue whichever one they choose. It's a target, not a guarantee. You set how far prices can move." Pick **Standard**, then pay with the **Test wallet (devnet, not real money)**.
 3. **Booking page** (`/b/{id}`): show status, the terms timeline, and "refund if you cancel now". Open the **Explorer link**: "That is the escrow account. It holds this booking's money and rules." Wait until the status shows **Confirmed**; a pending booking always refunds 100%.
 4. **Cancel**: click Cancel → the refund arrives at once by the schedule. Standard gives 100% more than 7 days before check-in and 50% between 7 and 3 days. Show the transaction on Explorer: "The guest's refund and the hotel's share are paid in one transaction. Nobody had to approve it."
 

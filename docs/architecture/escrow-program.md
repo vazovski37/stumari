@@ -184,7 +184,7 @@ Requires `Pending`, and (`now ≥ confirm_deadline_ts` **or** `authority == conf
 
 ## Trust property
 
-Escrowed funds can only ever move to **ATA(mint, `booking.guest`)**, **ATA(mint, `booking.hotel_authority`)**, or the **treasury** — and the treasury share is bounded by the booking's own `fee_bps` snapshot (≤ 10%). Both recipient owners are fixed at creation, so no Stumari key can redirect escrow afterwards. The admin key can only choose the guest/hotel split of a **disputed** booking and void **unconfirmed** bookings (refund only). Tokens sent directly to a vault outside `create_booking` are swept to the treasury on close.
+Escrowed funds can only ever move to **ATA(mint, `booking.guest`)**, **ATA(mint, `booking.hotel_authority`)**, or the **treasury** — and the treasury share is bounded by the booking's own `fee_bps` snapshot (≤ 10%). Both recipient owners are fixed at creation, so no Stumari key can redirect escrow afterwards **under this program** — during the pilot the program itself is upgradeable by Stumari, and disputed funds depend on the arbiter key (security.md, "Honest limits"). The admin key can only choose the guest/hotel split of a **disputed** booking and void **unconfirmed** bookings (refund only). Tokens sent directly to a vault outside `create_booking` are swept to the treasury on close.
 
 ## Errors
 

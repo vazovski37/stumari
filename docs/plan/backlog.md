@@ -20,18 +20,18 @@ Owned by the lead engineer; agents read the section for their component. Tick it
 - [ ] Founders proofread `messages/ka.json` and `messages/ru.json` before calls; confirm `/privacy` promises.
 
 ## docs (sales, submission, runbook)
-- [ ] objections.md + demo-video-script.md: "No Stumari key can redirect funds" must add the honest limits (upgradeable program; disputed funds depend on the arbiter key).
-- [ ] Runbook §3: local chain is `scripts/localnet.sh` (Surfpool in Docker, ADR-0015), not surfpool in WSL; deploy with `surfnet_writeProgram` via `scripts/bootstrap.ts`.
-- [ ] Runbook + scripts: demo slug `stumari-demo`, `DEMO_HOTEL_WALLET`, `AGENT_SECRET_KEY` formats, `AGENT_MAX_AMOUNT_MINOR` default 500 USDC; replace `/h/{demo-slug}` with `/h/stumari-demo`.
-- [ ] onboarding-checklist.md: a real pilot hotel stays `paused` on the devnet deployment except during supervised test bookings, and its export feed is pasted into OTAs only at go-live (devnet demo bookings would otherwise block real nights).
-- [ ] pitch-video-script.md: trim ~40 words to fit 1:50; use "1,579,764" (no rounding).
-- [ ] call-script.md: the "30-second pitch" is ~160 words — trim to ~75.
-- [ ] demo-video-script.md: fix over-long beats; prep step confirms the direction of the repeat-guest price difference; disclose all three stubs (arbiter key, no hotel bond, Portugal-trained prior).
-- [ ] one-pager.md (EN/RU/KA) + call-script pitch: payout "unless the guest opens a dispute in that window".
-- [ ] objections.md: remove "Some owners keep part of it in dollars" (invented behaviour).
-- [ ] status.md "Final check": replace `git log -p | grep -i secret` with a check for key material (64-byte JSON arrays, base58 secrets, committed .env files).
-- [ ] Statistic wording everywhere: "27% of ordinary bookings (37% overall incl. no-shows and group blocks)".
-- [ ] docs/README.md links runbook.md and backlog.md.
+- [x] objections.md + demo-video-script.md: "No Stumari key can redirect funds" must add the honest limits (upgradeable program; disputed funds depend on the arbiter key).
+- [x] Runbook §3: local chain is `scripts/localnet.sh` (Surfpool in Docker, ADR-0015), not surfpool in WSL; deploy with `surfnet_writeProgram` via `scripts/bootstrap.ts`.
+- [x] Runbook + scripts: demo slug `stumari-demo`, `DEMO_HOTEL_WALLET`, `AGENT_SECRET_KEY` formats, `AGENT_MAX_AMOUNT_MINOR` default 500 USDC; replace `/h/{demo-slug}` with `/h/stumari-demo`.
+- [x] onboarding-checklist.md: a real pilot hotel stays `paused` on the devnet deployment except during supervised test bookings, and its export feed is pasted into OTAs only at go-live (devnet demo bookings would otherwise block real nights).
+- [x] pitch-video-script.md: trim ~40 words to fit 1:50; use "1,579,764" (no rounding).
+- [x] call-script.md: the "30-second pitch" is ~160 words — trim to ~75.
+- [x] demo-video-script.md: fix over-long beats; prep step confirms the direction of the repeat-guest price difference; disclose all three stubs (arbiter key, no hotel bond, Portugal-trained prior).
+- [x] one-pager.md (EN/RU/KA) + call-script pitch: payout "unless the guest opens a dispute in that window".
+- [x] objections.md: remove "Some owners keep part of it in dollars" (invented behaviour).
+- [x] status.md "Final check": replace `git log -p | grep -i secret` with a check for key material (64-byte JSON arrays, base58 secrets, committed .env files).
+- [x] Statistic wording everywhere: "27% of ordinary bookings (37% overall incl. no-shows and group blocks)".
+- [x] docs/README.md links runbook.md and backlog.md.
 
 ## onchain
 - [ ] Decode emitted events in tests (`excess`, `by_admin`, `secs_before`, `refund_bps`).

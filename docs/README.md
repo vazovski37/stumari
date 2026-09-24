@@ -11,6 +11,7 @@
 - [Pricing and risk model](architecture/pricing-and-risk-model.md) — hazard model, features, artifact format, templates, pricing formula
 - [Data model](architecture/data-model.md) — DB tables, availability rule, wallet history features
 - [API](architecture/api.md) — REST, auth, dashboard, admin, cron, MCP tools
+- [Configuration](architecture/configuration.md) — environment variables, on-chain config, demo data
 - [Inventory and iCal](architecture/inventory-ical.md) — import/export, confirmation safety
 - [Security](architecture/security.md) — key custody, threats, mainnet checklist
 
@@ -18,13 +19,20 @@
 - [ADRs](decisions/README.md)
 
 ## Plan
-- [Roadmap to 12 Oct](plan/roadmap.md)
+- [Roadmap to 12 Oct](plan/roadmap.md) — milestones, build order, what only founders can do
+- [Runbook](plan/runbook.md) — setup, local chain, program deploy, devnet bootstrap, Vercel + Turso, cron, MCP, troubleshooting
+- [Backlog](plan/backlog.md) — open follow-ups from builds and reviews, by component
+
+## Model
+- [Model report](../ml/reports/metrics.md) — held-out 2017 metrics: AUC 0.713 vs 0.634 for lead time alone, Brier 0.1917 vs 0.2136 base rate, expected calibration error 0.038
 
 ## Go-to-market
-- [Sales kit](sales/) — pilot offer, call script, objections, onboarding checklist, lead tracker
+- [Pilot offer](sales/offer.md) — the single source of what we promise hotels (ADR-0013)
+- [Call script](sales/call-script.md) · [Objections](sales/objections.md) · [One-pager](sales/one-pager.md) (EN/RU/KA) · [Onboarding checklist](sales/onboarding-checklist.md) · [Lead tracker](sales/leads.csv)
 
 ## Colosseum submission
-- [Submission kit](submission/) — status, demo video script, pitch video script
+- [Status tracker](submission/status.md) — filled and missing fields, final check
+- [Demo video script](submission/demo-video-script.md) (≤ 3:00, live product) · [Pitch video script](submission/pitch-video-script.md) (≤ 2:00)
 
 ## Research
 - [Competitive landscape](research/landscape.md) — Copilot API data: win rates by cluster, tag lift, precedents, threats

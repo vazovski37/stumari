@@ -70,10 +70,10 @@ Unknown category at inference → all-zero one-hot group (deterministic; tested)
 All on the **test split of the training population, booking level, full window expansion**:
 1. ROC-AUC of the model and of a lead-time-only baseline (expect ≈ 0.70–0.73 vs ≈ 0.64);
 2. Brier score next to the base-rate Brier `p̄(1 − p̄)`;
-3. reliability curve, 10 equal-count bins, before and after isotonic → `ml/reports/reliability.json` (the web app renders it; a PNG is optional);
+3. reliability curve, 10 equal-count bins, uncalibrated and after calibration (Platt; isotonic reported for comparison) → `ml/reports/reliability.json` (the web app renders it; a PNG is optional);
 4. table of mean predicted vs observed `q_k` per window (report drift honestly — window 3 is over-predicted ~2–3× on 2017 data).
 
-Person-period AUC and Harrell's C are not reported. Demo wording: *"modestly discriminative (AUC ≈ 0.71 vs 0.64 for lead time alone) and calibrated on held-out 2017 arrivals."*
+Person-period AUC and Harrell's C are not reported. Demo wording (current model, `ml/reports/metrics.md`): *"modestly discriminative (AUC 0.713 vs 0.634 for lead time alone) and calibrated on held-out 2017 arrivals (Brier 0.1917 vs 0.2136 for the base rate; expected calibration error 0.038)."*
 
 **Toolchain:** `ml/` depends only on numpy, pandas, lightgbm and `sklearn.isotonic`. AUC (rank formula), Brier and reliability bins are implemented in `ml/stumari_ml/metrics.py` (numpy). On this Windows host an Application Control policy blocks `sklearn.metrics` (`_pairwise_fast` DLL); if any compiled wheel is blocked, run `ml/` in WSL (`python3 -m venv ~/stumari-ml`).
 
