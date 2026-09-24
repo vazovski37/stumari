@@ -36,7 +36,7 @@ pub struct VoidBooking<'info> {
         mut,
         dup,
         address = config.treasury @ EscrowError::InvalidTreasury,
-        // its own vault as treasury would pay the fee and excess to itself and never close
+        // a treasury equal to this booking's vault is a misconfiguration (release/resolve could not close it)
         constraint = treasury.key() != vault.key() @ EscrowError::InvalidTreasury
     )]
     pub treasury: Box<Account<'info, TokenAccount>>,

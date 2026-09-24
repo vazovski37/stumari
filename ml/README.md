@@ -49,7 +49,7 @@ same commands in WSL: `python3 -m venv ~/stumari-ml && ~/stumari-ml/bin/pip inst
 | `periods.py` | person-period expansion (truncated for training, full for scoring) |
 | `model.py` | `lgb.train` on a float64 matrix in `feature_order`, monotone constraints, early stopping |
 | `calibrate.py` | Platt scaling (Newton-Raphson, numpy) on validation raw margins — the exported default; isotonic fit too and reported for comparison (ADR-0016) |
-| `jsonmodel.py` | pure-Python evaluator of `model.json` (sequential raw sum + `numpy.interp`) |
+| `jsonmodel.py` | pure-Python evaluator of `model.json` (sequential raw sum + Platt, or `numpy.interp` for isotonic) |
 | `export.py` | `dump_model` → JSON with every spec assertion; walker == booster on 6,000 rows |
 | `evaluate.py`, `metrics.py` | booking-level metrics on the full window expansion |
 | `parity.py` | parity vectors and the request fixtures |
@@ -92,8 +92,8 @@ per-window row appends `window_0 … window_5` (one-hot of k) and `exposure_days
 **Scoring a request.** For each k in 0…5: reachable iff `lead_time ≥ lower_days[k]`; if reachable,
 `x = booking_vector ++ onehot(k) ++ [exposure_days(L, k)]` with
 `exposure = max(0, min(L, upper_k) − lower_k)`, `upper = [L, 30, 14, 7, 3, 1]`; `raw` = sequential sum of
-tree outputs in tree order starting from `init_score` (0.0); `hazard = interp(raw, calibration.x,
-calibration.y)` with numpy semantics (linear, clamped to the end values; `x` is strictly increasing).
+tree outputs in tree order starting from `init_score` (0.0); `hazard = 1 / (1 + exp(−(a·raw + b)))` with
+Platt `calibration.{a, b}` (ADR-0016); an isotonic artifact instead uses `interp(raw, calibration.x, calibration.y)` with numpy semantics (linear, clamped; `x` strictly increasing).
 Then with `s = 1.0`, for k = 0…5: unreachable → `q_k = 0`; reachable → `q_k = h_k · s`, `s = s · (1 − h_k)`.
 `p_cancel = q_0 + q_1 + … + q_5`, summed left to right.
 

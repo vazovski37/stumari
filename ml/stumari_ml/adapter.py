@@ -84,7 +84,7 @@ def adapt(request: Mapping[str, Any], *, channel: Mapping[str, str] | None = Non
         raise ValueError("is_repeated_guest must be 0 or 1")
     previous_bookings = _int_field(request, "previous_bookings_not_canceled", 0)
     # Serving derives both from one count of released bookings, so they must agree. The dataset's
-    # own columns disagree on ~1.6% of rows, which training (the `channel` override) keeps as is.
+    # own columns disagree on 1,395 rows (1.35%) of the training population, which training (the `channel` override) keeps as is.
     if channel is None and is_repeated_guest != int(previous_bookings >= 1):
         raise ValueError(
             "is_repeated_guest must be 1 exactly when previous_bookings_not_canceled >= 1, "
