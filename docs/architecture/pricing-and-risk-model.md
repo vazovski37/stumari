@@ -21,7 +21,7 @@ Cancellation time is measured before the check-in timestamp. Six windows (k = 0 
 
 - Window k is **reachable** iff `L ≥ lower_days[k]`.
 - Exposure `e_k = max(0, min(L, upper_k) − lower_k)` days.
-- Hazard `h_k(x) = P(cancel in window k | still booked at start of k)`: one gradient-boosted binary classifier on **person-period rows** with window one-hot and exposure as features, isotonic-calibrated.
+- Hazard `h_k(x) = P(cancel in window k | still booked at start of k)`: one gradient-boosted binary classifier on **person-period rows** with window one-hot and exposure as features, **Platt-calibrated** on the raw margin (ADR-0016).
 - `q_k = h_k · Π_{j<k, j reachable}(1 − h_j)` for reachable k, else 0. `P(cancel) = Σ q_k`.
 
 **Person-period construction (training).** For a booking with lead L and cancellation window w (the k with `lower_k ≤ d < upper_k`), emit one row per reachable k in time order 0 → 5, **stopping after k = w**; label 1 iff k == w. Survivors (`Check-Out`, `No-Show`) get every reachable window, all labelled 0. Exposure uses the formula above for every row, including the event row. L = 0 yields a single window-5 row with exposure 0.
@@ -35,7 +35,7 @@ No-shows are not priced: every template refunds 0 after check-in and a no-show n
 Hotel Booking Demand (Antonio, Almeida & Nunes, *Data in Brief* 22, 2019): 119,390 bookings, two Portuguese hotels, arrivals 2015-07-01 → 2017-08-31. Raw `is_canceled` = 37.0% (36.0% cancelled + 1.0% no-show). Public copy: `https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-11/hotels.csv`.
 
 - **Population:** `deposit_type == "No Deposit"`, `market_segment != "Undefined"`, `distribution_channel != "Undefined"`, `adults ≥ 1`, `stays_in_weekend_nights + stays_in_week_nights ≥ 1`; `children` NaN → 0. ≈ 103,588 bookings, 27.4% cancelled, 1.1% no-show. Rationale: `q_k` must be the hazard when cancelling returns money — exactly what the pricing prices. ("Non Refund" rows are 99.4% "cancelled" group blocks — a known artifact.)
-- **Features come from the adapter, never from dataset columns:** for each row reconstruct a request — `issued_at` = arrival date − `lead_time` days at 00:00, `checkin` = arrival date, `checkout` = arrival + (weekend + week nights) — and run `ml/stumari_ml/adapter.py`. Month names map January=1 … December=12 for building the date only.
+- **Features come from the adapter:** for each row reconstruct a request — `issued_at` = arrival date − `lead_time` days at 00:00, `checkin` = arrival date, `checkout` = arrival + (weekend + week nights) — and run `ml/stumari_ml/adapter.py`. Month names map January=1 … December=12 for building the date only. **Exception:** for training rows the adapter receives the dataset's own `market_segment`, `distribution_channel` and `customer_type` through a `channel` override (otherwise those groups would be constant and the model could not learn the Direct vs intermediary difference); serving never passes the override, so both guests and agents are Direct/Direct/Transient.
 - Cancellation day `d = (arrival − reservation_status_date).days` (always within `[0, lead_time]` in this data; clip defensively). `Check-Out` and `No-Show` survive.
 - **Split by arrival date:** train < 2016-07-01 ≤ validation < 2017-01-01 ≤ test.
 - Train with `monotone_constraints = −1` on `previous_bookings_not_canceled` and `is_repeated_guest`, 0 elsewhere.
@@ -56,7 +56,7 @@ Hotel Booking Demand (Antonio, Almeida & Nunes, *Data in Brief* 22, 2019): 119,3
 | `distribution_channel` (one-hot) | `Direct` |
 | `customer_type` (one-hot) | `Transient` |
 | `hotel` (one-hot) | hotel setting `City Hotel` \| `Resort Hotel` |
-| `meal` (one-hot) | room type setting `BB` \| `HB` \| `FB` \| `SC` (`Undefined` in data → `SC`) |
+| `meal` (one-hot) | room type setting `BB` \| `HB` \| `FB` \| `SC` (the dataset's `Undefined` is mapped to `SC` when loading data only; at serving an unknown meal is an all-zero group) |
 | `window` (one-hot 0–5), `exposure_days` | person-period |
 
 **Agents are priced as direct buyers** (product decision, ADR-0014): an AI agent acting for its own user is a direct booking; the dataset's Online TA segment is third-party resellers, which cancel 2.6× more (35.8% vs 13.7%). `buyer_type` is still recorded and shown in the explain block.
@@ -95,7 +95,7 @@ This is a **prior** learned from Portugal 2015–2017, shared by all hotels in t
   },
   "init_score": 0.0,
   "trees": [ { "nodes": [ { "f": 3, "t": 12.5, "l": 1, "r": 2 }, { "v": -0.12 }, { "v": 0.08 } ] } ],
-  "calibration": { "type": "isotonic_on_raw_margin", "x": [ ... ], "y": [ ... ] },
+  "calibration": { "type": "platt_on_raw_margin", "a": 1.04, "b": 0.08 },
   "link": "logistic",
   "metrics": { "...": "..." },
   "population_q_test_mean": [ ... ],
@@ -103,9 +103,11 @@ This is a **prior** learned from Portugal 2015–2017, shared by all hotels in t
 }
 ```
 
-**Semantics.** Internal node `{f, t, l, r}` → go to `l` iff `x[f] <= t`, else `r`; leaf `{v}`; root = node 0; a tree whose root is a leaf is `nodes: [{v}]`. `raw = Σ tree(x)` summed **sequentially in tree order** (`init_score` is always 0.0 — boost_from_average is already inside tree 0; never add a base-rate logit). `hazard = interp(raw)` with `numpy.interp` semantics (linear, clipped at both ends) over `calibration.x` (raw margins) / `calibration.y`. `link` is used only for the explain block's uncalibrated `p = 1/(1+e^−raw)`. The evaluator throws on any non-finite input.
+**One-hot column names:** `group + "_" + value`, lowercased, every run of non-alphanumeric characters replaced by `_`, outer `_` stripped (e.g. `market_segment_offline_ta_to`, `hotel_city_hotel`, `window_0`).
 
-**Export rules** (`ml/stumari_ml/export.py`, all asserted): train with `lgb.train` on a float64 numpy matrix whose columns are exactly `feature_order` (`feature_name=feature_order`, `categorical_feature=[]`, `objective='binary'`, `boosting='gbdt'`, `linear_tree=False`, deterministic seeds, fixed `num_threads`); assert no NaN/inf before training; export from `booster.dump_model(num_iteration=booster.best_iteration or None)`; assert `objective == 'binary sigmoid:1'`, every internal node has `decision_type == '<='` and `missing_type == 'None'`, and `max_feature_idx + 1 == len(feature_order)`; write floats with Python's default repr (never round `t` or `v` — one-hot splits use threshold `1.0000000180025095e-35`). Isotonic: `IsotonicRegression(out_of_bounds='clip', increasing=True, y_min=0, y_max=1)` fit on validation **raw margins** vs labels; export `X_thresholds_`, `y_thresholds_`. Before writing files, a pure-Python walker of the JSON must reproduce `booster.predict(raw_score=True)` exactly on ≥ 5,000 rows.
+**Semantics.** Internal node `{f, t, l, r}` → go to `l` iff `x[f] <= t`, else `r`; leaf `{v}`; root = node 0; a tree whose root is a leaf is `nodes: [{v}]`. `raw = Σ tree(x)` summed **sequentially in tree order** (`init_score` is always 0.0 — boost_from_average is already inside tree 0; never add a base-rate logit). Calibration (ADR-0016): `{"type": "platt_on_raw_margin", "a", "b"}` → `hazard = 1 / (1 + exp(-(a·raw + b)))` computed in exactly that operation order (the exported default), or `{"type": "isotonic_on_raw_margin", "x", "y"}` → `numpy.interp` (linear, clipped) — supported for comparison. `link` is used only for the explain block's uncalibrated `p = 1/(1+e^−raw)`. The evaluator throws on any non-finite input.
+
+**Export rules** (`ml/stumari_ml/export.py`, all asserted): train with `lgb.train` on a float64 numpy matrix whose columns are exactly `feature_order` (`feature_name=feature_order`, `categorical_feature=[]`, `objective='binary'`, `boosting='gbdt'`, `linear_tree=False`, deterministic seeds, fixed `num_threads`); assert no NaN/inf before training; export from `booster.dump_model(num_iteration=booster.best_iteration or None)`; assert `objective == 'binary sigmoid:1'`, every internal node has `decision_type == '<='` and `missing_type == 'None'`, and `max_feature_idx + 1 == len(feature_order)`; write floats with Python's default repr (never round `t` or `v` — one-hot splits use threshold `1.0000000180025095e-35`). Calibration is fit on validation **raw margins** vs labels: Platt by Newton-Raphson maximum likelihood in numpy (`ml/stumari_ml/calibrate.py`); isotonic (`IsotonicRegression(out_of_bounds='clip', increasing=True, y_min=0, y_max=1)`) is fit too and reported for comparison. Before writing files, a pure-Python walker of the JSON must reproduce `booster.predict(raw_score=True)` exactly on ≥ 5,000 rows.
 
 ### `packages/core/model/parity.json`
 

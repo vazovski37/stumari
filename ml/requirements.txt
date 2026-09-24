@@ -1,0 +1,6 @@
+# Pinned to the versions the committed model was trained with (Python 3.11.9, Windows host venv).
+numpy==2.4.6
+pandas==3.0.6
+lightgbm==4.7.0
+scikit-learn==1.9.1
+matplotlib==3.11.2

@@ -1,0 +1,111 @@
+{
+  "description": "Quote protocol v1 vectors, generated and checked by packages/core/test/quote.test.ts (UPDATE_VECTORS=1 regenerates). canonical = canonicalize(quote); sha256 = hex sha256(UTF-8 canonical) = on-chain quote_hash; signature = base58 Ed25519(canonical bytes) with the 32-byte seed; booking_id = sha256('stumari-booking-v1' || quote_id)[0..16].",
+  "seed_hex": "0101010101010101010101010101010101010101010101010101010101010101",
+  "signer": "AKnL4NNf3DGWZJS6cPknBuEGnVsV4A4m5tgebLHaRSZ9",
+  "quote": {
+    "v": 1,
+    "id": "6f1c1c9e-3f0a-4c43-9d2b-8a7e5b0c4d21",
+    "cluster": "devnet",
+    "program_id": "6Y17gFD9dWPJF6GtpzABJZY7Pk8j5CLh268zZyW5U6nf",
+    "hotel_id": "0b6e3a52-7d4c-4b8e-a1f2-3c4d5e6f7a8b",
+    "hotel_slug": "demo-tbilisi",
+    "room_type_id": "5a9d2c1e-8b7f-4e6d-9c3b-2a1f0e9d8c7b",
+    "checkin_date": "2026-12-10",
+    "checkout_date": "2026-12-13",
+    "checkin_ts": 1796896800,
+    "checkout_ts": 1797148800,
+    "nights": 3,
+    "adults": 2,
+    "children": 1,
+    "buyer_type": "guest",
+    "buyer_wallet": "9hSR6S7WPtxmTojgo6GG3k4yDPecgJY292j7xrsUGWBu",
+    "mint": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+    "decimals": 6,
+    "base_price_minor": "100000000",
+    "options": [
+      {
+        "id": "flexible",
+        "price_minor": "104730000",
+        "deposit_bps": 10000,
+        "tiers": [
+          {
+            "secs_before": 86400,
+            "refund_bps": 10000
+          },
+          {
+            "secs_before": 0,
+            "refund_bps": 5000
+          }
+        ]
+      },
+      {
+        "id": "standard",
+        "price_minor": "100000000",
+        "deposit_bps": 10000,
+        "tiers": [
+          {
+            "secs_before": 604800,
+            "refund_bps": 10000
+          },
+          {
+            "secs_before": 259200,
+            "refund_bps": 5000
+          },
+          {
+            "secs_before": 0,
+            "refund_bps": 0
+          }
+        ]
+      },
+      {
+        "id": "nonrefundable",
+        "price_minor": "95890000",
+        "deposit_bps": 10000,
+        "tiers": [
+          {
+            "secs_before": 0,
+            "refund_bps": 0
+          }
+        ]
+      }
+    ],
+    "issued_at": 1791783000,
+    "expires_at": 1791783600,
+    "nonce": "000102030405060708090a0b0c0d0e0f"
+  },
+  "canonical": "{\"adults\":2,\"base_price_minor\":\"100000000\",\"buyer_type\":\"guest\",\"buyer_wallet\":\"9hSR6S7WPtxmTojgo6GG3k4yDPecgJY292j7xrsUGWBu\",\"checkin_date\":\"2026-12-10\",\"checkin_ts\":1796896800,\"checkout_date\":\"2026-12-13\",\"checkout_ts\":1797148800,\"children\":1,\"cluster\":\"devnet\",\"decimals\":6,\"expires_at\":1791783600,\"hotel_id\":\"0b6e3a52-7d4c-4b8e-a1f2-3c4d5e6f7a8b\",\"hotel_slug\":\"demo-tbilisi\",\"id\":\"6f1c1c9e-3f0a-4c43-9d2b-8a7e5b0c4d21\",\"issued_at\":1791783000,\"mint\":\"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU\",\"nights\":3,\"nonce\":\"000102030405060708090a0b0c0d0e0f\",\"options\":[{\"deposit_bps\":10000,\"id\":\"flexible\",\"price_minor\":\"104730000\",\"tiers\":[{\"refund_bps\":10000,\"secs_before\":86400},{\"refund_bps\":5000,\"secs_before\":0}]},{\"deposit_bps\":10000,\"id\":\"standard\",\"price_minor\":\"100000000\",\"tiers\":[{\"refund_bps\":10000,\"secs_before\":604800},{\"refund_bps\":5000,\"secs_before\":259200},{\"refund_bps\":0,\"secs_before\":0}]},{\"deposit_bps\":10000,\"id\":\"nonrefundable\",\"price_minor\":\"95890000\",\"tiers\":[{\"refund_bps\":0,\"secs_before\":0}]}],\"program_id\":\"6Y17gFD9dWPJF6GtpzABJZY7Pk8j5CLh268zZyW5U6nf\",\"room_type_id\":\"5a9d2c1e-8b7f-4e6d-9c3b-2a1f0e9d8c7b\",\"v\":1}",
+  "sha256": "e7f99162765776a0d8b165533e621317ee8f542b636ea6bf995802128e25d373",
+  "signature": "5wsmPiEgvPDvYWYKEiENV8Vome1mszhnma2Q4ME4LmF7qbNNbCxYCwKkpiV4exsLd5sbrKbnvhsALUfVseaWM9mb",
+  "uuid_bytes": [
+    {
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "bytes_hex": "00000000000000000000000000000000"
+    },
+    {
+      "uuid": "00112233-4455-6677-8899-aabbccddeeff",
+      "bytes_hex": "00112233445566778899aabbccddeeff"
+    },
+    {
+      "uuid": "0B6E3A52-7D4C-4B8E-A1F2-3C4D5E6F7A8B",
+      "bytes_hex": "0b6e3a527d4c4b8ea1f23c4d5e6f7a8b"
+    },
+    {
+      "uuid": "ffffffff-ffff-4fff-bfff-ffffffffffff",
+      "bytes_hex": "ffffffffffff4fffbfffffffffffffff"
+    }
+  ],
+  "booking_ids": [
+    {
+      "quote_id": "6f1c1c9e-3f0a-4c43-9d2b-8a7e5b0c4d21",
+      "booking_id_hex": "c5b2118d65d59b8dff3cc1d8ba8f67e6"
+    },
+    {
+      "quote_id": "00000000-0000-0000-0000-000000000000",
+      "booking_id_hex": "e214a1dca7be155d277dcdc0513f1401"
+    },
+    {
+      "quote_id": "a3bb189e-8bf9-4888-9912-ace4e6543002",
+      "booking_id_hex": "07ce860823ca6954784d2860ac67d2d1"
+    }
+  ]
+}

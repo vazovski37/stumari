@@ -1,0 +1,111 @@
+{
+  "model_version": "hazard-gbdt-2026-09-25",
+  "split": "test",
+  "level": "booking, full window expansion",
+  "bins": 10,
+  "binning": "equal-count over predicted P(cancel), sorted ascending",
+  "before": [
+    {
+      "mean_predicted": 0.052939942523111856,
+      "observed_rate": 0.0603305785123967,
+      "count": 3630
+    },
+    {
+      "mean_predicted": 0.12398848918788272,
+      "observed_rate": 0.10826446280991736,
+      "count": 3630
+    },
+    {
+      "mean_predicted": 0.17738979832357965,
+      "observed_rate": 0.1743801652892562,
+      "count": 3630
+    },
+    {
+      "mean_predicted": 0.21890933266165696,
+      "observed_rate": 0.19008264462809918,
+      "count": 3630
+    },
+    {
+      "mean_predicted": 0.2893229079029952,
+      "observed_rate": 0.2780380270046845,
+      "count": 3629
+    },
+    {
+      "mean_predicted": 0.35173685416841005,
+      "observed_rate": 0.38908790300358226,
+      "count": 3629
+    },
+    {
+      "mean_predicted": 0.3797349157845566,
+      "observed_rate": 0.41636814549462664,
+      "count": 3629
+    },
+    {
+      "mean_predicted": 0.392852620329474,
+      "observed_rate": 0.4717553044915955,
+      "count": 3629
+    },
+    {
+      "mean_predicted": 0.42998637956948915,
+      "observed_rate": 0.5290713695232847,
+      "count": 3629
+    },
+    {
+      "mean_predicted": 0.5660634478096016,
+      "observed_rate": 0.47533755855607607,
+      "count": 3629
+    }
+  ],
+  "after": [
+    {
+      "mean_predicted": 0.05091433930351938,
+      "observed_rate": 0.06005509641873278,
+      "count": 3630
+    },
+    {
+      "mean_predicted": 0.11973049375332627,
+      "observed_rate": 0.10826446280991736,
+      "count": 3630
+    },
+    {
+      "mean_predicted": 0.17230697723961505,
+      "observed_rate": 0.1743801652892562,
+      "count": 3630
+    },
+    {
+      "mean_predicted": 0.21494247043777648,
+      "observed_rate": 0.18898071625344354,
+      "count": 3630
+    },
+    {
+      "mean_predicted": 0.2885543812145303,
+      "observed_rate": 0.2788647010195646,
+      "count": 3629
+    },
+    {
+      "mean_predicted": 0.35345516271609057,
+      "observed_rate": 0.3857812069440617,
+      "count": 3629
+    },
+    {
+      "mean_predicted": 0.38274243979900907,
+      "observed_rate": 0.41554147147974646,
+      "count": 3629
+    },
+    {
+      "mean_predicted": 0.39725906668544897,
+      "observed_rate": 0.47230642050151556,
+      "count": 3629
+    },
+    {
+      "mean_predicted": 0.4360040337055343,
+      "observed_rate": 0.5263157894736842,
+      "count": 3629
+    },
+    {
+      "mean_predicted": 0.576528733297805,
+      "observed_rate": 0.48222650868007716,
+      "count": 3629
+    }
+  ]
+}

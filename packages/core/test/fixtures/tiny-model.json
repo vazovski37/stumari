@@ -1,0 +1,62 @@
+{
+  "format": "stumari-gbdt-hazard/2",
+  "version": "hazard-gbdt-tiny-fixture",
+  "windows": { "lower_days": [30, 14, 7, 3, 1, 0] },
+  "feature_order": [
+    "lead_time", "arrival_month", "arrival_dow", "weekend_nights", "week_nights", "adults", "children",
+    "is_repeated_guest", "previous_bookings_not_canceled",
+    "market_segment_direct", "market_segment_online_ta",
+    "distribution_channel_direct", "distribution_channel_ta_to",
+    "customer_type_transient",
+    "hotel_city_hotel", "hotel_resort_hotel",
+    "meal_bb", "meal_hb", "meal_fb", "meal_sc",
+    "window_0", "window_1", "window_2", "window_3", "window_4", "window_5",
+    "exposure_days"
+  ],
+  "encoding": {
+    "numeric": [
+      "lead_time", "arrival_month", "arrival_dow", "weekend_nights", "week_nights", "adults", "children",
+      "is_repeated_guest", "previous_bookings_not_canceled", "exposure_days"
+    ],
+    "one_hot": {
+      "market_segment": ["Direct", "Online TA"],
+      "distribution_channel": ["Direct", "TA/TO"],
+      "customer_type": ["Transient"],
+      "hotel": ["City Hotel", "Resort Hotel"],
+      "meal": ["BB", "HB", "FB", "SC"],
+      "window": ["0", "1", "2", "3", "4", "5"]
+    }
+  },
+  "init_score": 0.0,
+  "trees": [
+    { "nodes": [ { "f": 0, "t": 30.5, "l": 1, "r": 2 }, { "v": -1.5 }, { "v": -0.75 } ] },
+    {
+      "nodes": [
+        { "f": 25, "t": 1.0000000180025095e-35, "l": 1, "r": 4 },
+        { "f": 16, "t": 1.0000000180025095e-35, "l": 2, "r": 3 },
+        { "v": 0.25 },
+        { "v": -0.125 },
+        { "v": 0.5 }
+      ]
+    },
+    { "nodes": [ { "v": 0.0625 } ] },
+    {
+      "nodes": [
+        { "f": 26, "t": 10.5, "l": 2, "r": 1 },
+        { "v": -0.25 },
+        { "f": 7, "t": 0.5, "l": 3, "r": 4 },
+        { "v": 0.125 },
+        { "v": -0.5 }
+      ]
+    }
+  ],
+  "calibration": {
+    "type": "isotonic_on_raw_margin",
+    "x": [-3, -2, -1, -1, 0, 1],
+    "y": [0.01, 0.02, 0.05, 0.08, 0.2, 0.4]
+  },
+  "link": "logistic",
+  "metrics": {},
+  "population_q_test_mean": [0, 0, 0, 0, 0, 0],
+  "training": { "dataset": "hand-built test fixture" }
+}

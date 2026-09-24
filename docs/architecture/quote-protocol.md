@@ -73,6 +73,9 @@ Bytes = UTF-8 of the canonical string. `hash = sha256(bytes)`; the same 32 bytes
 
 ## Explain block (unsigned)
 
+Every **enabled** template appears in `explain.options` with its `price_minor` (or `null` when withheld). `withheld` is `null`, `"risk_exceeds_bounds"`, or `"duplicate_terms"` with `same_as: <shown template id>` (identical refunds on every reachable window). `clamped` is `null` or `"floor"`. `p_uncalibrated` is logistic(raw) per window (null when unreachable), for explanation only.
+
+
 ```json
 {
   "model_version": "hazard-gbdt-2026-09-25",
@@ -88,6 +91,7 @@ Bytes = UTF-8 of the canonical string. `hash = sha256(bytes)`; the same 32 bytes
     { "id": "standard", "risk_cost": 0.0244, "multiplier": 1.0, "m_bps": 10000, "expected_revenue_minor": "…", "clamped": null, "withheld": null },
     { "id": "nonrefundable", "risk_cost": 0.0, "multiplier": 0.9756, "m_bps": 9756, "expected_revenue_minor": "…", "clamped": null, "withheld": null }
   ],
+  "p_uncalibrated": [0.049, 0.041, 0.031, 0.048, 0.039, 0.029],
   "features": { "lead_time": 34, "…": "…" }
 }
 ```
