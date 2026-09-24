@@ -3,8 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Devnet bootstrap, end-to-end loop, operational scripts.",
-  "scripts": { "typecheck": "tsc -p tsconfig.json" },
+  "description": "Localnet/devnet bootstrap, test-USDC faucet, time travel and the end-to-end smoke test.",
+  "scripts": {
+    "bootstrap": "tsx bootstrap.ts",
+    "fund": "tsx fund.ts",
+    "timetravel": "tsx timetravel.ts",
+    "smoke": "tsx smoke.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
   "dependencies": {
     "@solana/kit": "^8.3.0",
     "@solana-program/system": "latest",
