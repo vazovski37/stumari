@@ -147,7 +147,7 @@ Per-window refund fraction `r_T`: flexible `[1,1,1,1,1,0.5]`, standard `[1,1,1,0
 
 ## 5. Pricing: price room and terms together
 
-**Hotel policy** (all bps; validated in API + DB): `reference_template` R (the blanket policy the hotel uses today, default `standard`), `enabled_templates` (non-empty), `resale_bps[6]` each 0–10000 (default `[9000, 8000, 6500, 4500, 2500, 1000]`), `min_mult_bps` 5000–10000 (default 8500), `max_mult_bps` 10000–20000 (default 13000). Base price `B` = sum of nightly base rates (weekend rate on Fri/Sat nights when set).
+**Hotel policy** (all bps; validated in API + DB): `reference_template` R (the blanket policy the hotel uses today, default `standard`; **must be one of the enabled templates**), `enabled_templates` (non-empty), `resale_bps[6]` each 0–10000 (default `[9000, 8000, 6500, 4500, 2500, 1000]`), `min_mult_bps` 5000–10000 (default 8500), `max_mult_bps` 10000–20000 (default 13000). Base price `B` = sum of nightly base rates (weekend rate on Fri/Sat nights when set).
 
 **Resale probability** `s_k = resale_bps[k]/10000`: the probability that a night freed by a cancellation in window k is sold to a guest who could not otherwise have been accommodated (i.e. the night would otherwise have sold out). Defaults assume high-season sell-outs; the onboarding checklist asks the hotel's typical occupancy and suggests `[5000, 4000, 3000, 2000, 1000, 0]` below 70%. `s` is shown in the explain block.
 
@@ -167,7 +167,7 @@ m_T(x) = (1 − c_R(x)) / (1 − c_T(x)),    P_T = m_T(x) · B
 
 so `m_R ≡ 1`: **the hotel's current policy always costs exactly its base rate**; less generous contracts cost less and more generous ones more, by exactly this guest's risk; every shown option earns the hotel the same expected revenue as its current policy would from this guest. (The multiplier is independent of B.)
 
-**Integer money:** for T = R, `m_bps = 10000` directly (never computed). Otherwise `m_bps = round_half_up(m_T(x) · 10000)`. `price_minor = ((B · m_bps + 99_999_999) / 100_000_000) · 10_000` in bigint (B·m_bps/10⁴ rounded **up** to a whole cent). Floats appear only in `c_T`, `m_T` and the explain block.
+**Integer money:** for T = R, `m_bps = 10000` directly (never computed). Otherwise `m_bps = floor(m_T(x) · 10000 + 0.5 + 1e-9)` (round half up with a 1e-9 bp slack so a true decimal half-bp is not lost to binary noise). `price_minor = ((B · m_bps + 99_999_999) / 100_000_000) · 10_000` in bigint (B·m_bps/10⁴ rounded **up** to a whole cent). Floats appear only in `c_T`, `m_T` and the explain block.
 
 **Guards.**
 - If `1 − c_T(x) ≤ 0.05` or `m_bps > max_mult_bps`, T is **withheld** (explain `withheld: "risk_exceeds_bounds"`) — selling it at the cap would earn less than today's policy.
