@@ -3,22 +3,23 @@
 Owned by the lead engineer; agents read the section for their component. Tick items when done (with the commit).
 
 ## apps/web
-- [ ] **Landing copy (pricing review):** the "37%" problem card → "27% of ordinary bookings cancel" with the note "37% overall, including no-shows and group blocks (Hotel Booking Demand, 119,390 bookings)". The "1.58M" card → "1,579,764 visitors from Russia in 2025" (exact, not rounded), text: Russian-issued Visa/Mastercard cards do not work abroad, so many already pay small hotels in USDT/USDC informally. Update EN/KA/RU.
-- [ ] **Trust section:** add the honest limits from security.md — the program is still upgradeable by Stumari during the pilot (moves to a multisig / frozen before real money) and disputed bookings depend on Stumari's arbiter key.
-- [ ] `lib/public-config.ts`: read `fee_bps` and `release_delay_secs` from the on-chain Config (via `@stumari/escrow-client`) when available; startup check `STUMARI_PROGRAM_ID` == `onchain/artifacts/program-id.txt` (inline the id at build time).
-- [ ] Quote holds: on a local `file:` libsql DB, concurrent `BEGIN IMMEDIATE` fails with `SQLITE_BUSY` — use single-statement conditional writes (the rate limiter pattern) or retry with backoff.
-- [ ] Sync cron prunes old `rate_events`.
-- [ ] English-only pages (`/h`, `/b`, `/my`, `/model`, `/dashboard`, `/admin`) live under `app/(site)/`; avoid the paths `/`, `/apply`, `/en`, `/ka`, `/ru` there.
-- [ ] Policy validation in API/DB must match `@stumari/core` `validatePolicy` (reference template must be enabled).
-- [ ] `/model` page renders `ml/reports/reliability.json` + metrics summary (ADR-0016 wording: Platt; AUC 0.713 vs 0.634; ECE 0.038).
-- [ ] Rate-limit key: do not trust a client-supplied `X-Forwarded-For` first entry except on Vercel (`VERCEL` set); otherwise use the socket/`x-real-ip`.
-- [ ] Production build must fail (or loudly warn) when `NEXT_PUBLIC_SITE_URL` is missing — SSG bakes canonicals/sitemap/og:url at build time.
-- [ ] `AUTH_SECRET`: require ≥ 64 hex chars (32 bytes) as configuration.md says.
-- [ ] Features needing `OPERATOR_SECRET_KEY`, `STUMARI_MINT`, `CRON_SECRET` refuse clearly when they are null; a `libsql://` URL without `LIBSQL_AUTH_TOKEN` is an error in production.
-- [ ] Copy (ADR-0013): "earns you the same expected revenue" → "priced to target the same expected revenue"; soften "by exactly this guest's risk" → "by this guest's estimated risk" (EN/KA/RU).
-- [ ] Apply form placeholder contrast ≥ 4.5:1 (currently 3.66:1).
-- [ ] **Security:** reject any `buyer_wallet` / guest wallet (quote, pay, cancel, dispute, MCP) that equals a server key address — operator, admin, `DEMO_HOTEL_WALLET`'s operator-held keys, the treasury owner — with 400 `INVALID_WALLET`. Otherwise the builders would sign the guest's token transfer with our own key (the escrow client also refuses this).
-- [ ] Before `buildCreateBookingTx`, `fetchMaybeBooking(bookingPda)` → 409 `ALREADY_PAID` (a duplicate create otherwise surfaces only as simulate `Custom(0)` / "already in use").
+- [x] **Landing copy (pricing review):** the "37%" problem card → "27% of ordinary bookings cancel" with the note "37% overall, including no-shows and group blocks (Hotel Booking Demand, 119,390 bookings)". The "1.58M" card → "1,579,764 visitors from Russia in 2025" (exact, not rounded), text: Russian-issued Visa/Mastercard cards do not work abroad, so many already pay small hotels in USDT/USDC informally. Update EN/KA/RU.
+- [x] **Trust section:** add the honest limits from security.md — the program is still upgradeable by Stumari during the pilot (moves to a multisig / frozen before real money) and disputed bookings depend on Stumari's arbiter key.
+- [x] `lib/public-config.ts`: read `fee_bps` and `release_delay_secs` from the on-chain Config (via `@stumari/escrow-client`) when available; startup check `STUMARI_PROGRAM_ID` == `onchain/artifacts/program-id.txt` (inline the id at build time).
+- [x] Quote holds: on a local `file:` libsql DB, concurrent `BEGIN IMMEDIATE` fails with `SQLITE_BUSY` — use single-statement conditional writes (the rate limiter pattern) or retry with backoff.
+- [x] Sync cron prunes old `rate_events`.
+- [x] English-only pages (`/h`, `/b`, `/my`, `/model`, `/dashboard`, `/admin`) live under `app/(site)/`; avoid the paths `/`, `/apply`, `/en`, `/ka`, `/ru` there.
+- [ ] Policy validation in API/DB must match `@stumari/core` `validatePolicy` (reference template must be enabled). Checkout reads policy only through it; recheck when the dashboard PATCH lands.
+- [ ] Not yet exercised over HTTP: release crank and dispute (need time travel), a real Phantom / sign-and-send wallet (only the demo wallet was clicked through).
+- [x] `/model` page renders `ml/reports/reliability.json` + metrics summary (ADR-0016 wording: Platt; AUC 0.713 vs 0.634; ECE 0.038).
+- [x] Rate-limit key: do not trust a client-supplied `X-Forwarded-For` first entry except on Vercel (`VERCEL` set); otherwise use the socket/`x-real-ip`.
+- [x] Production build must fail (or loudly warn) when `NEXT_PUBLIC_SITE_URL` is missing — SSG bakes canonicals/sitemap/og:url at build time.
+- [x] `AUTH_SECRET`: require ≥ 64 hex chars (32 bytes) as configuration.md says.
+- [x] Features needing `OPERATOR_SECRET_KEY`, `STUMARI_MINT`, `CRON_SECRET` refuse clearly when they are null; a `libsql://` URL without `LIBSQL_AUTH_TOKEN` is an error in production.
+- [x] Copy (ADR-0013): "earns you the same expected revenue" → "priced to target the same expected revenue"; soften "by exactly this guest's risk" → "by this guest's estimated risk" (EN/KA/RU).
+- [x] Apply form placeholder contrast ≥ 4.5:1 (currently 3.66:1).
+- [x] **Security:** reject any `buyer_wallet` / guest wallet (quote, pay, cancel, dispute, MCP) that equals a server key address — operator, admin, `DEMO_HOTEL_WALLET`'s operator-held keys, the treasury owner — with 400 `INVALID_WALLET`. Otherwise the builders would sign the guest's token transfer with our own key (the escrow client also refuses this).
+- [x] Before `buildCreateBookingTx`, `fetchMaybeBooking(bookingPda)` → 409 `ALREADY_PAID` (a duplicate create otherwise surfaces only as simulate `Custom(0)` / "already in use").
 - [ ] Founders proofread `messages/ka.json` and `messages/ru.json` before calls; confirm `/privacy` promises.
 
 ## docs (sales, submission, runbook)

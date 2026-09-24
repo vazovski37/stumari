@@ -77,12 +77,12 @@ A sync replaces all `ical` rows of that `(room_id, feed_url)` in one transaction
 | explain (json) | |
 | booking_id | hex, derived from `id` (ID encoding) |
 | buyer_type, buyer_wallet | |
-| client_id | value of httpOnly cookie `stumari_cid` (128-bit random, set on first quote); MCP uses `mcp:{agent wallet or 'anon'}` |
+| client_id | value of httpOnly cookie `stumari_cid` (128-bit random, set on first quote); MCP uses `mcp:{agent wallet or 'anon'}` — anonymous agents share `mcp:anon`, so together they hold at most one unit (agents should pass a wallet) |
 | ip_hash | sha256(ip + AUTH_SECRET) |
 | status | `active` \| `used` \| `expired` |
 | expires_at, created_at | |
 
-Rules: `POST /api/quotes` runs the availability query, unit choice and insert inside **one libsql write transaction** (`db.transaction(fn, { behavior: "immediate" })`) so concurrent requests cannot hold the same unit. Creating a quote marks every other `active` quote with the same `client_id` `expired` (a client holds at most one unit). Limit 10 quotes per `ip_hash` per 10 min. The UI calls `POST /api/quotes` only on an explicit "See prices" click.
+Rules: `POST /api/quotes` holds a unit with **one atomic batch**: an `INSERT … SELECT` that picks the lowest-numbered unit free under the availability rule and inserts the quote in the same statement, plus a conditional `UPDATE` expiring the client's other active quotes. Concurrent requests cannot hold the same unit; `SQLITE_BUSY` from another process is retried with backoff. (An explicit `BEGIN IMMEDIATE` transaction fails with `SQLITE_BUSY` on a local `file:` database, so it is not used.) Creating a quote marks every other `active` quote with the same `client_id` `expired` (a client holds at most one unit). Limit 10 quotes per `ip_hash` per 10 min. The UI calls `POST /api/quotes` only on an explicit "See prices" click.
 
 ### `bookings`
 | Column | Notes |

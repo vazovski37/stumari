@@ -1,4 +1,5 @@
-import { Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
+import Link from "next/link";
 import { contractExamples, EXAMPLE_BASE_MINOR } from "@/lib/contract-examples";
 import { contractTemplates } from "@/lib/db/schema";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -39,6 +40,10 @@ export function ModelSection({ model }: { model: Dictionary["model"] }) {
               </li>
             ))}
           </ul>
+          <Link href="/model" className="mt-6 inline-flex items-center gap-1.5 font-medium text-wine underline underline-offset-4">
+            {model.learnMore}
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </Link>
         </div>
         <div>
           <ContractCompare

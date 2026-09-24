@@ -17,7 +17,7 @@ type Strings = Dictionary["apply"];
 type Status = { kind: "idle" | "submitting" | "done" } | { kind: "error"; message: string };
 
 const inputClass =
-  "mt-1.5 block w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-ink shadow-xs outline-none transition-colors placeholder:text-ink-soft/70 focus:border-wine focus:ring-2 focus:ring-wine/20 aria-[invalid=true]:border-clay aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-clay/20";
+  "mt-1.5 block w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-ink shadow-xs outline-none transition-colors placeholder:text-ink-soft/85 focus:border-wine focus:ring-2 focus:ring-wine/20 aria-[invalid=true]:border-clay aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-clay/20";
 
 function triState(value: FormDataEntryValue | null): boolean | null {
   if (value === "yes") return true;

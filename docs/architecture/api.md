@@ -15,7 +15,7 @@ All endpoints are Next.js route handlers under `apps/web/app/api`. JSON in/out. 
 1. **Server** builds a **version 0** transaction with Kit: `pipe(createTransactionMessage({ version: 0 }), m => setTransactionMessageFeePayerSigner(operator, m), m => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m), m => appendTransactionMessageInstructions(ixs, m))`, passing `createNoopSigner(address(guestWallet))` wherever the Codama builder needs the guest's signer. It prepends idempotent ATA creation for recipient ATAs, **simulates** the transaction (reject with `409 SIMULATION_FAILED` + program error name), then `partiallySignTransactionMessageWithSigners` (operator as fee payer; also as `quote_signer` for `create_booking`), and returns `getBase64EncodedWireTransaction(tx)`. It stores `sha256(messageBytes)` in `built_txs` with the action, booking id and `lastValidBlockHeight`, and **returns the same cached bytes** for repeat calls on the same `(booking, action)` while the blockhash is valid.
 2. **Browser** uses **Wallet Standard directly** (`@wallet-standard/app` `getWallets()`): pick a wallet exposing `standard:connect` and `solana:signTransaction` (and `solana:signMessage` for sign-in). Call `wallet.features['solana:signTransaction'].signTransaction({ account, transaction: bytes, chain })` → signed bytes, then `POST /api/tx/send`. Wallets exposing only `solana:signAndSendTransaction` use that and `POST /api/bookings/{id}/submitted { signature }`. The browser may use `@solana/kit` codecs (base64 ⇄ bytes) but has no RPC connection and no program client.
 3. **Demo wallet** (devnet, `demo_mode`): 32 random bytes in `localStorage['stumari_demo_sk']`, `createKeyPairSignerFromPrivateKeyBytes`, decode with `getTransactionDecoder`, `signer.signTransactions([tx])`, merge the signature, encode, `POST /api/tx/send`. Labelled "Test wallet — devnet, not real money".
-4. **`POST /api/tx/send { tx }`** rejects `400 FOREIGN_TX` unless the fee payer (static account 0) is the operator **and** `sha256(messageBytes)` matches an unexpired `built_txs` row; verifies every signature (`400 WALLET_MODIFIED_TX` if any fails — some wallets add instructions or priority fees, which invalidates the operator signature); sends with preflight; polls until `confirmed` (≤ 30 s); updates the booking; returns `{ signature, booking }`.
+4. **`POST /api/tx/send { tx }`** rejects `400 INVALID_TX` if the bytes do not decode; `400 FOREIGN_TX` if the fee payer (static account 0) is not the operator, or the message hash is unknown and the operator signature is valid (not ours); `400 WALLET_MODIFIED_TX` if the hash is unknown but the operator signature fails (a wallet changed our message — some add instructions or priority fees), or the hash is known and any signature is missing or invalid. Then it runs its own signature-verifying simulation as the preflight (keeps the program error name), sends, polls until `confirmed` (≤ 30 s); updates the booking; returns `{ signature, booking }`. Failures: `409 SIMULATION_FAILED` (program error name), `409 TX_FAILED`, `410 TX_EXPIRED` (blockhash expired), `504 CONFIRMATION_TIMEOUT`.
 
 ## Pages
 
@@ -37,13 +37,13 @@ Checkout, booking, dashboard and admin are English-only in the MVP. `booking_url
 
 | Method & path | Body / query | Response |
 |---|---|---|
-| `GET /api/config/public` | | `{ cluster, program_id, mint, quote_signer, demo_mode, pilot_offer: { fee_bps, payout_delay_hours, amount_cap_minor, currency: "USDC" } }` — fee and delay read from the on-chain Config |
+| `GET /api/config/public` | | `{ cluster, program_id, mint, quote_signer, demo_mode, pilot_offer: { fee_bps, payout_delay_hours, amount_cap_minor, currency: "USDC" } }` — fee and delay read from the on-chain Config (`payout_delay_hours` may be fractional: 0.0333 for the 120 s demo delay); the pilot constants (0 bps, 24 h) when the Config cannot be read. `quote_signer` is `null` while the operator key is not configured |
 | `GET /api/hotels?city=` | | active hotels: `[{ slug, name, city, from_price_minor, room_types:[{id,name,max_adults,max_children,base_rate_minor,meal}] }]` |
 | `GET /api/hotels/{slug}` | | public profile, room types, check-in/out times, enabled contracts with plain-language terms, address, phone |
 | `GET /api/hotels/{slug}/availability` | `checkin, checkout, adults, children` | `[{ room_type_id, available, nights, base_price_minor }]` — **never holds** |
-| `POST /api/quotes` | `{ hotel_slug, room_type_id, checkin_date, checkout_date, adults, children, buyer_type?: "guest"\|"agent", buyer_wallet? }` | `201` quote envelope · `409 UNAVAILABLE` · `400 INVALID_DATES`/`TOO_MANY_GUESTS` · `429 RATE_LIMITED`. Same-day check-in allowed while `now < checkin_ts`. |
+| `POST /api/quotes` | `{ hotel_slug, room_type_id, checkin_date, checkout_date, adults, children, buyer_type?: "guest"\|"agent", buyer_wallet? }` | `201` quote envelope · `409 UNAVAILABLE` · `400 INVALID_DATES` (also > 30 nights or check-in > 365 days ahead) / `TOO_MANY_GUESTS` / `INVALID_WALLET` (a server key) · `429 RATE_LIMITED`. Same-day check-in allowed while `now < checkin_ts`. |
 | `GET /api/quotes/{id}` | | `{ envelope, status }` |
-| `POST /api/quotes/{id}/pay` | `{ option_index, payer, guest_name?, guest_email?, guest_phone? }` | `{ booking_id, booking_pda, tx, signer, lastValidBlockHeight }` · `410 QUOTE_EXPIRED` · `409 HOLD_LOST` · `409 ALREADY_PAID` (booking account exists → booking view) · `403 WALLET_MISMATCH` · `422 AMOUNT_CAP` · `429` |
+| `POST /api/quotes/{id}/pay` | `{ option_index, payer, guest_name?, guest_email?, guest_phone? }` | `{ booking_id, booking_pda, tx, signer, lastValidBlockHeight }` · `404 QUOTE_NOT_FOUND` · `400 INVALID_OPTION` · `400 INVALID_WALLET` · `410 QUOTE_EXPIRED` · `409 HOLD_LOST` · `409 ALREADY_PAID` (booking account exists → booking view) · `403 WALLET_MISMATCH` · `422 AMOUNT_CAP` · `409 INSUFFICIENT_FUNDS { balance_minor, amount_minor }` (the UI offers the demo faucet) · `409 SIMULATION_FAILED` · `429` |
 | `POST /api/tx/send` | `{ tx }` | `{ signature, booking }` (see contract) |
 | `POST /api/bookings/{id}/submitted` | `{ signature }` | booking view (idempotent) |
 | `GET /api/bookings/{id}` | | public booking view (below); lazily cranks `release`/`void_booking` when due |
@@ -58,15 +58,18 @@ Checkout, booking, dashboard and admin are English-only in the MVP. `booking_url
 
 ```
 { id: "<32 hex>", status: "awaiting_signature"|"pending"|"confirmed"|"cancelled"|"released"|"disputed"|"resolved"|"voided"|"failed",
-  hotel: { name, address, phone, checkin_time: "HH:MM" }, room_type: { id, name },
-  checkin_date, checkout_date, amount_minor: "<u64>", option_id,
+  hotel: { name, address, phone, checkin_time: "HH:MM", timezone }, room_type: { id, name },
+  checkin_date, checkout_date, checkin_ts: int, amount_minor: "<u64>", option_id,
   terms: { tiers: [{ secs_before, refund_bps }], text: ["<plain-language line>", …] },
   refund_if_cancel_now_minor: "<u64>" | null, can_cancel, can_dispute, can_void,
   confirm_deadline_ts: int | null, release_after_ts: int | null, booking_pda,
-  explorer: { booking, create_tx, exit_tx } }
+  explorer: { booking, create_tx, exit_tx },
+  settled: { refund_minor, hotel_minor, fee_minor } | null }   // null until the booking closes
 ```
 
-`can_dispute` = status confirmed && checkin_ts ≤ now < release_after_ts. **Never** includes guest name/email/phone or the guest wallet. Other conventions: `lastValidBlockHeight` is a JSON number (a safe integer); hotel slugs match `^[a-z0-9][a-z0-9-]{0,63}$`; error bodies are `{ error: { code: "UPPER_SNAKE", message } }`.
+`can_dispute` = status confirmed && checkin_ts ≤ now < release_after_ts.
+
+**Clocks.** Quotes, holds and DB timestamps use wall-clock time. Everything the program will check against its `Clock` — lazy cranks, the `can_*` flags, `refund_if_cancel_now_minor` and `min_refund` — uses the chain's Clock sysvar (cached 2 s, wall time as fallback), so a surfnet after time travel behaves like the program. **Program id:** at startup the web app compares `STUMARI_PROGRAM_ID` with `onchain/artifacts/program-id.txt` (copied into the build); on a mismatch it logs an error and every chain route answers `503 PROGRAM_ID_MISMATCH`, while the landing page keeps serving. Routes that need unset chain settings answer `503 CHAIN_NOT_CONFIGURED`. **Never** includes guest name/email/phone or the guest wallet. Other conventions: `lastValidBlockHeight` is a JSON number (a safe integer); hotel slugs match `^[a-z0-9][a-z0-9-]{0,63}$`; error bodies are `{ error: { code: "UPPER_SNAKE", message } }`.
 
 ## Auth (Sign-In With Solana)
 

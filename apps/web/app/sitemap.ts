@@ -13,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         alternates: { languages: Object.fromEntries(locales.map((l) => [l, url(localePath(l, path))])) },
       })),
     ),
+    { url: url("/model") },
     { url: url("/privacy") },
   ];
 }

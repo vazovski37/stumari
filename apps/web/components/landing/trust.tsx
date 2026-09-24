@@ -1,4 +1,4 @@
-import { Hourglass, LockKeyhole, Scale, ScrollText } from "lucide-react";
+import { Hourglass, Info, LockKeyhole, Scale, ScrollText } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 const icons = [LockKeyhole, ScrollText, Scale, Hourglass];
@@ -24,6 +24,13 @@ export function Trust({ trust }: { trust: Dictionary["trust"] }) {
             );
           })}
         </ul>
+        <div className="mt-5 flex gap-4 rounded-[var(--radius-card)] border border-amber/40 bg-wine-deep/80 p-6">
+          <Info aria-hidden="true" className="size-6 shrink-0 text-amber" />
+          <div>
+            <h3 className="font-sans text-lg font-semibold">{trust.limits.title}</h3>
+            <p className="mt-2 leading-relaxed text-paper/85">{trust.limits.body}</p>
+          </div>
+        </div>
       </div>
     </section>
   );

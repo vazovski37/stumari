@@ -8,10 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx lib/db/migrate.ts",
-    "cron": "tsx scripts/cron-loop.ts"
+    "cron": "tsx scripts/cron-loop.ts",
+    "e2e": "tsx scripts/e2e-checkout.ts"
   },
   "dependencies": {
     "next": "16.3.6",

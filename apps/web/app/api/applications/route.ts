@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   const env = serverEnv();
   const db = getDb();
-  const hashedIp = ipHash(clientIp(request.headers), env.authSecret);
+  const hashedIp = ipHash(clientIp(request.headers, env.onVercel), env.authSecret);
 
   const limit = await consumeRateLimit(db, APPLY_LIMIT, hashedIp);
   if (!limit.ok) {

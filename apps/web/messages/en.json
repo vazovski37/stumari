@@ -50,15 +50,15 @@
         "body": "Big booking sites take 15–25% base commission, more with visibility boosters, and pay out weeks later."
       },
       {
-        "stat": "37%",
-        "title": "of bookings cancel, all under one policy",
+        "stat": "27%",
+        "title": "of ordinary bookings cancel, all under one policy",
         "body": "A family booking six months ahead and a speculative booking two days out get the same blanket terms, so you either lose guests or carry the risk.",
-        "source": "Hotel Booking Demand dataset, 119,390 bookings (Antonio, Almeida & Nunes, 2019)"
+        "source": "37% overall, including no-shows and group blocks (Hotel Booking Demand, 119,390 bookings)"
       },
       {
-        "stat": "1.58M",
-        "title": "visitors whose cards don't work here",
-        "body": "Russia sent 1.58 million of Georgia's 5.5 million visitors in 2025, and Russian-issued cards don't work abroad. Stripe has never supported Georgia. Many of these guests already pay in crypto, straight to an owner's personal wallet, with no receipt and no refund rule."
+        "stat": "1,579,764",
+        "title": "visitors from Russia in 2025",
+        "body": "Russian-issued Visa and Mastercard cards do not work abroad, so many of these guests already pay small hotels in USDT or USDC informally — straight to an owner's personal wallet, with no receipt and no refund rule. Stripe has never supported Georgia."
       }
     ]
   },
@@ -82,10 +82,10 @@
   "model": {
     "eyebrow": "Pricing",
     "title": "The model writes the contract",
-    "lead": "Most hotels have one cancellation policy for everyone. Stumari's model estimates how likely each request is to be cancelled, and when, then prices every contract so that you expect to earn the same from this guest as under your current policy.",
+    "lead": "Most hotels have one cancellation policy for everyone. Stumari's model estimates how likely each request is to be cancelled, and when, then prices every contract to target the same expected revenue from this guest as your current policy.",
     "points": [
       "Your current policy always costs your normal rate.",
-      "A more generous contract costs more, by exactly this guest's risk. A stricter one costs less.",
+      "A more generous contract costs more, by this guest's estimated risk. A stricter one costs less.",
       "You choose which contracts to offer and the price bounds."
     ],
     "compare": {
@@ -99,13 +99,14 @@
       "price": "Guest pays",
       "vsBase": "vs. your rate",
       "notShown": "Not shown: this close to check-in it has the same terms as Standard",
-      "footnote": "Numbers from the worked examples in our pricing spec, using default resale settings. Real prices depend on your rates, your settings and each request. Every option shown earns you the same expected revenue as your current policy."
+      "footnote": "Numbers from the worked examples in our pricing spec, using default resale settings. Real prices depend on your rates, your settings and each request. Every option shown is priced to target the same expected revenue as your current policy."
     },
     "templates": {
       "flexible": { "name": "Flexible", "terms": "Full refund until 24 h before check-in, then 50%" },
       "standard": { "name": "Standard", "terms": "Full refund until 7 days before, 50% until 3 days, then none" },
       "nonrefundable": { "name": "Non-refundable", "terms": "No refund" }
-    }
+    },
+    "learnMore": "How the model works and how well it is calibrated"
   },
   "trust": {
     "eyebrow": "Trust",
@@ -128,7 +129,11 @@
         "title": "Unconfirmed means refunded",
         "body": "Each booking stays pending until we re-check your calendars. If it isn't confirmed within 2 hours, the guest can take a full refund, so a double booking never costs the guest their money."
       }
-    ]
+    ],
+    "limits": {
+      "title": "What we don't claim",
+      "body": "During the pilot, Stumari can still upgrade the escrow program; it moves to a multi-signature group or is frozen before it holds meaningful funds. Disputed bookings depend on Stumari's arbiter key."
+    }
   },
   "pilot": {
     "eyebrow": "Pilot offer",

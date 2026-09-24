@@ -1,0 +1,52 @@
+import Link from "next/link";
+import { Logo } from "@/components/logo";
+import { SiteFooter } from "@/components/site-footer";
+import { WalletButton } from "@/components/wallet/wallet-button";
+import { WalletProvider } from "@/components/wallet/wallet-provider";
+import { serverEnv } from "@/lib/env";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+
+const clusterName = { localnet: "a local test chain", devnet: "Solana devnet", "mainnet-beta": "Solana" } as const;
+
+/** Guest pages (checkout, booking, my bookings): English only, with the wallet in the header. */
+export default function GuestLayout({ children }: LayoutProps<"/">) {
+  const env = serverEnv();
+  const dict = getDictionary("en");
+  return (
+    <WalletProvider config={{ cluster: env.cluster, demoMode: env.demoMode }}>
+      {env.cluster !== "mainnet-beta" && (
+        <p className="bg-wine-deep px-4 py-2 text-center text-xs font-medium text-paper">
+          Demo on {clusterName[env.cluster]}: payments use test USDC with no real value.
+        </p>
+      )}
+      <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
+          <Link href="/" aria-label="Stumari home" className="shrink-0">
+            <Logo />
+          </Link>
+          <nav aria-label="Guest" className="ml-2 hidden sm:block">
+            <ul className="flex items-center gap-5 text-sm font-medium text-ink-soft">
+              <li>
+                <Link href="/my" className="hover:text-wine">
+                  My bookings
+                </Link>
+              </li>
+              <li>
+                <Link href="/model" className="hover:text-wine">
+                  How pricing works
+                </Link>
+              </li>
+            </ul>
+          </nav>
+          <div className="ml-auto">
+            <WalletButton />
+          </div>
+        </div>
+      </header>
+      <main id="main" className="min-h-[60dvh]">
+        {children}
+      </main>
+      <SiteFooter locale="en" footer={dict.footer} />
+    </WalletProvider>
+  );
+}

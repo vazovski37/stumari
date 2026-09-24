@@ -95,6 +95,8 @@ describe("parseServerEnv", () => {
     expect(envError({ AMOUNT_CAP_MINOR: "1500.5" })).toContain("AMOUNT_CAP_MINOR");
     expect(envError({ STUMARI_CLUSTER: "testnet" })).toContain("STUMARI_CLUSTER");
     expect(envError({ AUTH_SECRET: "short" })).toContain("AUTH_SECRET");
+    expect(envError({ AUTH_SECRET: "z".repeat(64) })).toContain("AUTH_SECRET");
+    expect(envError({ AUTH_SECRET: "ab".repeat(31) })).toContain("AUTH_SECRET");
 
     const env = parseServerEnv({
       ADMIN_WALLETS: ` ${DEFAULT_PROGRAM_ID} , `,
@@ -117,12 +119,21 @@ describe("parseServerEnv", () => {
     expect(message).toContain("NEXT_PUBLIC_SITE_URL");
     expect(envError({ VERCEL: "1", LIBSQL_URL: "file:./.data/stumari.db" })).toContain("LIBSQL_URL");
     expect(
+      envError({
+        NODE_ENV: "production",
+        AUTH_SECRET: "a".repeat(64),
+        NEXT_PUBLIC_SITE_URL: "https://stumari.example",
+        LIBSQL_URL: "libsql://stumari.turso.io",
+      }),
+    ).toContain("LIBSQL_AUTH_TOKEN");
+    expect(
       parseServerEnv({
         NODE_ENV: "production",
         AUTH_SECRET: "a".repeat(64),
         NEXT_PUBLIC_SITE_URL: "https://stumari.example/",
         VERCEL: "1",
         LIBSQL_URL: "libsql://stumari.turso.io",
+        LIBSQL_AUTH_TOKEN: "token",
       }).siteUrl,
     ).toBe("https://stumari.example");
   });
@@ -140,7 +151,7 @@ describe("publicConfig", () => {
   it("exposes the quote signer public key and pilot terms, never secrets", () => {
     const { secret, publicKey } = keypair(5);
     const config = publicConfig(
-      parseServerEnv({ OPERATOR_SECRET_KEY: base58.encode(secret), STUMARI_DEMO_MODE: "1", AUTH_SECRET: "s".repeat(40) }),
+      parseServerEnv({ OPERATOR_SECRET_KEY: base58.encode(secret), STUMARI_DEMO_MODE: "1", AUTH_SECRET: "5e".repeat(32) }),
     );
     expect(config).toEqual({
       cluster: "devnet",
@@ -152,10 +163,18 @@ describe("publicConfig", () => {
     });
     const text = JSON.stringify(config);
     expect(text).not.toContain(base58.encode(secret));
-    expect(text).not.toContain("s".repeat(40));
+    expect(text).not.toContain("5e".repeat(32));
   });
 
   it("reports no quote signer until the operator key is configured", () => {
     expect(publicConfig(parseServerEnv({})).quote_signer).toBeNull();
+  });
+});
+
+describe("publicConfig with the on-chain Config", () => {
+  it("reads fee and payout delay from the Config when available", () => {
+    const config = publicConfig(parseServerEnv({}), { feeBps: 150, releaseDelaySecs: 120 });
+    expect(config.pilot_offer.fee_bps).toBe(150);
+    expect(config.pilot_offer.payout_delay_hours).toBeCloseTo(120 / 3600, 4);
   });
 });

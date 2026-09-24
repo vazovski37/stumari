@@ -1,4 +1,25 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { NextConfig } from "next";
+
+/**
+ * ADR-0008: the fixed program id, inlined so the server can check STUMARI_PROGRAM_ID against it
+ * (next runs from apps/web). A deploy without the repo's onchain/ folder skips this check.
+ */
+function artifactProgramId(): string {
+  try {
+    return readFileSync(resolve(process.cwd(), "../../onchain/artifacts/program-id.txt"), "utf8").trim();
+  } catch {
+    return "";
+  }
+}
+
+// Canonicals, the sitemap and og:url are baked in at build time (lib/site.ts).
+if (process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_SITE_URL) {
+  const message = "NEXT_PUBLIC_SITE_URL is not set: absolute URLs in this build point at http://localhost:3000";
+  if (process.env.VERCEL) throw new Error(message);
+  console.warn(`⚠ ${message}`);
+}
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -12,6 +33,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  env: { STUMARI_ARTIFACT_PROGRAM_ID: artifactProgramId() },
   transpilePackages: ["@stumari/core", "@stumari/escrow-client"],
   serverExternalPackages: ["@libsql/client", "libsql"],
   experimental: {

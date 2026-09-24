@@ -58,7 +58,10 @@ const rawSchema = z.object({
     .transform((v) => v.split(",").map((w) => w.trim()).filter((w) => w !== ""))
     .pipe(z.array(address("ADMIN_WALLETS entry"))),
   AUTH_SECRET: optionalString.pipe(
-    z.string().min(32, { message: "AUTH_SECRET must be at least 32 characters (use 32 random bytes as hex)" }).optional(),
+    z
+      .string()
+      .regex(/^[0-9a-fA-F]{64,}$/, { message: "AUTH_SECRET must be at least 32 random bytes as hex (64+ hex characters)" })
+      .optional(),
   ),
   CRON_SECRET: optionalString,
   LIBSQL_URL: optionalString,
@@ -74,6 +77,8 @@ const rawSchema = z.object({
 
 export type ServerEnv = {
   nodeEnv: "development" | "production" | "test";
+  /** Running on Vercel: only then is the first X-Forwarded-For entry the client's address. */
+  onVercel: boolean;
   cluster: Cluster;
   rpcUrl: string;
   programId: string;
@@ -123,6 +128,9 @@ export function parseServerEnv(source: Record<string, string | undefined>): Serv
     problems.push("LIBSQL_URL: a file: database cannot be used on Vercel; use a libsql://…turso.io URL");
   }
   if (production && !raw.NEXT_PUBLIC_SITE_URL) problems.push("NEXT_PUBLIC_SITE_URL: required in production");
+  if (production && libsqlUrl.startsWith("libsql://") && !raw.LIBSQL_AUTH_TOKEN) {
+    problems.push("LIBSQL_AUTH_TOKEN: required in production for a libsql:// database");
+  }
   if (problems.length > 0) throw new EnvError(problems);
 
   const operator = raw.OPERATOR_SECRET_KEY ?? null;
@@ -130,6 +138,7 @@ export function parseServerEnv(source: Record<string, string | undefined>): Serv
 
   return {
     nodeEnv: raw.NODE_ENV,
+    onVercel: raw.VERCEL !== undefined,
     cluster: raw.STUMARI_CLUSTER,
     rpcUrl: raw.SOLANA_RPC_URL ?? defaultRpcUrl[raw.STUMARI_CLUSTER],
     programId: raw.STUMARI_PROGRAM_ID ?? DEFAULT_PROGRAM_ID,
