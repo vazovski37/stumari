@@ -5,7 +5,7 @@ All endpoints are Next.js route handlers under `apps/web/app/api`. JSON in/out. 
 ## Runtime rules
 
 - Every route handler declares `export const runtime = 'nodejs'`. No auth or i18n logic in middleware/proxy — handlers and server components call `requireSession(role)`.
-- Ed25519 via `@noble/curves/ed25519`; sha256 via `@noble/hashes`.
+- Ed25519 and sha256: WebCrypto (`crypto.subtle`, Node ≥ 20 — what `@solana/kit` itself uses; `packages/escrow-client` does this) or `@noble/curves/ed25519` / `@noble/hashes`. Never a hand-rolled implementation.
 - Solana RPC only on the server (`SOLANA_RPC_URL`). Confirmation by polling `getSignatureStatuses` (no websockets in serverless).
 - Rate limits are persisted in the `rate_events` table (serverless-safe), never in memory.
 - Work after the response (iCal re-sync + `confirm_booking` after a payment lands) runs in `after()` from `next/server`.

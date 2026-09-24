@@ -22,7 +22,7 @@ Deadline: **2026-10-12 11:59 PM PDT** (Tbilisi: 2026-10-13 10:59 AM). Final subm
 ## Build order (engineering)
 
 Wave 1 (parallel): `apps/web` foundation (DB schema, landing EN/KA/RU, apply) · sales + submission kits + runbook · `onchain/` program with logic + LiteSVM tests · `ml/` model → `model.json` + `parity.json` · `packages/core` (refund math, tiers, dates, features, evaluator, pricing, quotes).
-Wave 2: `packages/escrow-client` (Codama + tx builders, tested on LiteSVM) → devnet deploy + `scripts/bootstrap.ts` → `apps/web` quote/pay/booking/cancel + demo wallet → dashboard + admin + iCal + cron · `apps/mcp` in parallel.
+Wave 2: `packages/escrow-client` (Codama + tx builders, tested on a dedicated Surfpool container, ADR-0015) → devnet deploy + `scripts/bootstrap.ts` → `apps/web` quote/pay/booking/cancel + demo wallet → dashboard + admin + iCal + cron · `apps/mcp` in parallel.
 Wave 3: E2E on Surfpool (time travel) and devnet in the browser; adversarial code review; deploy.
 
 ## What founders must do (Claude cannot)
