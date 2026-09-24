@@ -11,6 +11,12 @@ Owned by the lead engineer; agents read the section for their component. Tick it
 - [ ] English-only pages (`/h`, `/b`, `/my`, `/model`, `/dashboard`, `/admin`) live under `app/(site)/`; avoid the paths `/`, `/apply`, `/en`, `/ka`, `/ru` there.
 - [ ] Policy validation in API/DB must match `@stumari/core` `validatePolicy` (reference template must be enabled).
 - [ ] `/model` page renders `ml/reports/reliability.json` + metrics summary (ADR-0016 wording: Platt; AUC 0.713 vs 0.634; ECE 0.038).
+- [ ] Rate-limit key: do not trust a client-supplied `X-Forwarded-For` first entry except on Vercel (`VERCEL` set); otherwise use the socket/`x-real-ip`.
+- [ ] Production build must fail (or loudly warn) when `NEXT_PUBLIC_SITE_URL` is missing — SSG bakes canonicals/sitemap/og:url at build time.
+- [ ] `AUTH_SECRET`: require ≥ 64 hex chars (32 bytes) as configuration.md says.
+- [ ] Features needing `OPERATOR_SECRET_KEY`, `STUMARI_MINT`, `CRON_SECRET` refuse clearly when they are null; a `libsql://` URL without `LIBSQL_AUTH_TOKEN` is an error in production.
+- [ ] Copy (ADR-0013): "earns you the same expected revenue" → "priced to target the same expected revenue"; soften "by exactly this guest's risk" → "by this guest's estimated risk" (EN/KA/RU).
+- [ ] Apply form placeholder contrast ≥ 4.5:1 (currently 3.66:1).
 - [ ] Founders proofread `messages/ka.json` and `messages/ru.json` before calls; confirm `/privacy` promises.
 
 ## docs (sales, submission, runbook)
