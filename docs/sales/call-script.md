@@ -18,6 +18,7 @@ If they say no: "When is a better time?" Log `next_date` and hang up.
 2. **Guests who want to pay in crypto:** "Do you get guests whose cards don't work, for example Russian cards, who ask to pay in USDT or other crypto? How do you handle that today?"
    - Listen for the usual answer: *"they send USDT to my wallet (or my brother's)."* That is the day-one use case. Note `accepts_crypto` = `no` / `sometimes` / `often`.
 3. **Cancellation pain:** "What happens when a guest cancels late or doesn't show up? Does your cancellation policy fit every guest?"
+4. **Calendar system:** "Which system manages your calendar: OtelMS, Exely, Cloudbeds, Beds24, something else, or just the Booking.com extranet? On Booking.com, is each room its own listing, or one room type with several rooms?" Log `channel_manager` and `ical_single_unit`. No channel manager and one room per listing: iCal works today. A channel manager or multi-room types: say calendars connect through their channel manager, which we are integrating, and don't promise a date ([research](../research/channel-managers.md)).
 
 ## 3. Pitch (30 s)
 

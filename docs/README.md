@@ -36,4 +36,5 @@
 - [Demo video script](submission/demo-video-script.md) (≤ 3:00, live product) · [Pitch video script](submission/pitch-video-script.md) (≤ 2:00)
 
 ## Research
+- [Double booking and channel managers](research/channel-managers.md) — iCal latency and eligibility, gaps in today's design, Georgian PMS/CM market (OtelMS, Exely), integration routes (Exely Connect, Channex, Beds24, SiteMinder), no unified API
 - [Competitive landscape](research/landscape.md) — Copilot API data: win rates by cluster, tag lift, precedents, threats

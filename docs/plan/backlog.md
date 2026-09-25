@@ -55,6 +55,16 @@ Owned by the lead engineer; agents read the section for their component. Tick it
 - [ ] Add `drizzle-orm`, `@libsql/client` and `@modelcontextprotocol/sdk` to `scripts/package.json` (today `scripts/lib/db.ts` imports `apps/web/lib/db` and `scripts/e2e/mcp.ts` the MCP SDK by relative path, resolving them from `apps/web` / `apps/mcp` node_modules).
 - [x] E2E: time travel only after every create in a run (quotes are stamped with wall-clock time; a chain ahead of the wall clock fails `create_booking` with `QuoteExpired`), and `bootstrap --cluster localnet --reset` at the start of each E2E run.
 
+## inventory / double booking (research 2026-09-25, docs/research/channel-managers.md)
+- [ ] G2: program instruction signed by the **hotel authority** that refunds a Confirmed booking in full before check-in ("walk"); ADR + escrow-program.md + security.md + refund vectors.
+- [ ] G3: `autoConfirm` fails closed: confirm only if every import feed of the unit loaded in this sync; retry until the deadline, then void.
+- [ ] G1: confirm only after every OTA connected to the unit fetched our export feed since the booking (one export token per OTA per unit), then re-import; `confirm_window_secs` ≈ 4 h; guest sees "Reserved — calendars syncing"; update pricing-and-risk-model.md (longer free-cancel option while Pending).
+- [ ] G4: post-confirm conflict detector in the sync cron (new imported blocks vs confirmed bookings) → dashboard flag + founder alert.
+- [ ] G6: on HOLD_LOST / conflict, re-pick another free unit of the same room type.
+- [ ] `InventoryAdapter` interface (getAvailability, pushReservation, pushCancellation, parseWebhook) with iCal as the first implementation; one real adapter for the demo (Beds24 or Channex Open Channel staging).
+- [ ] Application form: make `channel_manager` a select (OtelMS, Exely, Cloudbeds, Beds24, HotelRunner, other, none).
+- [ ] Founders: email Exely (welcome@exely.com) for an Exely Connect partner key and OtelMS (partners@otelms.com) about a booking-channel API; ask both whether they import an external iCal per room.
+
 ## wave 3 review follow-ups (2026-09-25)
 - [x] 21 verified findings fixed (security SEC-1..5, money M1..M4, specs/data SC-1..5, product PH-1..8); see the commit "Wave 3 review fixes".
 - [ ] A hosted, shared MCP server puts every agent behind one IP hash: at most 2 concurrent agent holds, and agent hold owners are per wallet on that host. Forward a per-agent identity before hosting it for others.

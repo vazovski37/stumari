@@ -21,12 +21,14 @@ The MVP connects hotel inventory the way small properties already sync Booking.c
 
 ## Confirmation (write-back safety)
 
-OTAs poll imported calendars on their own schedule (often hourly), so a Stumari booking can collide with an OTA booking made in the gap. Therefore every booking starts `Pending` on-chain:
+OTAs poll imported calendars on their own schedule (Booking.com every 2 h, Airbnb every 3 h, Agoda "several times a day" — [research](../research/channel-managers.md)), so a Stumari booking can collide with an OTA booking made in the gap. Therefore every booking starts `Pending` on-chain:
 
 1. After the payment transaction lands, the server re-syncs the unit's imports.
 2. No overlap with (a) any `blocks` row of the unit and (b) any other booking on the unit that occupies it and either was created earlier or is already `confirmed`/`disputed`/`released`/`resolved` (a booking whose create landed unseen may be noticed after a later one was confirmed; it then stays pending and is voided) → server sends `confirm_booking` (operator key) → `Confirmed`. This must happen before `confirm_deadline_ts` (the program rejects later confirms).
 3. Overlap found → booking stays `Pending`, a `sync_conflict` event is logged, the hotel dashboard and admin show it. The hotel can confirm manually (if it resolves the conflict by moving the other guest) or admin voids → full refund.
 4. If nobody confirms within the 2 h confirm window, confirming becomes impossible and `void_booking` becomes permissionless; the release cron (or the next read of the booking) voids it → full refund.
+
+**Known gaps (2026-09-25, [research](../research/channel-managers.md#gaps-in-todays-design-and-fixes)).** As implemented, step 2 runs seconds after payment (`autoConfirm`), so the Pending window catches OTA bookings made *before* ours (the backward gap) but not an OTA sale in the 2–3 h before that OTA next reads our export feed (the forward gap); such a collision hits a Confirmed booking and is not detected afterwards. A feed that fails to load at confirm time is treated as unchanged (fail-open), and a Confirmed booking has no on-chain full refund before check-in. Planned fixes: confirm only after every connected OTA has fetched our feed since the booking (per-OTA export tokens, ~4 h window), fail closed, a post-confirm conflict alert, and a hotel-signed full-refund ("walk") instruction — tracked in [backlog.md](../plan/backlog.md).
 
 ## Manual blocks
 
@@ -34,4 +36,4 @@ Hotels without any OTA calendars can block dates in the dashboard (the "native l
 
 ## Known limitation — multi-unit room types
 
-Booking.com's calendar (iCal) sync is designed for single-unit listings; multi-unit room types may not offer iCal export/import. The application form asks `ical_single_unit`; hotels with multi-unit room types use manual blocks or a channel manager (a Channex adapter is roadmap). **Verify on a real extranet before promising iCal onboarding to a specific hotel.**
+Booking.com allows calendar (iCal) sync only for properties with **≤ 20 room types, ≤ 1 unit per room type and no XML connectivity provider** (channel manager or PMS); Agoda likewise only for room types with exactly one room. So hotels with multi-unit room types, and every hotel already on a channel manager (OtelMS, Exely, HotelRunner, Beds24, Channex…), cannot connect Booking.com to Stumari over iCal. The application form asks `ical_single_unit` and `channel_manager`; those hotels use manual blocks until a channel-manager adapter exists ([research](../research/channel-managers.md#integration-routes): Exely Connect, OtelMS partnership, Beds24, Channex). Interim bridge where supported: paste Stumari's feed into the hotel's channel manager instead of each OTA. **Verify on a real extranet before promising iCal onboarding to a specific hotel.**
