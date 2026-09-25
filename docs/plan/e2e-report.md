@@ -95,7 +95,7 @@ No step of the loop failed. The only product-code change is the test-only iCal a
 bash scripts/localnet.sh reset
 pnpm --filter @stumari/scripts bootstrap -- --cluster localnet
 pnpm --filter @stumari/scripts e2e              # ~90 s; resets the chain at start and end (--keep-chain to inspect)
-pnpm --filter web test                          # 21 files, 187 tests
+pnpm --filter web test                          # 22 files, 188 tests (2026-09-25)
 pnpm --filter web typecheck
 pnpm --filter @stumari/scripts typecheck
 # screenshots: start the demo app on :3000 (e.g. `pnpm dev`), then
