@@ -4,7 +4,7 @@
 
 The hotel's own model writes each booking's cancellation contract; a Solana USDC escrow enforces it.
 
-- A seller agent returns one signed quote per request: a menu of contracts (flexible / standard / non-refundable), each priced by a calibrated time-to-cancel model so the hotel's expected revenue stays at today's level.
+- A seller agent returns one signed quote per request: a menu of contracts (flexible / standard / non-refundable), each priced by a calibrated time-to-cancel model to target the hotel's expected revenue at today's level.
 - The guest (or an AI agent) pays USDC into a per-booking escrow that encodes the exact refund schedule. Guests need no SOL — Stumari pays the fees.
 - Cancellations refund by the schedule automatically; the hotel is paid 24 hours after check-in unless the guest flags a problem.
 
@@ -24,10 +24,23 @@ Built for the Colosseum **Crypto World's Fair** hackathon (2026). Not an OTA: th
 | `spec/vectors/` | Shared test vectors (Rust ⇄ TS) |
 | `scripts/` | WSL program build, devnet bootstrap, end-to-end loop |
 
-## Quick start
+## Quick start (local chain, Windows + Docker)
 
-See [docs/plan/runbook.md](docs/plan/runbook.md) for setup, local development, devnet bootstrap and deployment.
+```bash
+pnpm install
+pnpm --filter @stumari/scripts bootstrap --cluster localnet   # Surfpool in Docker + program + mock USDC + demo hotel + apps/web/.env.local
+pnpm dev                                                      # http://localhost:3000/h/stumari-demo → Test wallet → Get 500 test USDC → book → cancel
+pnpm --filter @stumari/scripts e2e                            # the whole loop headless: 20 steps, balances checked against the refund math
+```
 
-## Status
+Setup, devnet bootstrap, Vercel deployment and the MCP server for Claude Desktop: [docs/plan/runbook.md](docs/plan/runbook.md). What the E2E proves, with screenshots: [docs/plan/e2e-report.md](docs/plan/e2e-report.md).
 
-MVP in progress — see [docs/plan/roadmap.md](docs/plan/roadmap.md).
+**Program id** (fixed across clusters): `6Y17gFD9dWPJF6GtpzABJZY7Pk8j5CLh268zZyW5U6nf`.
+
+## Status (2026-09-25)
+
+The MVP loop works end to end on a local Solana chain: a hotel is onboarded with its iCal calendars, a guest (or an AI agent over MCP) gets a signed menu of cancellation contracts priced by the model, pays USDC without holding SOL, and cancels, disputes or is released to the hotel exactly by the schedule. Devnet deployment is next ([roadmap](docs/plan/roadmap.md)).
+
+**Stubbed, and said so on screen:** disputes are decided by a single Stumari arbiter key (roadmap: a multisig with bonded arbiters); there is no hotel bond yet; the cancellation model is trained on the public Hotel Booking Demand dataset (Portugal, 2015–17), not yet recalibrated per hotel. The escrow program is upgradeable by Stumari during the pilot; it moves to a multisig or is frozen before real money ([security.md](docs/architecture/security.md)).
+
+Model on held-out 2017 bookings: AUC 0.713 vs 0.634 for lead time alone, Brier 0.1917 vs 0.2136 for the base rate, expected calibration error 0.038 ([ml/reports/metrics.md](ml/reports/metrics.md)).
