@@ -73,7 +73,7 @@ Bytes = UTF-8 of the canonical string. `hash = sha256(bytes)`; the same 32 bytes
 
 ## Explain block (unsigned)
 
-Every **enabled** template appears in `explain.options` with its `price_minor` (or `null` when withheld). `withheld` is `null`, `"risk_exceeds_bounds"`, or `"duplicate_terms"` with `same_as: <shown template id>` (identical refunds on every reachable window). `clamped` is `null` or `"floor"`. `p_uncalibrated` is logistic(raw) per window (null when unreachable), for explanation only.
+Every **enabled** template appears in `explain.options` with its `price_minor` (or `null` when withheld). `withheld` is `null`, `"risk_exceeds_bounds"`, `"duplicate_terms"` with `same_as: <shown template id>` (identical refunds on every reachable window), or `"over_amount_cap"` (priced — `price_minor` stays set — but above the deployment's `AMOUNT_CAP_MINOR`, so left out of the signed options). `clamped` is `null` or `"floor"`. `p_uncalibrated` is logistic(raw) per window (null when unreachable), for explanation only.
 
 
 ```json

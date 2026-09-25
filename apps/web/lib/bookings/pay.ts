@@ -6,11 +6,14 @@ import { buildCreateBookingTx, findAta, findVaultPda } from "@stumari/escrow-cli
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { ApiError } from "../api/errors";
+import { enforceRateLimits } from "../api/rate";
 import type { Db } from "../db/client";
 import { bookings, quotes } from "../db/schema";
 import { hasConflicts, unitConflicts } from "../inventory/availability";
 import { PAY_SYNC_MAX_AGE_SECS, syncUnitIfStale } from "../inventory/ical-sync";
 import { effectiveStatus } from "../quotes/create";
+import { GLOBAL_KEY, PAY_DAILY_GLOBAL_LIMIT, PAY_DAILY_IP_LIMIT } from "../rate-limit";
+import { assertOperatorBalance } from "../solana/balance";
 import { chainNow } from "../solana/clock";
 import { serverKeyAddresses, type Chain } from "../solana/context";
 import { parseGuestWallet } from "../wallets";
@@ -65,6 +68,31 @@ export function checkPayable(
   return { option, amount };
 }
 
+/**
+ * Demo mode only (security.md: operator SOL drain), just before a new `create_booking` is built:
+ * 503 OPERATOR_LOW_BALANCE below 0.05 SOL, then 20 builds per IP and 300 in all per day. Cached
+ * transactions and refused requests cost nothing, so they spend no budget.
+ */
+export async function consumeDemoPayBudget(
+  c: Pick<Chain, "env" | "rpc" | "operator">,
+  db: Db,
+  ipHash: string,
+  now?: number,
+): Promise<void> {
+  if (!c.env.demoMode) return;
+  await assertOperatorBalance(c);
+  // The IP first: a caller over its own cap must not spend the deployment's.
+  await enforceRateLimits(
+    db,
+    [
+      [PAY_DAILY_IP_LIMIT, `ip:${ipHash}`],
+      [PAY_DAILY_GLOBAL_LIMIT, GLOBAL_KEY],
+    ],
+    "demo bookings today",
+    now,
+  );
+}
+
 async function alreadyPaid(c: Chain, db: Db, bookingId: string, now: number): Promise<ApiError> {
   const record = await loadBookingRecord(db, bookingId);
   return new ApiError(409, "ALREADY_PAID", "This quote has already been paid", {
@@ -75,8 +103,9 @@ async function alreadyPaid(c: Chain, db: Db, bookingId: string, now: number): Pr
 /**
  * POST /api/quotes/{id}/pay: builds (or returns the cached) `create_booking` for the quote's
  * deterministic booking id (ADR-0011), partially signed by the operator as fee payer + quote signer.
+ * `ipHash` is the caller's, for the demo-mode daily build caps.
  */
-export async function preparePayment(c: Chain, db: Db, quoteId: string, input: PayRequest, now: number): Promise<PayResponse> {
+export async function preparePayment(c: Chain, db: Db, quoteId: string, input: PayRequest, now: number, ipHash: string): Promise<PayResponse> {
   const quote = await db.query.quotes.findFirst({ where: eq(quotes.id, quoteId) });
   if (!quote) throw new ApiError(404, "QUOTE_NOT_FOUND", "No such quote");
   const payer = parseGuestWallet(input.payer, serverKeyAddresses(c));
@@ -86,6 +115,15 @@ export async function preparePayment(c: Chain, db: Db, quoteId: string, input: P
   if (existing && existing.status !== "awaiting_signature" && existing.status !== "failed") {
     throw await alreadyPaid(c, db, bookingId, await chainClock());
   }
+  // A create may have landed unseen (relay timeout, sign-and-send wallet): look at the chain
+  // before any quote check, so a paid booking answers ALREADY_PAID even after its quote expired.
+  if (existing) {
+    const landed = await fetchChainBooking(c, bookingId);
+    if (landed) {
+      await applyChainState(db, existing, landed);
+      throw await alreadyPaid(c, db, bookingId, await chainClock());
+    }
+  }
   const body = quote.body as unknown as QuoteBody;
   const { option, amount } = checkPayable({ ...quote, body }, { option_index: input.option_index, payer }, { now, amountCapMinor: c.env.amountCapMinor });
   if (body.mint !== c.mint || body.program_id !== c.env.programId) {
@@ -93,9 +131,7 @@ export async function preparePayment(c: Chain, db: Db, quoteId: string, input: P
   }
 
   const bookingPda = await bookingPdaOf(bookingId);
-  const account = await fetchChainBooking(c, bookingId);
-  if (account) {
-    if (existing) await applyChainState(db, existing, account);
+  if (!existing && (await fetchChainBooking(c, bookingId))) {
     throw await alreadyPaid(c, db, bookingId, await chainClock());
   }
 
@@ -131,6 +167,7 @@ export async function preparePayment(c: Chain, db: Db, quoteId: string, input: P
     });
   }
 
+  await consumeDemoPayBudget(c, db, ipHash, now);
   const built = await buildCreateBookingTx({
     rpc: c.rpc,
     operator: c.operator,

@@ -28,7 +28,7 @@
 | Feature | What it means |
 |---|---|
 | A booking page | `/h/{your-hotel}`. Guests see your rooms, pick dates and choose a contract (Flexible / Standard / Non-refundable). |
-| Enforceable terms | Every booking's refund schedule is written into its own Solana escrow before the guest pays. It is the same for both sides and neither side can change it. |
+| Enforceable terms | Every booking's refund schedule is written into its own Solana escrow before the guest pays. It is the same for both sides, and the program's rules let neither side change it (during the pilot Stumari can still upgrade the program; see [objections.md](objections.md#what-if-stumari-disappears)). |
 | Automatic payouts | USDC reaches your wallet 24 h after check-in unless the guest opens a dispute, with no invoice and no chasing. |
 | Automatic refunds | If a guest cancels, the escrow refunds them by the schedule and pays you the rest in the same transaction. |
 | Calendar sync | Stumari reads your Booking.com/Airbnb calendars (iCal) and gives you a feed to paste back, so a room sold on Stumari is blocked there too. |

@@ -77,12 +77,12 @@ A sync replaces all `ical` rows of that `(room_id, feed_url)` in one transaction
 | explain (json) | |
 | booking_id | hex, derived from `id` (ID encoding) |
 | buyer_type, buyer_wallet | |
-| client_id | value of httpOnly cookie `stumari_cid` (128-bit random, set on first quote); MCP uses `mcp:{agent wallet or 'anon'}` — anonymous agents share `mcp:anon`, so together they hold at most one unit (agents should pass a wallet) |
+| client_id | value of httpOnly cookie `stumari_cid` (128-bit random, set on first quote); MCP uses `mcp:{ip_hash}:{agent wallet or 'anon'}` (bound to the caller's IP, so nobody else can claim an agent's hold by naming its wallet) |
 | ip_hash | sha256(ip + AUTH_SECRET) |
 | status | `active` \| `used` \| `expired` |
 | expires_at, created_at | |
 
-Rules: `POST /api/quotes` holds a unit with **one atomic batch**: an `INSERT … SELECT` that picks the lowest-numbered unit free under the availability rule and inserts the quote in the same statement, plus a conditional `UPDATE` expiring the client's other active quotes. Concurrent requests cannot hold the same unit; `SQLITE_BUSY` from another process is retried with backoff. (An explicit `BEGIN IMMEDIATE` transaction fails with `SQLITE_BUSY` on a local `file:` database, so it is not used.) Creating a quote marks every other `active` quote with the same `client_id` `expired` (a client holds at most one unit). Limit 10 quotes per `ip_hash` per 10 min. The UI calls `POST /api/quotes` only on an explicit "See prices" click.
+Rules: `POST /api/quotes` holds a unit with **one atomic batch**: an `INSERT … SELECT` that picks the lowest-numbered unit free under the availability rule and inserts the quote in the same statement, plus a conditional `UPDATE` expiring the client's other active quotes. Concurrent requests cannot hold the same unit; `SQLITE_BUSY` from another process is retried with backoff. (An explicit `BEGIN IMMEDIATE` transaction fails with `SQLITE_BUSY` on a local `file:` database, so it is not used.) Creating a quote marks every other `active` quote with the same `client_id` `expired` (a client holds at most one unit), and the same `INSERT … SELECT` refuses a hold when the caller's `ip_hash` already has 2 active, unexpired holds from other owners (`429 HOLD_LIMIT`) — cookie-less requests cannot squat every unit. Limit 10 quotes per `ip_hash` per 10 min. The UI calls `POST /api/quotes` only on an explicit "See prices" click.
 
 ### `bookings`
 | Column | Notes |
@@ -106,7 +106,7 @@ Rules: `POST /api/quotes` holds a unit with **one atomic batch**: an `INSERT …
 
 `/pay` upserts the single row for the quote's derived `booking_id` while it is `awaiting_signature`.
 
-**Occupancy:** a booking occupies its unit's nights `[checkin_date, checkout_date)` when its status is `pending`, `confirmed`, `disputed`, `released` or `resolved`, or `awaiting_signature` while its quote's `expires_at > now`. Only `cancelled`, `voided` and `failed` free nights. (`released`/`resolved` are terminal on-chain, but the guest may still be in the room.)
+**Occupancy:** a booking occupies its unit's nights `[checkin_date, checkout_date)` when its status is `pending`, `confirmed`, `disputed`, `released` or `resolved`, or `awaiting_signature` while `quote.expires_at + 300 s > now` (the create may have landed unseen until then; after it, a create that has not landed never will and the row becomes `failed`). Only `cancelled`, `voided` and `failed` free nights. (`released`/`resolved` are terminal on-chain, but the guest may still be in the room.)
 
 ### `booking_events` — audit / public-label mirror
 | id pk | booking_id | type (`created`, `confirmed`, `cancelled`, `released`, `disputed`, `resolved`, `voided`, `sync_conflict`, `failed`) | sig | data (json) | created_at |
@@ -116,7 +116,7 @@ Rules: `POST /api/quotes` holds a unit with **one atomic batch**: an `INSERT …
 Repeat build requests for the same `(booking_id, action)` return the cached `tx_base64` while valid.
 
 ### `rate_events`
-| id pk | bucket (`apply`, `faucet`, `quote`, `pay`, `tx`, `nonce` — 20 per IP per 10 min, `sync` — dashboard "Sync now", 10 per hotel per 10 min) | key (ip_hash or wallet) | created_at |
+| id pk | bucket (`apply`, `faucet`, `quote`, `pay`, `tx`, `nonce` — 20 per IP per 10 min, `sync` — dashboard "Sync now", 10 per hotel per 10 min, `pay_daily` / `faucet_daily` — demo-mode daily caps, key `global` for deployment-wide ones; the sync cron prunes events older than 24 h) | key (ip_hash or wallet) | created_at |
 Index `(bucket, key, created_at)`. A limit is `COUNT(*)` in the window; old rows are pruned by the sync cron.
 
 ### `auth_nonces`

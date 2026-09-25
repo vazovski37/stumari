@@ -10,7 +10,7 @@ import {
   type SignedQuote,
 } from "@stumari/core";
 import type { AgentWallet } from "./agent";
-import type { StumariApi } from "./api";
+import { ApiError, type StumariApi } from "./api";
 import { type BookingView, type Envelope, type PublicConfig, type QuoteBody, bookingView } from "./schemas";
 import { clip, describeTiers, usdc } from "./text";
 import { hotelPda } from "./tx-guard";
@@ -297,7 +297,17 @@ export async function book(deps: ToolDeps, input: BookInput): Promise<ToolOutput
         mint: address(q.mint),
       },
     });
-    const sent = await api.sendTx(signed.txBase64);
+    let sent: Awaited<ReturnType<StumariApi["sendTx"]>>;
+    try {
+      sent = await api.sendTx(signed.txBase64);
+    } catch (e) {
+      // The payment may have landed; re-quoting and paying again could double-book.
+      if (!(e instanceof ApiError && e.code === "CONFIRMATION_TIMEOUT")) throw e;
+      return {
+        summary: `Payment sent from agent wallet ${agent.address}, but its confirmation was not seen yet. Do NOT book again: check booking_status for ${pay.booking_id} in a minute — ${url}`,
+        data: { booking_id: pay.booking_id, status: "unconfirmed", booking_url: url, option_id: option.id, amount_minor: option.price_minor, payer },
+      };
+    }
     const status = bookingStatusOf(sent.booking);
     return {
       summary: `Booked: ${optionText} Paid from agent wallet ${agent.address}; transaction ${sent.signature}. Booking ${pay.booking_id}${status ? ` is ${status}` : ""} — ${url}`,

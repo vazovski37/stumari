@@ -4,7 +4,7 @@ import { handler, readJson } from "@/lib/api/errors";
 import { enforceRateLimits } from "@/lib/api/rate";
 import { bookingTxRequest, prepareBookingTx } from "@/lib/bookings/actions";
 import { getDb } from "@/lib/db";
-import { TX_IP_LIMIT, TX_WALLET_LIMIT } from "@/lib/rate-limit";
+import { txLimits } from "@/lib/rate-limit";
 import { chain } from "@/lib/solana/context";
 
 export const runtime = "nodejs";
@@ -14,13 +14,8 @@ export const POST = handler(async (request: NextRequest, ctx: RouteContext<"/api
   const input = await readJson(request, bookingTxRequest);
   const c = await chain();
   const db = getDb();
-  await enforceRateLimits(
-    db,
-    [
-      [TX_IP_LIMIT, `ip:${requestIpHash(request)}`],
-      [TX_WALLET_LIMIT, `wallet:${input.wallet}`],
-    ],
-    "transactions",
-  );
+  // The wallet budget is per (IP, wallet): `wallet` is only checked against the booking's guest
+  // later, so a stranger naming it must not be able to spend the guest's budget.
+  await enforceRateLimits(db, txLimits(requestIpHash(request), input.wallet), "transactions");
   return Response.json(await prepareBookingTx(c, db, (await ctx.params).id, input));
 });

@@ -1,4 +1,4 @@
-import { parseMinor, splitCancel, type Tier } from "@stumari/core";
+import { minRefundForCancel, parseMinor, type Tier } from "@stumari/core";
 import type { bookings } from "../db/schema";
 import type { Cluster } from "../env-schema";
 import { explorerUrl } from "../explorer";
@@ -36,6 +36,8 @@ export interface PublicBookingView {
   explorer: { booking: string; create_tx: string | null; exit_tx: string | null };
   /** How the escrow was paid out once the booking closed (from the on-chain account). */
   settled: { refund_minor: string; hotel_minor: string; fee_minor: string } | null;
+  /** The chain clock (unix seconds) this view was built at: clients time the refund schedule by it. */
+  now: number;
 }
 
 export interface ViewContext {
@@ -58,20 +60,16 @@ export function allowedActions(b: BookingRow, now: number) {
 /** Never includes the guest's name, email, phone or wallet. */
 export function publicBookingView({ booking: b, hotel, roomType }: BookingRecord, ctx: ViewContext): PublicBookingView {
   const actions = allowedActions(b, ctx.now);
-  // The refund by the tier schedule: what a cancel guarantees (its min_refund). A pending booking
-  // gets everything back if the hotel has not confirmed when the cancel lands, but that is not
-  // promised, because an auto-confirm may land first (ADR-0012).
-  const refund =
-    actions.can_cancel && (b.status === "pending" || b.status === "confirmed")
-      ? splitCancel({
-          status: "confirmed",
-          amount: parseMinor(b.amount_minor),
-          feeBps: b.fee_bps ?? 0,
-          tiers: b.tiers,
-          checkinTs: b.checkin_ts,
-          now: ctx.now,
-        }).refund.toString()
-      : null;
+  // What a cancel guarantees: its min_refund, the refund by the tier schedule at now + 90 s
+  // (escrow-program.md). A pending booking gets everything back if the hotel has not confirmed
+  // when the cancel lands, but that is not promised, because an auto-confirm may land first
+  // (ADR-0012). Near a tier boundary the cancel may pay more than this, never less.
+  const refund = actions.can_cancel
+    ? minRefundForCancel({
+        booking: { amount: parseMinor(b.amount_minor), feeBps: b.fee_bps ?? 0, tiers: b.tiers, checkinTs: b.checkin_ts },
+        now: ctx.now,
+      }).toString()
+    : null;
   const bookingPda = b.booking_pda ?? "";
   return {
     id: b.id,
@@ -107,5 +105,6 @@ export function publicBookingView({ booking: b, hotel, roomType }: BookingRecord
       b.refund_minor !== null && b.hotel_minor !== null && b.fee_minor !== null
         ? { refund_minor: b.refund_minor, hotel_minor: b.hotel_minor, fee_minor: b.fee_minor }
         : null,
+    now: ctx.now,
   };
 }

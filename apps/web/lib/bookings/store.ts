@@ -3,6 +3,7 @@ import { matchTemplate, type QuoteBody } from "@stumari/core";
 import type { BookingView as ChainBooking } from "@stumari/escrow-client";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import type { Db } from "../db/client";
+import { CREATE_GRACE_SECS } from "../inventory/occupancy";
 import { bookingEvents, bookings, hotels, quotes, roomTypes } from "../db/schema";
 import type { BookingRecord, BookingRow, BookingStatus } from "./view";
 
@@ -36,8 +37,6 @@ export const isTerminal = (s: BookingStatus) => TERMINAL.has(s) || s === "failed
 /** A signature to record with the chain state it produced. */
 export type SigField = "create_sig" | "confirm_sig" | "final_sig";
 
-/** After the quote expired (+ blockhash lifetime), a create that has not landed never will. */
-const CREATE_GRACE_SECS = 300;
 
 /**
  * Mirrors the on-chain Booking into the DB row (the chain is the source of truth for money and

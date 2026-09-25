@@ -157,6 +157,8 @@ export const bookingView = z.object({
   confirm_deadline_ts: int.nullish(),
   release_after_ts: int.nullish(),
   booking_pda: address,
+  /** The chain clock (unix seconds) the view was built at; optional for older servers. */
+  now: int.optional(),
 });
 export type BookingView = z.infer<typeof bookingView>;
 

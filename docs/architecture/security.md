@@ -19,7 +19,7 @@ Never commit keys. `.gitignore` covers `*.json` keypairs under `onchain/keys/`, 
 |---|---|
 | Guest alters price/terms in the payment tx | `create_booking` requires `quote_signer` signature over the whole message (ADR-0004) |
 | Replay of a quote / double booking of one quote | `booking_id` is derived from the quote id, so the booking PDA (`init`) enforces one booking per quote on-chain; server marks the quote `used`; one hold per client |
-| Operator SOL drain via gasless txs | `/pay` and `/bookings/{id}/tx` rate-limited per wallet and IP; txs built only if valid against a fresh on-chain read and after simulation; signed tx cached per `(booking, action)` until its blockhash expires (repeat calls get the same bytes); one booking per quote; alert when operator balance < 1 SOL; Booking rent (~0.00334 SOL) is an accepted per-booking cost |
+| Operator SOL drain via gasless txs | `/pay` and `/bookings/{id}/tx` rate-limited per IP and per (IP, wallet); demo mode: 20 new `create_booking` builds per IP and 300 in all per day, faucet 200 per day in all, and `/pay` + faucet refuse with `503 OPERATOR_LOW_BALANCE` under 0.05 SOL; txs built only if valid against a fresh on-chain read and after simulation; signed tx cached per `(booking, action)` until its blockhash expires (repeat calls get the same bytes); one booking per quote; alert when operator balance < 1 SOL; Booking rent (~0.00334 SOL) is an accepted per-booking cost |
 | Vault griefing (unsolicited deposit blocks close) | every exit sweeps vault excess to the treasury before `close_account` |
 | Admin redirects a hotel's payout | payout owner is snapshotted on the booking (`hotel_authority`); `update_hotel` affects new bookings only |
 | Guest loses refund to a confirm race or tier boundary | `cancel_booking(min_refund)` fails instead of refunding less than shown |
@@ -32,7 +32,11 @@ Never commit keys. `.gitignore` covers `*.json` keypairs under `onchain/keys/`, 
 | SSRF via iCal URLs | https only, private-IP/loopback denylist after DNS resolution (inside the socket lookup), redirect re-check, size + time limits; the test-only `ICAL_ALLOW_LOOPBACK` is accepted on localnet only (ADR-0017) |
 | Session forgery | HMAC-signed cookie, `httpOnly`, `sameSite=lax`, `secure` in prod; SIWS nonce single-use, 5-min TTL |
 | Application spam | per-IP rate limit, honeypot field, server-side validation |
-| Faucet abuse | demo mode only, never on mainnet, per-wallet + per-IP rate limits |
+| Faucet abuse | demo mode only, never on mainnet, per-(IP, wallet) + per-IP + global daily limits |
+| Inventory squatting (holding every unit with cookie-less quotes) | at most 2 active holds per IP hash, checked inside the hold `INSERT … SELECT`; agent hold owners bound to the IP (`mcp:{ip_hash}:{wallet}`); 10-minute holds |
+| Locking a guest out via rate limits keyed on their public wallet | wallet budgets are keyed per (IP, wallet), never on the unauthenticated wallet alone |
+| Forged exit signature via `/submitted` | the booking PDA must sit at the instruction's IDL `booking` position (generated parser); columns are written once and only when the chain shows the step |
+| Paying twice after a confirmation timeout | `/pay` reads the chain before re-validating the quote (`ALREADY_PAID`); the checkout and the MCP agent go to the booking instead of re-quoting |
 | Prompt injection via on-chain data / iCal summaries (MCP) | tools return structured data; iCal `SUMMARY` never shown to the model verbatim beyond a length-limited, escaped field |
 | RPC lies / stale reads | server verifies booking account owner = program id, discriminator, and fields before trusting; confirmed commitment |
 

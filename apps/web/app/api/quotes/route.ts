@@ -9,14 +9,17 @@ import { chain, serverKeyAddresses } from "@/lib/solana/context";
 
 export const runtime = "nodejs";
 
-/** Prices the menu, signs the quote and holds one unit for 10 minutes. */
+/**
+ * Prices the menu, signs the quote and holds one unit for 10 minutes (at most two holds per IP:
+ * 429 HOLD_LIMIT; 422 AMOUNT_CAP when every option exceeds the pilot cap).
+ */
 export const POST = handler(async (request: NextRequest) => {
   const input = await readJson(request, quoteRequest);
   const c = await chain();
   const db = getDb();
   const ip = requestIpHash(request);
   await enforceRateLimits(db, [[QUOTE_LIMIT, ip]], "price requests");
-  const owner = holdOwner(request, { type: input.buyer_type, wallet: input.buyer_wallet ?? null });
+  const owner = holdOwner(request, { type: input.buyer_type, wallet: input.buyer_wallet ?? null }, ip);
   const envelope = await createQuote(
     {
       db,
@@ -28,6 +31,7 @@ export const POST = handler(async (request: NextRequest) => {
       clientId: owner.clientId,
       ipHash: ip,
       now: Math.floor(Date.now() / 1000),
+      amountCapMinor: c.env.amountCapMinor,
     },
     input,
   );

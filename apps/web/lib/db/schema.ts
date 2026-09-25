@@ -30,7 +30,7 @@ export const bookingEventTypes = [
   "failed",
 ] as const;
 export const builtTxActions = ["create", "cancel", "dispute", "void"] as const;
-export const rateBuckets = ["apply", "faucet", "quote", "pay", "tx", "nonce", "sync"] as const;
+export const rateBuckets = ["apply", "faucet", "faucet_daily", "quote", "pay", "pay_daily", "tx", "nonce", "sync"] as const;
 
 export type ContractTemplate = (typeof contractTemplates)[number];
 export type RateBucket = (typeof rateBuckets)[number];

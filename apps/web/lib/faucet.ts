@@ -4,6 +4,10 @@ import { fetchMaybeMint, fetchMaybeToken, getCreateAssociatedTokenIdempotentInst
 import { USDC_DECIMALS } from "@stumari/core";
 import { findAta } from "@stumari/escrow-client";
 import { ApiError } from "./api/errors";
+import { enforceRateLimits } from "./api/rate";
+import type { Db } from "./db/client";
+import { FAUCET_DAILY_GLOBAL_LIMIT, GLOBAL_KEY } from "./rate-limit";
+import { assertOperatorBalance } from "./solana/balance";
 import type { Chain } from "./solana/context";
 import { sendOperatorInstructions } from "./solana/send";
 
@@ -15,6 +19,15 @@ export function assertFaucetEnabled(c: Pick<Chain, "env">): void {
   if (!c.env.demoMode || c.env.cluster === "mainnet-beta") {
     throw new ApiError(404, "NOT_FOUND", "The test-USDC faucet is only available on the demo deployment");
   }
+}
+
+/**
+ * After the per-wallet and per-IP limits: 503 OPERATOR_LOW_BALANCE below 0.05 SOL, then one of the
+ * deployment's 200 mints per day (each costs operator fees and possibly ATA rent).
+ */
+export async function consumeFaucetBudget(c: Pick<Chain, "rpc" | "operator">, db: Db, now?: number): Promise<void> {
+  await assertOperatorBalance(c);
+  await enforceRateLimits(db, [[FAUCET_DAILY_GLOBAL_LIMIT, GLOBAL_KEY]], "faucet requests today", now);
 }
 
 /** Mints mock USDC to the wallet's ATA; the operator is the mint authority and pays the ATA rent. */

@@ -13,7 +13,7 @@ Do not say it is legal, compliant or tax-free.
 Do not promise GEL payouts, rates or a specific provider.
 
 ### "What if the guest cancels?"
-> "The guest chose a contract before paying, for example 'full refund until 7 days before, 50% until 3 days, then none'. If they cancel, the escrow applies exactly that rule. The guest gets their refund and you get the rest in the same transaction, automatically. Neither of us has to approve anything, and neither of us can change the rule afterwards."
+> "The guest chose a contract before paying, for example 'full refund until 7 days before, 50% until 3 days, then none'. If they cancel, the escrow applies exactly that rule. The guest gets their refund and you get the rest in the same transaction, automatically. Neither of us has to approve anything, and the program's rules don't let either of us change it afterwards."
 
 ### "What about double bookings with Booking.com?"
 > "We read your Booking.com and Airbnb calendars, and you paste our calendar feed back into them. Calendars only sync every so often, so each new booking starts as *pending*. We re-check your calendar right after payment and confirm the booking only if the dates are free. If there's a clash, you can move the other guest and confirm it yourself. If nobody confirms within 2 hours, the guest gets a full refund automatically."

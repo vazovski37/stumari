@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { BookingPanel } from "@/components/booking/booking-panel";
 import { ApiError } from "@/lib/api/errors";
 import { currentBookingView } from "@/lib/bookings/public";
-import { unixNow } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -16,5 +15,5 @@ export default async function BookingPage({ params }: PageProps<"/b/[bookingId]"
     if (e instanceof ApiError && e.status === 404) notFound();
     throw e;
   });
-  return <BookingPanel initial={view} initialNow={unixNow()} />;
+  return <BookingPanel initial={view} initialNow={view.now} />;
 }

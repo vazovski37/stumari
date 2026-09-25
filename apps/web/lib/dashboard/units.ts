@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { dayNumber, isCoreError, localDate } from "@stumari/core";
-import { and, asc, eq, gt, inArray } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, notInArray } from "drizzle-orm";
 import { z } from "zod";
 import { ApiError } from "../api/errors";
 import type { Db } from "../db/client";
@@ -144,9 +144,20 @@ export async function syncHotel(db: Db, hotel: { id: string; timezone: string },
   return results;
 }
 
-/** New import URLs; the unit is marked never-synced so the next sync (or cron) picks it up. */
+/**
+ * New import URLs; the unit is marked never-synced so the next sync (or cron) picks it up. Blocks
+ * imported from a URL that is no longer listed are removed at once: no sync would ever revisit them.
+ */
 export async function setImportUrls(db: Db, unitId: string, urls: string[]): Promise<void> {
-  await db.update(rooms).set({ ical_import_urls: urls, last_synced_at: null, sync_error: null }).where(eq(rooms.id, unitId));
+  const dropped = and(
+    eq(blocks.room_id, unitId),
+    eq(blocks.source, "ical"),
+    urls.length > 0 ? notInArray(blocks.feed_url, urls) : undefined,
+  );
+  await db.batch([
+    db.update(rooms).set({ ical_import_urls: urls, last_synced_at: null, sync_error: null }).where(eq(rooms.id, unitId)),
+    db.delete(blocks).where(dropped),
+  ]);
 }
 
 const MAX_BLOCK_NIGHTS = 366;

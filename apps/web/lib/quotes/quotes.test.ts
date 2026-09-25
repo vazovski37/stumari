@@ -47,6 +47,7 @@ const ctx = (over: Partial<QuoteContext> = {}): QuoteContext => ({
   clientId: "client-a",
   ipHash: "ip",
   now: T0,
+  amountCapMinor: 1_500_000_000n,
   ...over,
 });
 
@@ -155,6 +156,21 @@ describe("pricing wiring", () => {
 
     await createQuote(ctx({ clientId: "x" }), request({ room_type_id: s.twin }));
     expect(await code(createQuote(ctx({ clientId: "y" }), request({ room_type_id: s.twin })))).toBe("UNAVAILABLE");
+  });
+
+  it("withholds options over the pilot amount cap, and refuses before holding when none is left", async () => {
+    // Double room Fri+Sat: base 150 USDC; the reference (Standard) costs exactly that.
+    const env = await createQuote(ctx({ amountCapMinor: 150_000_000n }), request());
+    expect(env.quote.options.map((o) => o.id)).not.toContain("flexible");
+    expect(env.quote.options.find((o) => o.id === "standard")?.price_minor).toBe("150000000");
+    expect(env.explain.options.find((o) => o.id === "flexible")).toMatchObject({ withheld: "over_amount_cap" });
+    for (const o of env.quote.options) expect(BigInt(o.price_minor) <= 150_000_000n).toBe(true);
+
+    const before = await db.select().from(quotes);
+    const refused = await createQuote(ctx({ clientId: "client-b", amountCapMinor: 100_000_000n }), request()).catch((e: unknown) => e);
+    expect(refused).toMatchObject({ status: 422, code: "AMOUNT_CAP" });
+    expect((refused as ApiError).message).toMatch(/100\.00 USDC.*shorter stay/);
+    expect(await db.select().from(quotes)).toHaveLength(before.length); // no hold was placed
   });
 
   it("allows a same-day check-in until the check-in time", async () => {

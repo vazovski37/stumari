@@ -2,10 +2,12 @@ import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { insertBooking, insertQuote, seedHotel, T0, tempDb, type Seeded } from "@/test/db";
+import { ApiError } from "../api/errors";
 import { createDb, type Db } from "../db/client";
 import { blocks, quotes } from "../db/schema";
 import { freeUnitCounts, freeUnits, hasConflicts, unitConflicts } from "./availability";
-import { insertQuoteHold, type QuoteHoldRow } from "./holds";
+import { insertQuoteHold, MAX_HOLDS_PER_IP, type QuoteHoldRow } from "./holds";
+import { CREATE_GRACE_SECS } from "./occupancy";
 
 const stay = { checkin: "2026-10-20", checkout: "2026-10-22" };
 const now = T0;
@@ -87,10 +89,11 @@ describe("availability rule (data-model.md)", () => {
     }
   });
 
-  it("counts awaiting_signature bookings only while their quote is unexpired", async () => {
+  it("counts awaiting_signature bookings until their create can no longer land (quote expiry + grace)", async () => {
     await insertBooking(db, s, { roomId: s.units.D1, roomTypeId: s.double, ...stay, status: "awaiting_signature", quoteExpiresAt: now + 300 });
     expect(await labels("me", now)).toEqual(["D2"]);
-    expect(await labels("me", now + 300)).toEqual(["D1", "D2"]);
+    expect(await labels("me", now + 300 + CREATE_GRACE_SECS - 1)).toEqual(["D2"]);
+    expect(await labels("me", now + 300 + CREATE_GRACE_SECS)).toEqual(["D1", "D2"]);
   });
 
   it("counts other clients' active unexpired holds, never the caller's own", async () => {
@@ -131,6 +134,41 @@ describe("quote holds", () => {
     expect(row?.status).toBe("active");
   });
 
+  it("caps one IP at MAX_HOLDS_PER_IP holds across hold owners (fresh cookies, agent wallets)", async () => {
+    const fromIp = (clientId: string, ip: string | null, roomTypeId = s.double, at = now) => ({
+      ...holdRow(clientId, roomTypeId),
+      ip_hash: ip,
+      created_at: at,
+      expires_at: at + 600,
+    });
+    expect(MAX_HOLDS_PER_IP).toBe(2);
+    expect(await insertQuoteHold(db, fromIp("a", "ip-1"))).toBe(s.units.D1);
+    expect(await insertQuoteHold(db, fromIp("b", "ip-1"))).toBe(s.units.D2);
+
+    // A third owner from the same IP is refused although the Twin unit is free…
+    const refused = await insertQuoteHold(db, fromIp("c", "ip-1", s.twin)).catch((e: unknown) => e);
+    expect(refused).toBeInstanceOf(ApiError);
+    expect(refused).toMatchObject({ status: 429, code: "HOLD_LIMIT" });
+    expect(new Headers((refused as ApiError).extra?.headers).get("retry-after")).toBe("600");
+    expect(await db.select().from(quotes).where(eq(quotes.client_id, "c"))).toEqual([]);
+
+    // …while another IP (or a request without one) still gets it.
+    expect(await insertQuoteHold(db, fromIp("d", "ip-2", s.twin))).toBe(s.units.T1);
+
+    // An owner's own active quote does not count: the same batch expires it.
+    expect(await insertQuoteHold(db, fromIp("a", "ip-1"))).toBe(s.units.D1);
+    const active = await db.select().from(quotes).where(eq(quotes.status, "active"));
+    expect(active.filter((q) => q.ip_hash === "ip-1")).toHaveLength(2);
+
+    // Expired holds free the IP's slots.
+    expect(await insertQuoteHold(db, fromIp("c", "ip-1", s.double, now + 600))).toBe(s.units.D1);
+  });
+
+  it("answers null (not HOLD_LIMIT) when the IP is under the cap but nothing is free", async () => {
+    await insertBooking(db, s, { roomId: s.units.T1, roomTypeId: s.twin, ...stay, status: "confirmed" });
+    expect(await insertQuoteHold(db, { ...holdRow("a", s.twin), ip_hash: "ip-1" })).toBeNull();
+  });
+
   it("never double-holds a unit under concurrent requests", async () => {
     const results = await Promise.all(Array.from({ length: 12 }, (_, i) => insertQuoteHold(db, holdRow(`client-${i}`))));
     const held = results.filter((r): r is string => r !== null);
@@ -169,5 +207,13 @@ describe("unit conflicts (confirm and /pay checks)", () => {
 
     await db.insert(blocks).values({ id: randomUUID(), room_id: s.units.D1, start_date: "2026-10-21", end_date: "2026-10-23", source: "ical", updated_at: now });
     expect((await unitConflicts(db, base)).blocks).toHaveLength(1);
+  });
+
+  it("always counts a confirmed booking, even one created (or first seen) after the booking being confirmed", async () => {
+    // A's create landed unseen; meanwhile B was quoted, paid and confirmed on the same unit.
+    const a = await insertBooking(db, s, { roomId: s.units.D1, roomTypeId: s.double, ...stay, status: "pending", createdAt: now });
+    const b = await insertBooking(db, s, { roomId: s.units.D1, roomTypeId: s.double, ...stay, status: "confirmed", createdAt: now + 900 });
+    const conflicts = await unitConflicts(db, { roomId: s.units.D1, stay, now: now + 1_000, bookingId: a, createdBefore: { createdAt: now } });
+    expect(conflicts.bookings).toEqual([b]);
   });
 });

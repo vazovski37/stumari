@@ -4,6 +4,7 @@ import {
   createNoopSigner,
   createTransactionMessage,
   generateKeyPairSigner,
+  getBase58Decoder,
   getBase64EncodedWireTransaction,
   getTransactionEncoder,
   partiallySignTransaction,
@@ -14,17 +15,18 @@ import {
   type Address,
   type Blockhash,
   type KeyPairSigner,
+  type ReadonlyUint8Array,
   type SignatureBytes,
   type Transaction,
 } from "@solana/kit";
 import { getTransferSolInstruction } from "@solana-program/system";
-import { decodeWireTx } from "@stumari/escrow-client";
+import { decodeWireTx, generated, STUMARI_ESCROW_PROGRAM_ADDRESS } from "@stumari/escrow-client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { T0, tempDb } from "@/test/db";
 import { ApiError } from "../api/errors";
 import type { Db } from "../db/client";
 import { saveBuiltTx } from "./built-txs";
-import { checkRelayable } from "./relay";
+import { checkRelayable, fieldOfTransaction } from "./relay";
 
 // No RPC: messages carry a fixed blockhash; only the allow-list and signature checks run.
 const COMPUTE_BUDGET = "ComputeBudget111111111111111111111111111111" as Address;
@@ -154,5 +156,42 @@ describe("POST /api/tx/send allow-list", () => {
 
   it("rejects bytes that are not a transaction", async () => {
     expect(await rejection("aGVsbG8=")).toBe("INVALID_TX");
+  });
+});
+
+describe("POST /api/bookings/{id}/submitted: which column a landed transaction fills", () => {
+  const PROGRAM = STUMARI_ESCROW_PROGRAM_ADDRESS as string;
+  const PDA = "Bk1ngPda111111111111111111111111111111111111";
+  const b58 = (bytes: ReadonlyUint8Array) => getBase58Decoder().decode(bytes);
+  const cancelData = b58(generated.getCancelBookingInstructionDataEncoder().encode({ minRefund: 0n }));
+  const flagData = b58(generated.getFlagDisputeInstructionDataEncoder().encode({}));
+  const releaseData = b58(generated.getReleaseInstructionDataEncoder().encode({}));
+  /** Account keys: 0 = program, 1 = the PDA, 2… = filler accounts. */
+  const keys = [PROGRAM, PDA, ...Array.from({ length: 12 }, (_, i) => `Fi11er${i}`)];
+  /** An escrow instruction whose account list puts key `at[k]` at position k. */
+  const ix = (data: string, at: number[]) => ({ programIdIndex: 0, accounts: at, data });
+  /** Filler accounts everywhere, with the PDA (key 1) at `position`. */
+  const withPdaAt = (count: number, position: number) => Array.from({ length: count }, (_, k) => (k === position ? 1 : k + 2));
+
+  it("maps an escrow instruction whose IDL booking account is the PDA", () => {
+    expect(fieldOfTransaction(keys, [ix(cancelData, withPdaAt(10, 1))], PDA)).toBe("final_sig");
+    expect(fieldOfTransaction(keys, [ix(releaseData, withPdaAt(8, 0))], PDA)).toBe("final_sig");
+    expect(fieldOfTransaction(keys, [ix(flagData, withPdaAt(2, 1))], PDA)).toBeNull(); // a dispute is no exit
+  });
+
+  it("ignores the PDA anywhere else in the account list (Anchor ignores extra accounts)", () => {
+    // cancel_booking with the PDA as, e.g., its guest token account, or appended past the IDL accounts.
+    expect(fieldOfTransaction(keys, [ix(cancelData, withPdaAt(10, 5))], PDA)).toBeUndefined();
+    expect(fieldOfTransaction(keys, [ix(cancelData, [...withPdaAt(10, 99), 1])], PDA)).toBeUndefined();
+    // release names its booking first; the PDA second is some other booking's account.
+    expect(fieldOfTransaction(keys, [ix(releaseData, withPdaAt(8, 1))], PDA)).toBeUndefined();
+    // Too few accounts for the instruction, or another program with the same data.
+    expect(fieldOfTransaction(keys, [ix(flagData, [2])], PDA)).toBeUndefined();
+    expect(fieldOfTransaction(keys, [{ ...ix(cancelData, withPdaAt(10, 1)), programIdIndex: 2 }], PDA)).toBeUndefined();
+  });
+
+  it("finds the matching instruction among others", () => {
+    const decoy = ix(cancelData, withPdaAt(10, 4));
+    expect(fieldOfTransaction(keys, [decoy, ix(releaseData, withPdaAt(8, 0))], PDA)).toBe("final_sig");
   });
 });

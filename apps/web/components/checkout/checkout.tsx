@@ -3,14 +3,16 @@
 import { addDays, nightsBetween, TEMPLATES, type QuoteEnvelope, type QuoteOption } from "@stumari/core";
 import { ArrowRight, BedDouble, Clock, Info, LockKeyhole, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FaucetButton } from "@/components/wallet/wallet-button";
 import { shortAddress } from "@/lib/format";
 import { useWallet } from "@/components/wallet/wallet-provider";
 import { apiGet, apiPost, ClientApiError, errorMessage } from "@/lib/client/api";
 import type { hotelProfile } from "@/lib/hotels";
 import { formatChange, formatUsdc } from "@/lib/money";
+import type { PublicConfig } from "@/lib/public-config";
 import { ExplainDrawer } from "./explain-drawer";
+import { errorHint, radioKeyTarget } from "./menu";
 import { RefundTimeline } from "./refund-timeline";
 
 export type HotelProfile = ReturnType<typeof hotelProfile>;
@@ -34,6 +36,9 @@ function useNow(intervalMs: number): number {
   return now;
 }
 
+/** An error after signing where the create may still have landed (we just could not see it confirm). */
+const UNSEEN_OUTCOME = new Set(["CONFIRMATION_TIMEOUT"]);
+
 export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string }) {
   const router = useRouter();
   const wallet = useWallet();
@@ -49,6 +54,8 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
   const [busyQuote, setBusyQuote] = useState(false);
   const [stage, setStage] = useState<Stage>("idle");
   const [error, setError] = useState<ClientApiError | Error | null>(null);
+  const [amountCap, setAmountCap] = useState<string | null>(null);
+  const cards = useRef<(HTMLDivElement | null)[]>([]);
   const now = useNow(1000);
 
   const nights = useMemo(() => {
@@ -75,6 +82,21 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
       cancelled = true;
     };
   }, [hotel.slug, query, nights]);
+
+  // The pilot cap is named only when the menu withholds an option above it.
+  const needsCap = quote?.explain.options.some((o) => o.withheld === "over_amount_cap") ?? false;
+  useEffect(() => {
+    if (!needsCap || amountCap !== null) return;
+    let cancelled = false;
+    apiGet<PublicConfig>("/api/config/public")
+      .then((c) => !cancelled && setAmountCap(c.pilot_offer.amount_cap_minor))
+      .catch(() => {
+        // The drawer states the limit without the number.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [needsCap, amountCap]);
 
   const expiresIn = quote ? quote.quote.expires_at - now : 0;
   const quoteLive = quote !== null && expiresIn > 0;
@@ -118,20 +140,25 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
   async function pay() {
     if (!quote || !option) return;
     setError(null);
+    let built: PayResponse | null = null;
     try {
       const payer = await wallet.requireWallet();
       setStage("building");
-      const built = await apiPost<PayResponse>(`/api/quotes/${quote.quote.id}/pay`, {
+      built = await apiPost<PayResponse>(`/api/quotes/${quote.quote.id}/pay`, {
         option_index: optionIndex,
         payer: payer.address,
         guest_name: contact.name || null,
         guest_email: contact.email || null,
       });
       setStage("signing");
-      await payer.submit(built.tx, built.booking_id, () => setStage("confirming"));
-      router.push(`/b/${built.booking_id}`);
+      const bookingId = built.booking_id;
+      await payer.submit(built.tx, bookingId, () => setStage("confirming"));
+      router.push(`/b/${bookingId}`);
     } catch (e) {
       setStage("idle");
+      // The payment may have landed even though we could not see it confirm: the booking page
+      // re-reads the chain, while staying here would invite a second payment.
+      if (built && e instanceof ClientApiError && UNSEEN_OUTCOME.has(e.code)) return router.push(`/b/${built.booking_id}`);
       if (e instanceof ClientApiError && e.code === "ALREADY_PAID") {
         const booking = e.body.booking as { id?: string } | undefined;
         if (booking?.id) return router.push(`/b/${booking.id}`);
@@ -278,12 +305,26 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
                 return (
                   <div
                     key={o.id}
+                    ref={(el) => {
+                      cards.current[i] = el;
+                    }}
                     role="radio"
                     aria-checked={chosen}
                     tabIndex={chosen ? 0 : -1}
                     onClick={() => setOptionIndex(i)}
                     onKeyDown={(e) => {
-                      if (e.key === " " || e.key === "Enter") setOptionIndex(i);
+                      // Keys pressed on the inner "Why this price" button are that button's.
+                      if (e.target !== e.currentTarget) return;
+                      if (e.key === " " || e.key === "Enter") {
+                        e.preventDefault();
+                        setOptionIndex(i);
+                        return;
+                      }
+                      const next = radioKeyTarget(e.key, i, quote.quote.options.length);
+                      if (next === null) return;
+                      e.preventDefault();
+                      setOptionIndex(next);
+                      cards.current[next]?.focus();
                     }}
                     className={`card flex cursor-pointer flex-col gap-3 p-5 transition-shadow ${chosen ? "ring-2 ring-wine" : "hover:border-ink-soft"}`}
                   >
@@ -383,6 +424,7 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
           {error && (
             <div role="alert" className="space-y-2 rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay">
               <p>{error.message}</p>
+              {errorHint(code) && <p>{errorHint(code)}</p>}
               {code === "INSUFFICIENT_FUNDS" && wallet.connected?.kind === "demo" && <FaucetButton />}
               {(code === "WALLET_MISMATCH" || code === "QUOTE_EXPIRED" || code === "HOLD_LOST") && roomTypeId && (
                 <button type="button" onClick={() => seePrices(roomTypeId)} className="font-medium text-wine underline">
@@ -396,7 +438,13 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
       </aside>
 
       {quote && (
-        <ExplainDrawer explain={quote.explain} optionId={explainFor} basePriceMinor={base} onClose={() => setExplainFor(null)} />
+        <ExplainDrawer
+          explain={quote.explain}
+          optionId={explainFor}
+          basePriceMinor={base}
+          amountCapMinor={amountCap}
+          onClose={() => setExplainFor(null)}
+        />
       )}
     </div>
   );

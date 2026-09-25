@@ -14,14 +14,17 @@ export function requestIpHash(request: Request): string {
 }
 
 /**
- * The hold owner: MCP agents are `mcp:{wallet|anon}` (they carry no cookie); browsers get a
- * 128-bit random id in `stumari_cid`, set on their first quote.
+ * The hold owner: MCP agents carry no cookie, so they are `mcp:{ip_hash}:{wallet|anon}` — the
+ * wallet is unproven at quote time, and binding it to the caller's IP keeps anyone else from
+ * expiring an agent's hold by quoting with its wallet. Browsers get a 128-bit random id in
+ * `stumari_cid`, set on their first quote.
  */
 export function holdOwner(
   request: NextRequest,
   buyer: { type: "guest" | "agent"; wallet: string | null },
+  ipHash: string,
 ): { clientId: string; setCookie: string | null } {
-  if (buyer.type === "agent") return { clientId: `mcp:${buyer.wallet ?? "anon"}`, setCookie: null };
+  if (buyer.type === "agent") return { clientId: `mcp:${ipHash}:${buyer.wallet ?? "anon"}`, setCookie: null };
   const existing = request.cookies.get(CLIENT_COOKIE)?.value;
   if (existing && CLIENT_ID.test(existing)) return { clientId: existing, setCookie: null };
   const clientId = randomBytes(16).toString("hex");

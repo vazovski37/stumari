@@ -93,7 +93,11 @@ export interface QuoteOption {
   tiers: Tier[];
 }
 
-export type WithheldReason = "risk_exceeds_bounds" | "duplicate_terms";
+/**
+ * Why a template is not offered: its multiplier is out of bounds, its reachable terms duplicate a
+ * shown template, or its price exceeds the deployment's per-booking cap (pilot `AMOUNT_CAP_MINOR`).
+ */
+export type WithheldReason = "risk_exceeds_bounds" | "duplicate_terms" | "over_amount_cap";
 
 export interface ExplainOption {
   id: TemplateId;
@@ -131,6 +135,11 @@ export interface PriceMenuInput {
   policy: PricingPolicy;
   /** B: sum of nightly base rates, base units. */
   basePriceMinor: bigint;
+  /**
+   * Largest payable price, base units (pilot cap). Priced options above it are withheld as
+   * `over_amount_cap`, keeping their price in the explain block; absent = no cap.
+   */
+  amountCapMinor?: bigint;
 }
 
 export interface PriceMenu {
@@ -162,7 +171,7 @@ function checkRisk(risk: RiskEstimate, reachable: readonly boolean[]): void {
   if (!ok) throw new CoreError("InvalidInput", "risk estimate must have 6 finite q in [0,1], 0 on unreachable windows");
 }
 
-export function priceMenu({ provider, request, policy: rawPolicy, basePriceMinor }: PriceMenuInput): PriceMenu {
+export function priceMenu({ provider, request, policy: rawPolicy, basePriceMinor, amountCapMinor }: PriceMenuInput): PriceMenu {
   const policy = validatePolicy(rawPolicy);
   if (basePriceMinor <= 0n) throw new CoreError("InvalidAmount", "base price must be positive");
   const features = adaptRequest(request);
@@ -216,9 +225,11 @@ export function priceMenu({ provider, request, policy: rawPolicy, basePriceMinor
       clamped: mBps > rawBps ? "floor" : null,
       price_minor: formatMinor(price),
       expected_revenue_minor: BigInt(Math.round(Number(price) * (1 - c))).toString(),
+      withheld: amountCapMinor !== undefined && price > amountCapMinor ? "over_amount_cap" : null,
     };
   });
 
+  // `over_amount_cap` options keep their price above; only offered options reach the signed body.
   const options = explainOptions
     .filter((o) => o.withheld === null)
     .map((o): QuoteOption => ({

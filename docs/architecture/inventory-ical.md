@@ -12,7 +12,7 @@ The MVP connects hotel inventory the way small properties already sync Booking.c
 
 - Fetch with a 10 s timeout, max 2 MB, `https:` only (the test-only `ICAL_ALLOW_LOOPBACK`, localnet only, admits plain-`http` loopback feeds for the E2E — ADR-0017); reject hosts that resolve to private, loopback or link-local addresses (SSRF guard, enforced inside the socket's own DNS lookup so a rebinding answer cannot slip past); follow ≤ 3 redirects re-checking each hop.
 - Parse `VEVENT`s with `node-ical` (or equivalent): `DTSTART`/`DTEND` as DATE or DATE-TIME. DATE-TIME values are converted to the hotel's timezone and truncated to dates; `DTEND` is exclusive. Events with no `DTEND` block one night. Cancelled events (`STATUS:CANCELLED`) are ignored, and so are events whose `UID` ends in `@stumari`: an OTA that re-exports imported calendars would otherwise hand our own bookings back as blocks on the same unit.
-- Each sync **replaces** all `blocks` rows of that `(room_id, feed_url)` in one transaction; `last_synced_at` / `sync_error` are updated on the unit.
+- Each sync **replaces** all `blocks` rows of that `(room_id, feed_url)` in one transaction; `last_synced_at` / `sync_error` are updated on the unit. Removing a URL from a unit (`PUT …/ical`) deletes the blocks imported from it in the same batch.
 - Freshness: cron every 10 min; plus an **on-demand sync of the chosen unit** before building a payment transaction (skipped if synced < 2 min ago). If the on-demand sync fails, proceed with cached data and rely on the confirm step.
 
 ## Export
@@ -24,7 +24,7 @@ The MVP connects hotel inventory the way small properties already sync Booking.c
 OTAs poll imported calendars on their own schedule (often hourly), so a Stumari booking can collide with an OTA booking made in the gap. Therefore every booking starts `Pending` on-chain:
 
 1. After the payment transaction lands, the server re-syncs the unit's imports.
-2. No overlap with (a) any `blocks` row of the unit and (b) any other booking on the unit that occupies it and was created earlier → server sends `confirm_booking` (operator key) → `Confirmed`. This must happen before `confirm_deadline_ts` (the program rejects later confirms).
+2. No overlap with (a) any `blocks` row of the unit and (b) any other booking on the unit that occupies it and either was created earlier or is already `confirmed`/`disputed`/`released`/`resolved` (a booking whose create landed unseen may be noticed after a later one was confirmed; it then stays pending and is voided) → server sends `confirm_booking` (operator key) → `Confirmed`. This must happen before `confirm_deadline_ts` (the program rejects later confirms).
 3. Overlap found → booking stays `Pending`, a `sync_conflict` event is logged, the hotel dashboard and admin show it. The hotel can confirm manually (if it resolves the conflict by moving the other guest) or admin voids → full refund.
 4. If nobody confirms within the 2 h confirm window, confirming becomes impossible and `void_booking` becomes permissionless; the release cron (or the next read of the booking) voids it → full refund.
 

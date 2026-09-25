@@ -158,6 +158,34 @@ describe("quote options and explain block", () => {
     expect(l5.options.map((o) => o.id)).toEqual(["flexible", "standard", "nonrefundable"]);
   });
 
+  it("withholds options priced above the amount cap, keeping their price in the explain block", () => {
+    const q = [0.132, 0.052, 0.044, 0.043, 0.02, 0.017]; // Request A: 104.73 / 100.00 / 95.89
+    const input = { provider: stub(q), request: request(60), policy: policy(), basePriceMinor: B };
+    const uncapped = priceMenu(input);
+    // A cap no option reaches changes nothing, and the cap is inclusive.
+    expect(priceMenu({ ...input, amountCapMinor: 104_730_000n })).toEqual(uncapped);
+
+    const capped = priceMenu({ ...input, amountCapMinor: 100_000_000n });
+    expect(capped.options.map((o) => [o.id, o.price_minor])).toEqual([
+      ["standard", "100000000"],
+      ["nonrefundable", "95890000"],
+    ]);
+    expect(byId(capped.explain.options, "flexible")).toMatchObject({ withheld: "over_amount_cap", price_minor: "104730000", m_bps: 10473 });
+    expect(capped.explain.options.filter((o) => o.id !== "flexible")).toEqual(uncapped.explain.options.filter((o) => o.id !== "flexible"));
+
+    // The reference template is withheld like any other; below every price nothing is offered.
+    const none = priceMenu({ ...input, amountCapMinor: 95_889_999n });
+    expect(none.options).toEqual([]);
+    expect(none.explain.options.map((o) => o.withheld)).toEqual(["over_amount_cap", "over_amount_cap", "over_amount_cap"]);
+  });
+
+  it("keeps the other withheld reasons ahead of the amount cap", () => {
+    const menu = priceMenu({ provider: stub([0, 0, 0, 0, 0.4, 0.4]), request: request(60), policy: policy(), basePriceMinor: B, amountCapMinor: 1n });
+    expect(byId(menu.explain.options, "flexible").withheld).toBe("risk_exceeds_bounds");
+    const dup = priceMenu({ provider: stub([0, 0, 0, 0, 0.05, 0.03]), request: request(2), policy: policy(), basePriceMinor: B, amountCapMinor: 1n });
+    expect(byId(dup.explain.options, "nonrefundable").withheld).toBe("duplicate_terms");
+  });
+
   it("omits disabled templates entirely", () => {
     const p = policy({ enabled_templates: ["standard", "flexible"] });
     const menu = priceMenu({ provider: stub([0.1, 0, 0, 0, 0, 0]), request: request(60), policy: p, basePriceMinor: B });

@@ -1,4 +1,4 @@
-import { bookingIdHex, buildQuoteBody, signQuote, USDC_DECIMALS, type HazardProvider, type QuoteBody, type QuoteEnvelope } from "@stumari/core";
+import { bookingIdHex, buildQuoteBody, formatUsdc, signQuote, USDC_DECIMALS, type HazardProvider, type QuoteBody, type QuoteEnvelope } from "@stumari/core";
 import { and, eq, lte } from "drizzle-orm";
 import { z } from "zod";
 import { ApiError } from "../api/errors";
@@ -37,6 +37,8 @@ export interface QuoteContext {
   clientId: string;
   ipHash: string | null;
   now: number;
+  /** Pilot per-booking cap (`env.amountCapMinor`); `/pay` enforces it again. */
+  amountCapMinor: bigint;
   hazard?: HazardProvider;
 }
 
@@ -68,9 +70,19 @@ export async function createQuote(ctx: QuoteContext, input: QuoteRequest): Promi
       buyerWallet,
       issuedAt: now,
       policy: hotelPolicy(hotel),
+      amountCapMinor: ctx.amountCapMinor,
     },
     ctx.hazard ?? hazardProvider(),
   );
+  // Only the cap can empty a menu (the reference template is never withheld otherwise): refuse
+  // before holding a unit rather than offer prices that /pay would reject.
+  if (menu.options.length === 0) {
+    throw new ApiError(
+      422,
+      "AMOUNT_CAP",
+      `Bookings are limited to ${formatUsdc(ctx.amountCapMinor)} during the pilot; try a shorter stay`,
+    );
+  }
   const body = buildQuoteBody({
     cluster: ctx.cluster,
     program_id: ctx.programId,

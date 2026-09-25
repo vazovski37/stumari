@@ -6,6 +6,12 @@ import { sql, type SQL } from "drizzle-orm";
  */
 export const OCCUPYING_STATUSES = ["pending", "confirmed", "disputed", "released", "resolved"] as const;
 
+/**
+ * After its quote expires (+ this grace for the blockhash lifetime), a create that has not landed
+ * never will; until then an `awaiting_signature` booking may already exist on-chain unseen.
+ */
+export const CREATE_GRACE_SECS = 300;
+
 const statusList = sql.join(
   OCCUPYING_STATUSES.map((s) => sql`${s}`),
   sql`, `,
@@ -23,10 +29,10 @@ export function blockedSql(unit: SQL, { checkin, checkout }: StayWindow): SQL {
 
 /**
  * The status/expiry part of "occupies" for a booking aliased `b` joined to its quote `bq`:
- * pending…resolved, or awaiting_signature while its quote has not expired.
+ * pending…resolved, or awaiting_signature until its create can no longer land.
  */
 export function occupiesSql(now: number): SQL {
-  return sql`(b.status IN (${statusList}) OR (b.status = 'awaiting_signature' AND bq.expires_at > ${now}))`;
+  return sql`(b.status IN (${statusList}) OR (b.status = 'awaiting_signature' AND bq.expires_at + ${CREATE_GRACE_SECS} > ${now}))`;
 }
 
 /** Another booking occupies a night of the stay on this unit (optionally ignoring one booking). */

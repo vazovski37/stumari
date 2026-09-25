@@ -1,3 +1,4 @@
+import { formatUsdc as coreFormatUsdc } from "@stumari/core";
 import { describe, expect, it } from "vitest";
 import { contractExamples, EXAMPLE_BASE_MINOR } from "./contract-examples";
 import { formatChange, formatUsdc } from "./money";
@@ -7,8 +8,18 @@ describe("formatUsdc", () => {
     expect(formatUsdc(104_730_000n)).toBe("104.73");
     expect(formatUsdc(1_500_000_000n)).toBe("1,500.00");
     expect(formatUsdc(0n)).toBe("0.00");
-    expect(formatUsdc(9_999n)).toBe("0.00");
     expect(formatUsdc(-2_500_000n)).toBe("-2.50");
+  });
+
+  it("shows every non-zero digit of an amount that is not a whole cent, so halves add up", () => {
+    expect(formatUsdc(52_365_000n)).toBe("52.365");
+    expect(formatUsdc(9_999n)).toBe("0.009999");
+    expect(formatUsdc(1_234_567_891n)).toBe("1,234.567891");
+    expect(formatUsdc(-1_005_000n)).toBe("-1.005");
+    // The same digits as @stumari/core, which appends the unit.
+    for (const minor of [0n, 1n, 104_730_000n, 52_365_000n, 1_500_000_000n]) {
+      expect(`${formatUsdc(minor)} USDC`).toBe(coreFormatUsdc(minor));
+    }
   });
 });
 
@@ -20,7 +31,7 @@ describe("formatChange", () => {
   });
 });
 
-describe("landing contract examples (pricing-and-risk-model.md §6)", () => {
+describe("landing contract examples (the shipped model's output, lib/contract-examples.ts)", () => {
   it("keep the reference template at the base rate and order prices by generosity", () => {
     for (const prices of contractExamples) {
       expect(prices.standard).toBe(EXAMPLE_BASE_MINOR);

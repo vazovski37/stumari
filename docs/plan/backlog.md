@@ -55,9 +55,16 @@ Owned by the lead engineer; agents read the section for their component. Tick it
 - [ ] Add `drizzle-orm`, `@libsql/client` and `@modelcontextprotocol/sdk` to `scripts/package.json` (today `scripts/lib/db.ts` imports `apps/web/lib/db` and `scripts/e2e/mcp.ts` the MCP SDK by relative path, resolving them from `apps/web` / `apps/mcp` node_modules).
 - [x] E2E: time travel only after every create in a run (quotes are stamped with wall-clock time; a chain ahead of the wall clock fails `create_booking` with `QuoteExpired`), and `bootstrap --cluster localnet --reset` at the start of each E2E run.
 
+## wave 3 review follow-ups (2026-09-25)
+- [x] 21 verified findings fixed (security SEC-1..5, money M1..M4, specs/data SC-1..5, product PH-1..8); see the commit "Wave 3 review fixes".
+- [ ] A hosted, shared MCP server puts every agent behind one IP hash: at most 2 concurrent agent holds, and agent hold owners are per wallet on that host. Forward a per-agent identity before hosting it for others.
+- [ ] Index `quotes (ip_hash, status, expires_at)` if the quotes table grows (the HOLD_LIMIT count scans it).
+- [ ] Program (post-hackathon): close the Booking account on terminal exits, or a permissionless `close_booking` after `closed_ts` + delay, so rent returns to `rent_payer` (today ~0.00334 SOL per booking is never returned).
+- [ ] If the model is retrained, regenerate `apps/web/lib/contract-examples.ts` and the landing percentages (contract-examples.test.ts fails by design).
+
 ## demo recording
 - [ ] Start from a fresh demo DB (or reject the 'E2E Test Guesthouse' application and hide old test bookings).
-- [ ] Repeat-guest price gap is small with one released stay (0.25 USDC at 60 d); give Guest B up to 3 released stays or cut the sentence; use the Double room (two units) for the split screen.
+- [x] Repeat-guest gap: one released stay is enough (1–3 price the same); use check-in ~6–10 days out, where the gap is largest (~0.6 USDC on 130); Double room for the split screen (demo script updated).
 - [ ] Test wallet label says 'devnet' on localnet too (cosmetic; the guest banner names the real cluster).
 
 ## packages/escrow-client

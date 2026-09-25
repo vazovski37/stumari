@@ -53,6 +53,8 @@ export interface PricingRequest {
   buyerWallet: string | null;
   issuedAt: number;
   policy: PricingPolicy;
+  /** Pilot per-booking cap (`AMOUNT_CAP_MINOR`): dearer options are withheld as `over_amount_cap`. */
+  amountCapMinor?: bigint;
 }
 
 /** The menu for one request: the hotel's policy, its rates and the buyer's wallet history. */
@@ -63,6 +65,7 @@ export async function priceRequest(db: Db, r: PricingRequest, hazard: HazardProv
     provider: hazard,
     policy: r.policy,
     basePriceMinor: basePrice,
+    amountCapMinor: r.amountCapMinor,
     request: {
       issued_at: r.issuedAt,
       checkin_ts: r.stay.checkinTs,

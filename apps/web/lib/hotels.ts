@@ -1,5 +1,5 @@
 import { checkinTs, isCoreError, nightsBetween, TEMPLATES, validatePolicy, type PricingPolicy, type Tier } from "@stumari/core";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { ApiError } from "./api/errors";
 import type { Db } from "./db/client";
 import { hotels, roomTypes } from "./db/schema";
@@ -56,7 +56,7 @@ export async function listPublicHotels(db: Db, city?: string) {
   const rows = await db
     .select()
     .from(hotels)
-    .where(and(eq(hotels.status, "active"), city ? eq(hotels.city, city) : undefined))
+    .where(and(eq(hotels.status, "active"), city?.trim() ? sql`lower(${hotels.city}) = lower(${city.trim()})` : undefined))
     .orderBy(asc(hotels.name));
   if (rows.length === 0) return [];
   const types = await db

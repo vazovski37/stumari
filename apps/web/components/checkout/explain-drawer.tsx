@@ -4,9 +4,12 @@ import { BPS_DENOM, perWindowRefund, TEMPLATES, WINDOW_LABELS, type Explain, typ
 import { ArrowUpRight, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { modelReport } from "@/lib/model-report";
 import { formatUsdc } from "@/lib/money";
+import { withheldText } from "./menu";
 
 const pct = (x: number, digits = 1) => `${(x * 100).toFixed(digits)}%`;
+const count = (n: number) => n.toLocaleString("en-US");
 
 /**
  * "Why this price" (api.md /h/[slug]): the explain block of the quote for one option — P(cancel),
@@ -17,11 +20,14 @@ export function ExplainDrawer({
   explain,
   optionId,
   basePriceMinor,
+  amountCapMinor = null,
   onClose,
 }: {
   explain: Explain;
   optionId: TemplateId | null;
   basePriceMinor: bigint;
+  /** The pilot cap per booking (public config), to name it when an option is withheld above it. */
+  amountCapMinor?: string | null;
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -150,20 +156,16 @@ export function ExplainDrawer({
                 {explain.options
                   .filter((o) => o.withheld)
                   .map((o) => (
-                    <p key={o.id}>
-                      <span className="font-medium text-ink">{TEMPLATES[o.id].name}</span> is not offered:{" "}
-                      {o.withheld === "duplicate_terms"
-                        ? `this close to check-in it has the same refunds as ${TEMPLATES[o.same_as ?? explain.reference_template].name}.`
-                        : "its risk for this request is outside the hotel's price bounds."}
-                    </p>
+                    <p key={o.id}>{withheldText(o, explain, amountCapMinor)}</p>
                   ))}
               </section>
             )}
 
             <section className="space-y-2 text-sm text-ink-soft">
               <p>
-                Model {explain.model_version}: a calibrated time-to-cancel model trained on 103,588 bookings from two
-                Portuguese hotels (2015–2017). It has not yet been recalibrated on this hotel&rsquo;s own bookings.
+                Model {explain.model_version}: a calibrated time-to-cancel model learned from{" "}
+                {count(modelReport.training.trainBookings)} bookings at two Portuguese hotels (2015–2017) and evaluated on{" "}
+                {count(modelReport.test.bookings)} held-out ones. It has not yet been recalibrated on this hotel&rsquo;s own bookings.
               </p>
               <Link href="/model" className="inline-flex items-center gap-1 font-medium text-wine underline underline-offset-2">
                 How the model works and how well it is calibrated

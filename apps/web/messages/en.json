@@ -89,17 +89,17 @@
       "You choose which contracts to offer and the price bounds."
     ],
     "compare": {
-      "illustrative": "Illustrative",
+      "illustrative": "Example",
       "caption": "Base rate 100.00 USDC · your current policy: Standard",
       "guests": [
-        { "label": "Books 60 days ahead", "detail": "Model estimate: about 31% chance of cancelling" },
-        { "label": "Books 2 days ahead", "detail": "Model estimate: about 8% chance of cancelling" }
+        { "label": "Books 60 days ahead", "detail": "Model estimate: about 18% chance of cancelling" },
+        { "label": "Books 2 days ahead", "detail": "Model estimate: about 7% chance of cancelling" }
       ],
       "contract": "Contract",
       "price": "Guest pays",
       "vsBase": "vs. your rate",
       "notShown": "Not shown: this close to check-in it has the same terms as Standard",
-      "footnote": "Numbers from the worked examples in our pricing spec, using default resale settings. Real prices depend on your rates, your settings and each request. Every option shown is priced to target the same expected revenue as your current policy."
+      "footnote": "Real output of the current model for one example request: a city-hotel room with breakfast, 2 adults, 2 nights, quoted on 2 October 2026 to a new wallet with no past stays, default resale settings. Real prices depend on your rates, your settings and each request. Every option shown is priced to target the same expected revenue as your current policy."
     },
     "templates": {
       "flexible": { "name": "Flexible", "terms": "Full refund until 24 h before check-in, then 50%" },
@@ -111,7 +111,7 @@
   "trust": {
     "eyebrow": "Trust",
     "title": "Where the money sits",
-    "lead": "Nobody has to hold the guest's money on trust, including us.",
+    "lead": "Nobody has to hold the guest's money on trust.",
     "items": [
       {
         "title": "One escrow per booking",
@@ -119,7 +119,7 @@
       },
       {
         "title": "Terms fixed before payment",
-        "body": "Price, refund schedule, check-in time and fee are written into the escrow before the guest pays. After that, neither you, the guest nor Stumari can change them."
+        "body": "Price, refund schedule, check-in time and fee are written into the escrow before the guest pays. After that, the program's rules don't let you, the guest or Stumari change them. During the pilot Stumari can still upgrade the program itself: see “What we don't claim”."
       },
       {
         "title": "A disclosed arbiter",
@@ -171,7 +171,7 @@
       },
       {
         "q": "What happens if a guest disputes?",
-        "a": "A guest can open a dispute only in the 24 hours after check-in. The payout then waits for Stumari's arbiter, who can split the escrow between the guest and you. During the pilot the arbiter is a single Stumari key. Outside that window nobody can redirect the money."
+        "a": "A guest can open a dispute only in the 24 hours after check-in. The payout then waits for Stumari's arbiter, who can split the escrow between the guest and you. During the pilot the arbiter is a single Stumari key. Outside that window the program's rules let nobody redirect the money. During the pilot Stumari can still upgrade the program itself: see “What we don't claim”."
       },
       {
         "q": "What do guests need?",

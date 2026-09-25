@@ -2,13 +2,17 @@
 export const USDC_DECIMALS = 6;
 const UNIT = 10n ** BigInt(USDC_DECIMALS);
 
-/** Formats base units as a USDC amount with two decimals, rounding toward zero ("104.73"). */
+/**
+ * Formats base units as a USDC amount with two decimals ("104.73"), or with every non-zero
+ * fraction digit when the amount is not a whole cent ("52.365"), so parts always add up to the
+ * whole. Same digits as `formatUsdc` in @stumari/core, without the unit and allowing a sign.
+ */
 export function formatUsdc(minor: bigint): string {
   const sign = minor < 0n ? "-" : "";
   const abs = minor < 0n ? -minor : minor;
   const whole = (abs / UNIT).toLocaleString("en-US");
-  const cents = ((abs % UNIT) / 10n ** BigInt(USDC_DECIMALS - 2)).toString().padStart(2, "0");
-  return `${sign}${whole}.${cents}`;
+  const frac = (abs % UNIT).toString().padStart(USDC_DECIMALS, "0").replace(/0+$/, "").padEnd(2, "0");
+  return `${sign}${whole}.${frac}`;
 }
 
 /** Signed percentage change from `base` to `value`, two decimals, typographic minus ("+4.73%", "−4.11%"). */

@@ -1,5 +1,5 @@
 import "server-only";
-import { getBase58Encoder, type Signature } from "@solana/kit";
+import { AccountRole, getBase58Encoder, type Address, type Signature } from "@solana/kit";
 import {
   decodeWireTx,
   generated,
@@ -79,29 +79,37 @@ const FIELD_BY_INSTRUCTION = new Map<number, SigField | null>([
   [Ix.FlagDispute, null],
 ]);
 
-interface JsonInstruction {
+export interface JsonInstruction {
   programIdIndex: number;
   accounts: readonly number[];
   data: string;
 }
 
 /**
- * The booking column a confirmed transaction fills, from its own escrow instruction: the one that
- * names this booking's PDA. `undefined` when no escrow instruction touches the booking.
+ * The booking column a confirmed transaction fills, from its own escrow instruction: the one whose
+ * `booking` account (at its IDL position, read with the generated Codama parser) is this booking's
+ * PDA. Anchor ignores extra accounts, so a PDA listed anywhere else proves nothing. `undefined`
+ * when no escrow instruction acts on the booking.
  */
-function fieldOfTransaction(
+export function fieldOfTransaction(
   keys: readonly string[],
   instructions: readonly JsonInstruction[],
   bookingPda: string,
 ): SigField | null | undefined {
   for (const ix of instructions) {
     if (keys[ix.programIdIndex] !== STUMARI_ESCROW_PROGRAM_ADDRESS) continue;
-    if (!ix.accounts.some((i) => keys[i] === bookingPda)) continue;
     try {
-      const kind = generated.identifyStumariEscrowInstruction(getBase58Encoder().encode(ix.data));
-      if (FIELD_BY_INSTRUCTION.has(kind)) return FIELD_BY_INSTRUCTION.get(kind);
+      const parsed = generated.parseStumariEscrowInstruction({
+        programAddress: STUMARI_ESCROW_PROGRAM_ADDRESS,
+        // Roles do not matter for parsing: only each account's position does.
+        accounts: ix.accounts.map((i) => ({ address: keys[i] as Address, role: AccountRole.READONLY })),
+        data: getBase58Encoder().encode(ix.data),
+      });
+      if (!FIELD_BY_INSTRUCTION.has(parsed.instructionType)) continue;
+      const booking = (parsed.accounts as { booking?: { address: string } }).booking;
+      if (booking?.address === bookingPda) return FIELD_BY_INSTRUCTION.get(parsed.instructionType);
     } catch {
-      // not one of our instructions
+      // not one of our instructions, or too few accounts / malformed data for it
     }
   }
   return undefined;

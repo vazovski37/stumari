@@ -42,8 +42,9 @@ export interface UnitConflicts {
 
 /**
  * What stands in the way of a booking on its unit (inventory-ical.md "Confirmation"). With
- * `createdBefore`, only bookings created earlier count (the confirm rule); otherwise every other
- * occupying booking does (the `/pay` hold check).
+ * `createdBefore` (the confirm rule), an unconfirmed booking counts only if it was created
+ * earlier, but a confirmed, disputed or settled one always counts, however late it was seen;
+ * otherwise every other occupying booking does (the `/pay` hold check).
  */
 export async function unitConflicts(
   db: Db,
@@ -61,7 +62,7 @@ export async function unitConflicts(
     WHERE bl.room_id = ${roomId} AND bl.start_date < ${stay.checkout} AND bl.end_date > ${stay.checkin}
   `);
   const earlier = createdBefore
-    ? sql` AND (b.created_at < ${createdBefore.createdAt} OR (b.created_at = ${createdBefore.createdAt} AND b.id < ${bookingId}))`
+    ? sql` AND (b.status IN ('confirmed', 'disputed', 'released', 'resolved') OR b.created_at < ${createdBefore.createdAt} OR (b.created_at = ${createdBefore.createdAt} AND b.id < ${bookingId}))`
     : sql``;
   const bookings = await db.all<{ id: string }>(sql`
     SELECT b.id FROM bookings b JOIN quotes bq ON bq.id = b.quote_id

@@ -171,6 +171,7 @@ so `m_R ≡ 1`: **the hotel's current policy always costs exactly its base rate*
 
 **Guards.**
 - If `1 − c_T(x) ≤ 0.05` or `m_bps > max_mult_bps`, T is **withheld** (explain `withheld: "risk_exceeds_bounds"`) — selling it at the cap would earn less than today's policy.
+- With the optional `amountCapMinor` (the pilot's per-booking cap), a priced option above it is withheld as `"over_amount_cap"` (after the other rules; without a cap the output is unchanged).
 - If `m_bps < min_mult_bps`, T is priced at `min_mult_bps` (the hotel earns more than today; explain `clamped: "floor"`).
 - R is never withheld (`m_R ≡ 1`).
 - If two enabled templates have identical refund fractions on **every reachable window** (e.g. standard and non-refundable when L < 3), show only one: R if it is one of them, otherwise the first in the order flexible, standard, non-refundable.

@@ -98,6 +98,24 @@ describe("public booking view", () => {
     expect(afterCheckin).toMatchObject({ can_cancel: false, refund_if_cancel_now_minor: null });
   });
 
+  it("promises only the cancel's min_refund: the tiers 90 s from now, so a boundary about to pass is not shown", () => {
+    const sevenDays = CHECKIN - 604_800;
+    const threeDays = CHECKIN - 259_200;
+    // 30 s before a boundary the program would still pay the earlier tier, but a cancel built now
+    // only guarantees the next one.
+    expect(view(booking(), sevenDays - 30).refund_if_cancel_now_minor).toBe("75000000");
+    expect(view(booking({ status: "pending" }), sevenDays - 30).refund_if_cancel_now_minor).toBe("75000000");
+    expect(view(booking(), threeDays - 30).refund_if_cancel_now_minor).toBe("0");
+    expect(view(booking(), sevenDays - 90).refund_if_cancel_now_minor).toBe("150000000");
+    expect(view(booking(), sevenDays - 89).refund_if_cancel_now_minor).toBe("75000000");
+    // The fee is only taken from the hotel's share; the refund is the tier share of the amount.
+    expect(view(booking({ fee_bps: 150 }), sevenDays - 30).refund_if_cancel_now_minor).toBe("75000000");
+  });
+
+  it("carries the chain clock it was built at", () => {
+    expect(view(booking(), CHECKIN - 1234).now).toBe(CHECKIN - 1234);
+  });
+
   it("opens the dispute window from check-in until release, and void only after the confirm deadline", () => {
     expect(view(booking(), CHECKIN - 1).can_dispute).toBe(false);
     expect(view(booking(), CHECKIN).can_dispute).toBe(true);

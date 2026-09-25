@@ -10,6 +10,7 @@ import type { PublicBookingView } from "@/lib/bookings/view";
 import { formatHotelDate, formatHotelTime } from "@/lib/bookings/terms";
 import { shortAddress } from "@/lib/format";
 import { formatUsdc } from "@/lib/money";
+import { refundDroppedTo } from "./cancel-guard";
 
 type Action = "cancel" | "dispute" | "void";
 type BookingTx = { tx: string; refund_minor?: string };
@@ -31,7 +32,10 @@ const pollMs = (s: PublicBookingView["status"]) =>
 
 const usdc = (minor: string) => `${formatUsdc(BigInt(minor))} USDC`;
 
-/** `initialNow` comes from the server render so hydration sees the same clock. */
+/**
+ * `initialNow` is the chain clock the server built the view at (`initial.now`), so hydration sees
+ * the same clock and the refund schedule is timed like the program, not by the browser.
+ */
 export function BookingPanel({ initial, initialNow }: { initial: PublicBookingView; initialNow: number }) {
   const wallet = useWallet();
   const [view, setView] = useState(initial);
@@ -42,11 +46,12 @@ export function BookingPanel({ initial, initialNow }: { initial: PublicBookingVi
 
   const reload = useCallback(async () => {
     try {
-      setView(await apiGet<PublicBookingView>(`/api/bookings/${initial.id}`));
+      const next = await apiGet<PublicBookingView>(`/api/bookings/${initial.id}`);
+      setView(next);
+      setNow(next.now);
     } catch {
-      // Keep the last view; the next poll retries.
+      // Keep the last view and clock; the next poll retries.
     }
-    setNow(Math.floor(Date.now() / 1000));
   }, [initial.id]);
 
   useEffect(() => {
@@ -62,10 +67,19 @@ export function BookingPanel({ initial, initialNow }: { initial: PublicBookingVi
       const payer = await wallet.requireWallet();
       setBusy("Preparing the transaction…");
       const built = await apiPost<BookingTx>(`/api/bookings/${view.id}/tx`, { action, wallet: payer.address });
+      const dropped = action === "cancel" ? refundDroppedTo(view.refund_if_cancel_now_minor, built.refund_minor) : null;
+      if (dropped !== null) {
+        // A refund step passed since the page was loaded: never sign for less than was shown.
+        setView((v) => ({ ...v, refund_if_cancel_now_minor: dropped }));
+        setError(`A refund step has just passed: cancelling now refunds ${usdc(dropped)}. Confirm again if you still want to cancel.`);
+        return;
+      }
       setBusy("Approve in your wallet…");
       const result = await payer.submit(built.tx, view.id, () => setBusy("Confirming on Solana…"));
-      if (result.booking) setView(result.booking);
-      else await reload();
+      if (result.booking) {
+        setView(result.booking);
+        setNow(result.booking.now);
+      } else await reload();
       setConfirming(null);
     } catch (e) {
       if (e instanceof Error && e.message === "No wallet selected") return;

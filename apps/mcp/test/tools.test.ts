@@ -165,6 +165,17 @@ describe("get_quote", () => {
 });
 
 describe("book", () => {
+  it("with the agent key reports an unconfirmed payment instead of an error, so the agent does not pay twice", async () => {
+    fake.sendTimesOut = true;
+    const { call } = await open({ agent: true });
+    const q = await call("get_quote", QUOTE_ARGS);
+    const r = await call("book", { quote_id: q.data.quote_id, option_index: 1 });
+    expect(r.isError).toBe(false);
+    expect(r.data).toMatchObject({ booking_id: bookingIdHex(q.data.quote_id), status: "unconfirmed" });
+    expect(r.text).toContain("Do NOT book again");
+    expect(fake.sent).toHaveLength(1);
+  });
+
   it("without an agent key returns the transaction and signer", async () => {
     const { call } = await open();
     const q = await call("get_quote", { ...QUOTE_ARGS, wallet: OTHER });

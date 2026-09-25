@@ -484,6 +484,9 @@ export class FakeStumari {
   }
 
   /** `/api/tx/send`: only transactions we built, with every signature present and valid. */
+  /** Answer every send with 504 CONFIRMATION_TIMEOUT (after recording it), like a slow cluster. */
+  sendTimesOut = false;
+
   private async send(txBase64: string): Promise<Response> {
     const tx = getTransactionDecoder().decode(getBase64Encoder().encode(txBase64));
     const bookingId = this.builtMessages.get(Buffer.from(tx.messageBytes).toString("hex"));
@@ -495,6 +498,7 @@ export class FakeStumari {
       }
     }
     this.sent.push(txBase64);
+    if (this.sendTimesOut) return apiError(504, "CONFIRMATION_TIMEOUT", "not confirmed yet");
     const booking = this.bookings.get(bookingId)!;
     booking.status = booking.status === "awaiting_signature" ? "confirmed" : "cancelled";
     if (booking.status === "confirmed") this.quotes.get(booking.quoteId)!.status = "used";
