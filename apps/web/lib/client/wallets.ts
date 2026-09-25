@@ -11,6 +11,7 @@ import {
   getBase64Encoder,
   getTransactionDecoder,
   getTransactionEncoder,
+  signBytes,
   type KeyPairSigner,
   type Transaction,
   type TransactionWithinSizeLimit,
@@ -18,8 +19,10 @@ import {
 } from "@solana/kit";
 import {
   SolanaSignAndSendTransaction,
+  SolanaSignMessage,
   SolanaSignTransaction,
   type SolanaSignAndSendTransactionFeature,
+  type SolanaSignMessageFeature,
   type SolanaSignTransactionFeature,
 } from "@solana/wallet-standard-features";
 import { getWallets } from "@wallet-standard/app";
@@ -42,6 +45,8 @@ export interface ConnectedWallet {
   address: string;
   /** Signs the server's bytes and gets them on-chain; resolves with the updated booking. */
   submit(txBase64: string, bookingId: string, onSigned?: () => void): Promise<SubmitResult>;
+  /** Ed25519 signature over raw bytes (Sign-In With Solana, `solana:signMessage`). */
+  signMessage(message: Uint8Array): Promise<Uint8Array>;
   disconnect(): Promise<void>;
 }
 
@@ -82,7 +87,9 @@ export async function connectStandardWallet(wallet: Wallet, cluster: Cluster): P
   const chain = chainFor(cluster);
   // Wallets that do not list this cluster (e.g. localnet) sign without a chain hint.
   const chainHint = account.chains.includes(chain) ? chain : undefined;
-  const features = wallet.features as Partial<SolanaSignTransactionFeature & SolanaSignAndSendTransactionFeature & StandardDisconnectFeature>;
+  const features = wallet.features as Partial<
+    SolanaSignTransactionFeature & SolanaSignAndSendTransactionFeature & SolanaSignMessageFeature & StandardDisconnectFeature
+  >;
 
   async function submit(txBase64: string, bookingId: string, onSigned?: () => void): Promise<SubmitResult> {
     const transaction = new Uint8Array(b64.toBytes(txBase64));
@@ -109,6 +116,13 @@ export async function connectStandardWallet(wallet: Wallet, cluster: Cluster): P
     icon: wallet.icon ?? null,
     address: account.address,
     submit,
+    signMessage: async (message) => {
+      const signer = features[SolanaSignMessage];
+      if (!signer) throw new Error(`${wallet.name} cannot sign messages; use another wallet to sign in`);
+      const [out] = await signer.signMessage({ account: account!, message });
+      if (!out) throw new Error("The wallet returned no signature");
+      return out.signature;
+    },
     disconnect: async () => {
       await features[StandardDisconnect]?.disconnect();
     },
@@ -170,6 +184,7 @@ export async function connectDemoWallet(): Promise<ConnectedWallet> {
       onSigned?.();
       return relaySigned(signed);
     },
+    signMessage: async (message) => new Uint8Array(await signBytes(signer.keyPair.privateKey, message)),
     disconnect: async () => {},
   };
 }

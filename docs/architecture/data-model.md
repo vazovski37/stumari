@@ -116,7 +116,7 @@ Rules: `POST /api/quotes` holds a unit with **one atomic batch**: an `INSERT …
 Repeat build requests for the same `(booking_id, action)` return the cached `tx_base64` while valid.
 
 ### `rate_events`
-| id pk | bucket (`apply`, `faucet`, `quote`, `pay`, `tx`, `nonce`) | key (ip_hash or wallet) | created_at |
+| id pk | bucket (`apply`, `faucet`, `quote`, `pay`, `tx`, `nonce` — 20 per IP per 10 min, `sync` — dashboard "Sync now", 10 per hotel per 10 min) | key (ip_hash or wallet) | created_at |
 Index `(bucket, key, created_at)`. A limit is `COUNT(*)` in the window; old rows are pruned by the sync cron.
 
 ### `auth_nonces`

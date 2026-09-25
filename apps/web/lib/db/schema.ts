@@ -3,10 +3,9 @@
  * Timestamps are unix seconds; money is a decimal string of base units; JSON is TEXT.
  */
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
-import { applicationRoles, cryptoAcceptance } from "../application-fields";
+import { applicationRoles, applicationStatuses, cryptoAcceptance } from "../application-fields";
 import { locales } from "../i18n/locales";
 
-export const applicationStatuses = ["new", "contacted", "qualified", "pilot", "rejected"] as const;
 export const contractTemplates = ["flexible", "standard", "nonrefundable"] as const;
 export const bookingStatuses = [
   "awaiting_signature",
@@ -31,7 +30,7 @@ export const bookingEventTypes = [
   "failed",
 ] as const;
 export const builtTxActions = ["create", "cancel", "dispute", "void"] as const;
-export const rateBuckets = ["apply", "faucet", "quote", "pay", "tx", "nonce"] as const;
+export const rateBuckets = ["apply", "faucet", "quote", "pay", "tx", "nonce", "sync"] as const;
 
 export type ContractTemplate = (typeof contractTemplates)[number];
 export type RateBucket = (typeof rateBuckets)[number];

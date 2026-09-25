@@ -4,7 +4,8 @@ import { addDays, nightsBetween, TEMPLATES, type QuoteEnvelope, type QuoteOption
 import { ArrowRight, BedDouble, Clock, Info, LockKeyhole, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { FaucetButton, shortAddress } from "@/components/wallet/wallet-button";
+import { FaucetButton } from "@/components/wallet/wallet-button";
+import { shortAddress } from "@/lib/format";
 import { useWallet } from "@/components/wallet/wallet-provider";
 import { apiGet, apiPost, ClientApiError, errorMessage } from "@/lib/client/api";
 import type { hotelProfile } from "@/lib/hotels";

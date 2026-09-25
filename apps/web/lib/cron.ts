@@ -2,6 +2,7 @@ import "server-only";
 import { timingSafeEqual } from "node:crypto";
 import { and, asc, eq, inArray, lt, lte, or } from "drizzle-orm";
 import { ApiError } from "./api/errors";
+import { pruneNonces } from "./auth/siws";
 import { autoConfirm, crankIfDue, syncFromChain } from "./bookings/lifecycle";
 import type { Db } from "./db/client";
 import { bookings } from "./db/schema";
@@ -49,7 +50,7 @@ export function authorizeCron(request: Request, secret: string | null): void {
 /**
  * `sync`: iCal imports for stale units, quote expiry, reconciliation of `awaiting_signature` and
  * `pending` bookings with the chain (auto-confirming pending ones without conflicts), and pruning
- * of old rate-limit events.
+ * of old rate-limit events and sign-in nonces.
  */
 export async function runSyncJob(c: Chain, db: Db) {
   const wallNow = Math.floor(Date.now() / 1000);
@@ -76,7 +77,14 @@ export async function runSyncJob(c: Chain, db: Db) {
       .where(and(inArray(bookings.id, open.map((r) => r.id)), lt(bookings.updated_at, wallNow)));
   }
   const pruned = await pruneRateEvents(db, wallNow);
-  return { units: synced, quotes_expired: quotesExpired, bookings: reconciled, rate_events_pruned: pruned };
+  const noncesPruned = await pruneNonces(db, wallNow);
+  return {
+    units: synced,
+    quotes_expired: quotesExpired,
+    bookings: reconciled,
+    rate_events_pruned: pruned,
+    nonces_pruned: noncesPruned,
+  };
 }
 
 /** `release`: releases confirmed bookings past `release_after_ts`; voids pending ones past the confirm deadline. */

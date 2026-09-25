@@ -20,6 +20,11 @@ export const TX_WALLET_LIMIT: RateLimit = { bucket: "tx", limit: 30, windowSecs:
 /** POST /api/demo/faucet: 3 per wallet and 10 per IP per hour (api.md). */
 export const FAUCET_WALLET_LIMIT: RateLimit = { bucket: "faucet", limit: 3, windowSecs: 3600 };
 export const FAUCET_IP_LIMIT: RateLimit = { bucket: "faucet", limit: 10, windowSecs: 3600 };
+/** GET /api/auth/nonce: 20 per IP per 10 minutes. */
+export const NONCE_LIMIT: RateLimit = { bucket: "nonce", limit: 20, windowSecs: 600 };
+
+/** Dashboard "Sync now" (outbound iCal fetches): 10 per hotel per 10 minutes. */
+export const SYNC_LIMIT: RateLimit = { bucket: "sync", limit: 10, windowSecs: 600 };
 /** Longest window above; the sync cron deletes older events. */
 export const RATE_EVENT_RETENTION_SECS = 3600;
 

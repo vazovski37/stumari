@@ -12,7 +12,7 @@ export class ClientApiError extends Error {
   }
 }
 
-async function call<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
+async function call<T>(method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE", path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
     res = await fetch(path, {
@@ -24,7 +24,7 @@ async function call<T>(method: "GET" | "POST", path: string, body?: unknown): Pr
   } catch {
     throw new ClientApiError(0, "NETWORK", "Could not reach Stumari. Check your connection and try again.", {});
   }
-  const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  const json = (res.status === 204 ? {} : await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
     const error = (json.error ?? {}) as { code?: string; message?: string };
     throw new ClientApiError(res.status, error.code ?? "HTTP_ERROR", error.message ?? `Request failed (HTTP ${res.status})`, json);
@@ -34,6 +34,9 @@ async function call<T>(method: "GET" | "POST", path: string, body?: unknown): Pr
 
 export const apiGet = <T>(path: string) => call<T>("GET", path);
 export const apiPost = <T>(path: string, body: unknown) => call<T>("POST", path, body);
+export const apiPatch = <T>(path: string, body: unknown) => call<T>("PATCH", path, body);
+export const apiPut = <T>(path: string, body: unknown) => call<T>("PUT", path, body);
+export const apiDelete = <T>(path: string) => call<T>("DELETE", path);
 
 export const errorMessage = (e: unknown) =>
   e instanceof ClientApiError ? e.message : e instanceof Error ? e.message : "Something went wrong";

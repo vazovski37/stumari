@@ -4,7 +4,7 @@ import { TEMPLATES, isTemplateId } from "@stumari/core";
 import { ArrowRight, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { shortAddress } from "@/components/wallet/wallet-button";
+import { shortAddress } from "@/lib/format";
 import { useWallet } from "@/components/wallet/wallet-provider";
 import { apiGet, errorMessage } from "@/lib/client/api";
 import { formatHotelDate } from "@/lib/bookings/terms";

@@ -3,10 +3,9 @@
 import { Coins, LogOut, Wallet } from "lucide-react";
 import { useState } from "react";
 import { errorMessage } from "@/lib/client/api";
+import { shortAddress } from "@/lib/format";
 import { formatUsdc } from "@/lib/money";
 import { useWallet } from "./wallet-provider";
-
-export const shortAddress = (a: string) => `${a.slice(0, 4)}…${a.slice(-4)}`;
 
 /** Header control: connect, show the connected wallet, test-USDC faucet and disconnect. */
 export function WalletButton() {

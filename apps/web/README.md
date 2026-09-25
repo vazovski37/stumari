@@ -1,6 +1,6 @@
 # apps/web
 
-Next.js 16 (App Router, Turbopack) app for Stumari: the hotel landing page (EN/KA/RU), the pilot application form, guest checkout (`/h/[slug]`), the booking page (`/b/[id]`), `/my`, `/model`, and the API. The hotel dashboard and admin land here next (English only). Specs: [`docs/architecture/api.md`](../../docs/architecture/api.md), [`data-model.md`](../../docs/architecture/data-model.md), [`configuration.md`](../../docs/architecture/configuration.md).
+Next.js 16 (App Router, Turbopack) app for Stumari: the hotel landing page (EN/KA/RU), the pilot application form, guest checkout (`/h/[slug]`), the booking page (`/b/[id]`), `/my`, `/model`, the hotel dashboard (`/dashboard/[hotelId]`), the admin console (`/admin`, onboarding at `/admin/hotels/[id]`) and the API. Checkout, dashboard and admin are English only. Specs: [`docs/architecture/api.md`](../../docs/architecture/api.md), [`data-model.md`](../../docs/architecture/data-model.md), [`configuration.md`](../../docs/architecture/configuration.md).
 
 > This Next.js version differs from older ones. Read the bundled docs in `node_modules/next/dist/docs/` before touching routing, route handlers, metadata or caching (see `AGENTS.md`).
 
@@ -17,7 +17,7 @@ With a chain: `pnpm --filter @stumari/scripts bootstrap -- --cluster localnet` (
 | Script | What it does |
 |---|---|
 | `dev` / `build` / `start` | Next.js |
-| `test` | Vitest: application validator, locale + dictionary parity, pilot offer parity, rate limiter, env parsing, money; availability/occupancy/holds (incl. concurrent holds across connections), SSRF guard, iCal parse/export/sync, `/api/tx/send` allow-list, pricing wiring + pay checks, public booking view (no PII), guest action windows |
+| `test` | Vitest: application validator, locale + dictionary parity, pilot offer parity, rate limiter, env parsing, money; availability/occupancy/holds (incl. concurrent holds across connections), SSRF guard, iCal parse/export/sync, `/api/tx/send` allow-list, pricing wiring + pay checks, public booking view (no PII), guest action windows; SIWS (format, host binding, nonce reuse/expiry, concurrent verify), session cookie, role isolation over the route handlers, policy parity with `validatePolicy`, operator action windows, admin/dashboard lists; `lib/admin/onboarding.localnet.test.ts` drives the onboarding API against the local Surfpool (register_hotel, update_hotel) and is skipped unless `.env.local` points at a running surfnet with the Config |
 | `typecheck` / `lint` | `next typegen && tsc --noEmit` / ESLint |
 | `cron` | `scripts/cron-loop.ts`: POSTs `/api/cron/sync` and `/api/cron/release` every 60 s with `CRON_SECRET` |
 | `e2e` | `scripts/e2e-checkout.ts`: HTTP end-to-end guest flow against a running app on localnet/devnet (refuses mainnet) |
@@ -35,10 +35,12 @@ app/
   (site)/            root layout for English-only pages
     privacy/, model/ /privacy, /model (calibration chart from ml/reports)
     (guest)/         wallet provider + guest header: h/[slug] checkout, b/[bookingId] booking, my
+    (operator)/      wallet provider + sign-in header: dashboard, dashboard/[hotelId], admin, admin/hotels/[hotelId]
   api/               route handlers (table below)
   global-not-found.tsx, icon.svg, apple-icon.tsx, robots.ts, sitemap.ts, fonts.ts, globals.css
 components/          header, footer, language switcher, landing sections, apply form,
-                     checkout/ (menu, refund timeline, "Why this price"), booking/, wallet/, model/
+                     checkout/ (menu, refund timeline, "Why this price"), booking/, wallet/, model/,
+                     operator/ (SIWS sign-in, shared UI), dashboard/ (overview, bookings, units, policy), admin/
 lib/
   env-schema.ts      zod-validated server env (pure, tested) · env.ts: cached accessor, server-only
   keys.ts            Solana secret key parsing (base58 or JSON byte array) → public key
@@ -55,6 +57,9 @@ lib/
   quotes/            pricing wiring (@stumari/core priceMenu + wallet history), quote creation + expiry
   bookings/          public view + terms text, chain mirror (applyChainState), built_txs cache/allow-list,
                      /pay, guest actions, relay (/tx/send, /submitted), auto-confirm + lazy crank
+  auth/              SIWS nonce/verify (siws.ts), HMAC session cookie (session.ts), requireSession + roles (access.ts)
+  dashboard/         operator booking lists + overview, units/import URLs/manual blocks/sync, policy (validatePolicy)
+  admin/             applications pipeline + convert, hotels/room types/units, register_hotel + update_hotel, filters
   cron.ts, faucet.ts cron jobs (batch 20, concurrency 4), demo faucet
   client/            browser only: API client, Wallet Standard + demo wallet (no RPC in the browser)
 messages/            en.json (source), ka.json + ru.json (machine-drafted, marked "_note")
@@ -86,9 +91,12 @@ Contract: `docs/architecture/api.md`. Errors are `{ error: { code, message } }` 
 | `GET /api/wallets/{wallet}/bookings` | public views of the wallet's bookings |
 | `GET /api/ical/{token}` | unit export feed (occupying bookings + manual blocks), `no-store` |
 | `POST /api/demo/faucet` | demo mode only, never mainnet: 500 test USDC; 3/hour/wallet, 10/hour/IP |
-| `GET`/`POST /api/cron/sync` · `/api/cron/release` | `Authorization: Bearer ${CRON_SECRET}` (503 when unset); iCal + quote expiry + reconcile + auto-confirm + rate-event pruning / release + void |
+| `GET`/`POST /api/cron/sync` · `/api/cron/release` | `Authorization: Bearer ${CRON_SECRET}` (503 when unset); iCal + quote expiry + reconcile + auto-confirm + rate-event and nonce pruning / release + void |
+| `GET /api/auth/nonce?wallet=` · `POST /api/auth/verify` · `POST /api/auth/logout` · `GET /api/me` | Sign-In With Solana: the wallet signs `"{host} wants you to sign in to Stumari…"` (`solana:signMessage`; the demo wallet signs with its key); host = `NEXT_PUBLIC_SITE_URL`'s, nonce single-use and ≤ 300 s; `stumari_session` cookie (HMAC, httpOnly, SameSite=Lax, Secure in production, 7 days). 20 nonce/verify calls per IP per 10 min |
+| `/api/dashboard/{hotelId}/…` | overview (lazily cranks due bookings), bookings (guest contact), policy (PATCH, `validatePolicy`), units, `units/{unitId}/ical` (PUT), `units/{unitId}/blocks` (GET/POST, DELETE manual only), sync, `bookings/{id}/confirm`. Allowed for the hotel's payout wallet or an admin; others get 403 whether or not the hotel exists |
+| `/api/admin/…` | applications (GET, PATCH, `convert`), hotels (GET/POST, PATCH → `update_hotel` once registered), room types, units, `register`, bookings (GET with filters, `{id}/resolve` · `void` · `confirm` · `release`), `cron/sync` · `cron/release`. Admin = wallet in `ADMIN_WALLETS` at request time |
 
-Every route handler declares `export const runtime = "nodejs"`.
+Every route handler declares `export const runtime = "nodejs"`. Session routes also refuse state-changing requests whose `Origin` is not the request's own origin (`403 BAD_ORIGIN`).
 
 ## Environment
 

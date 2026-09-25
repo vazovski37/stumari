@@ -1,6 +1,8 @@
 /** Choice lists shared by the apply form, the API validator and the DB schema (dependency-free, safe for client bundles). */
 export const applicationRoles = ["owner", "manager", "other"] as const;
 export const cryptoAcceptance = ["no", "sometimes", "often"] as const;
+/** Pilot pipeline stages (`applications.status`). */
+export const applicationStatuses = ["new", "contacted", "qualified", "pilot", "rejected"] as const;
 export const applicationChannels = ["booking.com", "airbnb", "expedia", "direct", "instagram", "other"] as const;
 
 export type ApplicationRole = (typeof applicationRoles)[number];

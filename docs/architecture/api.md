@@ -4,7 +4,7 @@ All endpoints are Next.js route handlers under `apps/web/app/api`. JSON in/out. 
 
 ## Runtime rules
 
-- Every route handler declares `export const runtime = 'nodejs'`. No auth or i18n logic in middleware/proxy — handlers and server components call `requireSession(role)`.
+- Every route handler declares `export const runtime = 'nodejs'`. No auth or i18n logic in middleware/proxy — route handlers call `requireSession(request, role)` with role `"user" | "admin" | { hotelId }`; server components call `pageSession()`. Admin is decided per request from `ADMIN_WALLETS`, never stored in the cookie. Session routes refuse non-GET requests whose `Origin` differs from the site's own (`403 BAD_ORIGIN`), on top of `SameSite=Lax`.
 - Ed25519 and sha256: WebCrypto (`crypto.subtle`, Node ≥ 20 — what `@solana/kit` itself uses; `packages/escrow-client` does this) or `@noble/curves/ed25519` / `@noble/hashes`. Never a hand-rolled implementation.
 - Solana RPC only on the server (`SOLANA_RPC_URL`). Confirmation by polling `getSignatureStatuses` (no websockets in serverless).
 - Rate limits are persisted in the `rate_events` table (serverless-safe), never in memory.
@@ -67,16 +67,16 @@ Checkout, booking, dashboard and admin are English-only in the MVP. `booking_url
   settled: { refund_minor, hotel_minor, fee_minor } | null }   // null until the booking closes
 ```
 
-`can_dispute` = status confirmed && checkin_ts ≤ now < release_after_ts. `refund_if_cancel_now_minor` is the refund by the tier schedule — what a cancel guarantees — also while `pending`: a pending booking gets everything back only if the hotel has not confirmed when the cancel lands, and the UI states that as conditional (ADR-0012). `/submitted` fills `create_sig` / `confirm_sig` / `final_sig` from the transaction's own escrow instruction, and a column is written once, only when the chain shows that step happened.
+`can_dispute` = status confirmed && checkin_ts ≤ now < release_after_ts. `refund_if_cancel_now_minor` is the refund by the tier schedule — what a cancel guarantees — also while `pending`: a pending booking gets everything back only if the hotel has not confirmed when the cancel lands, and the UI states that as conditional (ADR-0012). `/submitted` fills `create_sig` / `confirm_sig` / `final_sig` from the transaction's own escrow instruction, and a column is written once, only when the chain shows that step happened. **Never** includes guest name/email/phone or the guest wallet. Other conventions: `lastValidBlockHeight` is a JSON number (a safe integer); hotel slugs match `^[a-z0-9][a-z0-9-]{0,63}$`; error bodies are `{ error: { code: "UPPER_SNAKE", message } }`.
 
-**Clocks.** Quotes, holds and DB timestamps use wall-clock time. Everything the program will check against its `Clock` — lazy cranks, the `can_*` flags, `refund_if_cancel_now_minor` and `min_refund` — uses the chain's Clock sysvar (cached 2 s, wall time as fallback), so a surfnet after time travel behaves like the program. **Program id:** at startup the web app compares `STUMARI_PROGRAM_ID` with `onchain/artifacts/program-id.txt` (copied into the build); on a mismatch it logs an error and every chain route answers `503 PROGRAM_ID_MISMATCH`, while the landing page keeps serving. Routes that need unset chain settings answer `503 CHAIN_NOT_CONFIGURED`. **Never** includes guest name/email/phone or the guest wallet. Other conventions: `lastValidBlockHeight` is a JSON number (a safe integer); hotel slugs match `^[a-z0-9][a-z0-9-]{0,63}$`; error bodies are `{ error: { code: "UPPER_SNAKE", message } }`.
+**Clocks.** Quotes, holds and DB timestamps use wall-clock time. Everything the program will check against its `Clock` — lazy cranks, the `can_*` flags, `refund_if_cancel_now_minor` and `min_refund` — uses the chain's Clock sysvar (cached 2 s, wall time as fallback), so a surfnet after time travel behaves like the program. **Program id:** at startup the web app compares `STUMARI_PROGRAM_ID` with `onchain/artifacts/program-id.txt` (copied into the build); on a mismatch it logs an error and every chain route answers `503 PROGRAM_ID_MISMATCH`, while the landing page keeps serving. Routes that need unset chain settings answer `503 CHAIN_NOT_CONFIGURED`.
 
 ## Auth (Sign-In With Solana)
 
 | Endpoint | Behaviour |
 |---|---|
 | `GET /api/auth/nonce?wallet=` | `{ nonce, message }`, message = `"{host} wants you to sign in to Stumari\nWallet: {wallet}\nNonce: {nonce}\nIssued: {iso}"`; nonce stored with the exact message |
-| `POST /api/auth/verify` | `{ wallet, message, signature }` (base58 Ed25519 over UTF-8 message). Checks: message equals the stored one, host == `NEXT_PUBLIC_SITE_URL` host, nonce unused and ≤ 300 s old; marks used; sets `stumari_session` cookie (HMAC, httpOnly, sameSite=lax, secure in prod, 7 days) |
+| `POST /api/auth/verify` | `{ wallet, message, signature }` (base58 Ed25519 over UTF-8 message). Checks: message equals the stored one, host == `NEXT_PUBLIC_SITE_URL` host, nonce unused and ≤ 300 s old; marks it used with one conditional `UPDATE` (two parallel verifies cannot both win); sets `stumari_session` cookie (HMAC, httpOnly, sameSite=lax, secure in prod, 7 days). Nonce and verify share a limit of 20 per IP per 10 min; the sync cron prunes old nonces |
 | `POST /api/auth/logout` | clears cookie |
 | `GET /api/me` | `{ wallet, is_admin, hotels: [{id, slug, name}] }` |
 
@@ -84,13 +84,13 @@ Roles: **admin** if wallet ∈ `ADMIN_WALLETS`; **hotel** if wallet == `hotels.p
 
 ## Hotel dashboard
 
-Authorized when `session.wallet == hotels.payout_wallet` **or** `session.is_admin` (admins onboard hotels on their behalf). `{unitId}` = `rooms.id` everywhere.
+Authorized when `session.wallet == hotels.payout_wallet` **or** `session.is_admin` (admins onboard hotels on their behalf). A non-admin asking for another hotel gets `403` whether or not it exists (ids cannot be probed); an admin gets `404` for a missing hotel. `{unitId}` = `rooms.id` everywhere.
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/dashboard/{hotelId}/overview` | counts, upcoming arrivals, payouts released / pending, conflicts (lazily cranks due bookings) |
+| `GET /api/dashboard/{hotelId}/overview` | `{ counts, upcoming, payouts: { released_minor, pending_minor, disputed_minor }, conflicts }` (lazily cranks due bookings first) |
 | `GET /api/dashboard/{hotelId}/bookings?status=` | list incl. guest contact |
-| `PATCH /api/dashboard/{hotelId}/policy` | `{ enabled_templates, reference_template, resale_bps[6], min_mult_bps, max_mult_bps }` (bounds in pricing-and-risk-model.md §5) |
+| `PATCH /api/dashboard/{hotelId}/policy` | `{ enabled_templates, reference_template, resale_bps[6], min_mult_bps, max_mult_bps }` validated by `@stumari/core` `validatePolicy` (the same function checkout uses; bounds in pricing-and-risk-model.md §5) |
 | `GET /api/dashboard/{hotelId}/units` | room types + units + export URLs + last sync |
 | `PUT /api/dashboard/{hotelId}/units/{unitId}/ical` | `{ import_urls: string[] }` (https, ≤ 5) |
 | `GET/POST /api/dashboard/{hotelId}/units/{unitId}/blocks` | manual blocks `{ start_date, end_date, summary? }` (end exclusive) |
@@ -107,7 +107,7 @@ Authorized when `session.wallet == hotels.payout_wallet` **or** `session.is_admi
 | `GET/POST /api/admin/hotels` · `PATCH /api/admin/hotels/{id}` | CRUD; on a registered hotel `status: paused\|active` sends `update_hotel(active)`, a new `payout_wallet` sends `update_hotel(authority)` + idempotent ATA create (affects new bookings only) |
 | `POST /api/admin/hotels/{id}/room-types` · `PATCH …/room-types/{rtId}` | rates in USD (base units) |
 | `POST /api/admin/hotels/{id}/room-types/{rtId}/units` | `{ label, ical_import_urls? }` → `{ id, export_url }` |
-| `POST /api/admin/hotels/{id}/register` | idempotent ATA create for the payout wallet + `register_hotel`; status → `active` |
+| `POST /api/admin/hotels/{id}/register` | idempotent ATA create for the payout wallet + `register_hotel` (an existing Hotel account is aligned with `update_hotel`); status → `active`. `409 NO_PAYOUT_WALLET` / `409 NO_UNITS` (needs ≥ 1 active unit). Activating an unregistered hotel: `409 NOT_REGISTERED`. A payout wallet equal to a key the web app holds (operator, admin): `400 INVALID_WALLET` |
 | `GET /api/admin/bookings` · `POST …/{id}/resolve {guest_bps}` · `…/void` · `…/confirm` · `…/release` | operations |
 | `POST /api/admin/cron/{sync\|release}` | run a job now |
 

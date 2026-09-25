@@ -4,11 +4,11 @@ import { TEMPLATES, isTemplateId } from "@stumari/core";
 import { CheckCircle2, CircleDashed, ExternalLink, Flag, RotateCcw, Undo2, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { RefundTimeline } from "@/components/checkout/refund-timeline";
-import { shortAddress } from "@/components/wallet/wallet-button";
 import { useWallet } from "@/components/wallet/wallet-provider";
 import { apiGet, apiPost, ClientApiError, errorMessage } from "@/lib/client/api";
 import type { PublicBookingView } from "@/lib/bookings/view";
 import { formatHotelDate, formatHotelTime } from "@/lib/bookings/terms";
+import { shortAddress } from "@/lib/format";
 import { formatUsdc } from "@/lib/money";
 
 type Action = "cancel" | "dispute" | "void";

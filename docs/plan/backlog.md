@@ -9,7 +9,11 @@ Owned by the lead engineer; agents read the section for their component. Tick it
 - [x] Quote holds: on a local `file:` libsql DB, concurrent `BEGIN IMMEDIATE` fails with `SQLITE_BUSY` — use single-statement conditional writes (the rate limiter pattern) or retry with backoff.
 - [x] Sync cron prunes old `rate_events`.
 - [x] English-only pages (`/h`, `/b`, `/my`, `/model`, `/dashboard`, `/admin`) live under `app/(site)/`; avoid the paths `/`, `/apply`, `/en`, `/ka`, `/ru` there.
-- [ ] Policy validation in API/DB must match `@stumari/core` `validatePolicy` (reference template must be enabled). Checkout reads policy only through it; recheck when the dashboard PATCH lands.
+- [x] Policy validation in API/DB must match `@stumari/core` `validatePolicy` (reference template must be enabled). Checkout and the dashboard PATCH both use it (27-case parity test).
+- [ ] Dashboard: after a payout-wallet change, show that open bookings still pay the wallet snapshotted at booking time (the new wallet's dashboard lists them; the old wallet loses access).
+- [ ] SIWS: a wallet whose `solana:signMessage` returns a wrapped `signedMessage` (e.g. some hardware setups) fails verification; test Phantom and document supported wallets.
+- [ ] Policy editor: friendlier wording than `validatePolicy`'s own messages for hotel owners.
+- [ ] Sign in once with a real Phantom (`solana:signMessage`) before recording; only the demo wallet was clicked through.
 - [ ] Not yet exercised over HTTP: release crank and dispute (need time travel), a real Phantom / sign-and-send wallet (only the demo wallet was clicked through).
 - [x] `/model` page renders `ml/reports/reliability.json` + metrics summary (ADR-0016 wording: Platt; AUC 0.713 vs 0.634; ECE 0.038).
 - [x] Rate-limit key: do not trust a client-supplied `X-Forwarded-For` first entry except on Vercel (`VERCEL` set); otherwise use the socket/`x-real-ip`.
