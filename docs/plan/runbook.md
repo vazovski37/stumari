@@ -2,7 +2,7 @@
 
 How to set up, run, deploy and operate Stumari. Default cluster: **devnet**. Never touch mainnet without the M7 decision in the [roadmap](roadmap.md) and the checklist in [security.md](../architecture/security.md#before-mainnet-checklist).
 
-Some parts are still being built (`scripts/bootstrap.ts`, the web routes, `apps/mcp`). If a command below disagrees with the code, the code and [configuration.md](../architecture/configuration.md) win. Fix this runbook in the same change.
+If a command below disagrees with the code, the code and [configuration.md](../architecture/configuration.md) win. Fix this runbook in the same change.
 
 ## 1. Prerequisites
 
