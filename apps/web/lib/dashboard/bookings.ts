@@ -86,7 +86,7 @@ export interface HotelOverview {
   /** Paid bookings arriving today or later, soonest first. */
   upcoming: OperatorBooking[];
   payouts: {
-    /** Paid out to the hotel (released or resolved). */
+    /** Paid out to the hotel: released and resolved stays plus its share of cancellations. */
     released_minor: string;
     /** Held in escrow for pending and confirmed bookings, net of the fee snapshot. */
     pending_minor: string;
@@ -110,12 +110,12 @@ export async function hotelOverview(db: Db, hotel: { id: string; timezone: strin
   const money = await db
     .select({ status: bookings.status, amount: bookings.amount_minor, fee: bookings.fee_bps, hotelMinor: bookings.hotel_minor })
     .from(bookings)
-    .where(and(eq(bookings.hotel_id, hotel.id), inArray(bookings.status, ["pending", "confirmed", "disputed", "released", "resolved"])));
+    .where(and(eq(bookings.hotel_id, hotel.id), inArray(bookings.status, ["pending", "confirmed", "disputed", "released", "resolved", "cancelled"])));
   let released = 0n;
   let pending = 0n;
   let disputed = 0n;
   for (const m of money) {
-    if (m.status === "released" || m.status === "resolved") released += BigInt(m.hotelMinor ?? "0");
+    if (m.status === "released" || m.status === "resolved" || m.status === "cancelled") released += BigInt(m.hotelMinor ?? "0");
     else if (m.status === "disputed") disputed += BigInt(m.amount);
     else pending += splitRelease({ amount: BigInt(m.amount), feeBps: m.fee ?? 0 }).hotelNet;
   }

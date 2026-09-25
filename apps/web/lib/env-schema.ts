@@ -67,6 +67,7 @@ const rawSchema = z.object({
   LIBSQL_URL: optionalString,
   LIBSQL_AUTH_TOKEN: optionalString,
   STUMARI_DEMO_MODE: booleanFlag.default(false),
+  ICAL_ALLOW_LOOPBACK: booleanFlag.default(false),
   NEXT_PUBLIC_SITE_URL: optionalString.pipe(z.url().optional()),
   AMOUNT_CAP_MINOR: optionalString.pipe(
     z.string().regex(/^[1-9][0-9]{0,19}$/, { message: "AMOUNT_CAP_MINOR must be a positive integer (base units)" }).optional(),
@@ -96,6 +97,8 @@ export type ServerEnv = {
   libsqlAuthToken: string | null;
   /** Demo wallet + faucet. Always false on mainnet. */
   demoMode: boolean;
+  /** Test-only: iCal import URLs may be plain-http loopback (the local E2E's fixture feed). Never on mainnet or Vercel. */
+  icalAllowLoopback: boolean;
   siteUrl: string;
   amountCapMinor: bigint;
   telegram: { botToken: string; chatId: string } | null;
@@ -127,6 +130,9 @@ export function parseServerEnv(source: Record<string, string | undefined>): Serv
   if (raw.VERCEL && libsqlUrl.startsWith("file:")) {
     problems.push("LIBSQL_URL: a file: database cannot be used on Vercel; use a libsql://…turso.io URL");
   }
+  if (raw.ICAL_ALLOW_LOOPBACK && (raw.STUMARI_CLUSTER !== "localnet" || raw.VERCEL)) {
+    problems.push("ICAL_ALLOW_LOOPBACK: test-only; allowed only with STUMARI_CLUSTER=localnet and never on Vercel");
+  }
   if (production && !raw.NEXT_PUBLIC_SITE_URL) problems.push("NEXT_PUBLIC_SITE_URL: required in production");
   if (production && libsqlUrl.startsWith("libsql://") && !raw.LIBSQL_AUTH_TOKEN) {
     problems.push("LIBSQL_AUTH_TOKEN: required in production for a libsql:// database");
@@ -151,6 +157,7 @@ export function parseServerEnv(source: Record<string, string | undefined>): Serv
     libsqlUrl,
     libsqlAuthToken: raw.LIBSQL_AUTH_TOKEN ?? null,
     demoMode: raw.STUMARI_DEMO_MODE && raw.STUMARI_CLUSTER !== "mainnet-beta",
+    icalAllowLoopback: raw.ICAL_ALLOW_LOOPBACK,
     siteUrl: (raw.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, ""),
     amountCapMinor: amountCap === undefined ? DEFAULT_AMOUNT_CAP_MINOR : BigInt(amountCap),
     telegram:

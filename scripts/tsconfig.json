@@ -1,1 +1,1 @@
-{ "extends": "../tsconfig.base.json", "compilerOptions": { "types": ["node"] }, "include": ["*.ts", "lib/**/*.ts"] }
+{ "extends": "../tsconfig.base.json", "compilerOptions": { "types": ["node"] }, "include": ["*.ts", "lib/**/*.ts", "e2e/**/*.ts"] }

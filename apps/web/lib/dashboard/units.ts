@@ -6,6 +6,7 @@ import { ApiError } from "../api/errors";
 import type { Db } from "../db/client";
 import { blocks, hotels, rooms, roomTypes } from "../db/schema";
 import { syncUnit, type SyncResult } from "../inventory/ical-sync";
+import { serverEnv } from "../env";
 import { assertSafeUrl, UnsafeUrlError } from "../inventory/ssrf";
 
 /** iCal import URLs of one unit: https, public host, at most 5, no duplicates (inventory-ical.md). */
@@ -17,7 +18,7 @@ export const importUrls = z
     for (const raw of urls) {
       if (raw === "") continue;
       try {
-        const url = assertSafeUrl(raw).toString();
+        const url = assertSafeUrl(raw, { allowLoopback: serverEnv().icalAllowLoopback }).toString();
         if (!out.includes(url)) out.push(url);
       } catch (e) {
         ctx.addIssue({ code: "custom", message: e instanceof UnsafeUrlError ? `${e.message}` : "not a valid URL" });

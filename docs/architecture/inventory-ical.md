@@ -10,7 +10,7 @@ The MVP connects hotel inventory the way small properties already sync Booking.c
 
 ## Import
 
-- Fetch with a 10 s timeout, max 2 MB, `https:` only; reject hosts that resolve to private, loopback or link-local addresses (SSRF guard, enforced inside the socket's own DNS lookup so a rebinding answer cannot slip past); follow ≤ 3 redirects re-checking each hop.
+- Fetch with a 10 s timeout, max 2 MB, `https:` only (the test-only `ICAL_ALLOW_LOOPBACK`, localnet only, admits plain-`http` loopback feeds for the E2E — ADR-0017); reject hosts that resolve to private, loopback or link-local addresses (SSRF guard, enforced inside the socket's own DNS lookup so a rebinding answer cannot slip past); follow ≤ 3 redirects re-checking each hop.
 - Parse `VEVENT`s with `node-ical` (or equivalent): `DTSTART`/`DTEND` as DATE or DATE-TIME. DATE-TIME values are converted to the hotel's timezone and truncated to dates; `DTEND` is exclusive. Events with no `DTEND` block one night. Cancelled events (`STATUS:CANCELLED`) are ignored, and so are events whose `UID` ends in `@stumari`: an OTA that re-exports imported calendars would otherwise hand our own bookings back as blocks on the same unit.
 - Each sync **replaces** all `blocks` rows of that `(room_id, feed_url)` in one transaction; `last_synced_at` / `sync_error` are updated on the unit.
 - Freshness: cron every 10 min; plus an **on-demand sync of the chosen unit** before building a payment transaction (skipped if synced < 2 min ago). If the on-demand sync fails, proceed with cached data and rely on the confirm step.

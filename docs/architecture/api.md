@@ -88,7 +88,7 @@ Authorized when `session.wallet == hotels.payout_wallet` **or** `session.is_admi
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/dashboard/{hotelId}/overview` | `{ counts, upcoming, payouts: { released_minor, pending_minor, disputed_minor }, conflicts }` (lazily cranks due bookings first) |
+| `GET /api/dashboard/{hotelId}/overview` | `{ counts, upcoming, payouts: { released_minor, pending_minor, disputed_minor }, conflicts }` (`released_minor` = everything paid to the hotel: released and resolved stays plus its share of cancellations) (lazily cranks due bookings first) |
 | `GET /api/dashboard/{hotelId}/bookings?status=` | list incl. guest contact |
 | `PATCH /api/dashboard/{hotelId}/policy` | `{ enabled_templates, reference_template, resale_bps[6], min_mult_bps, max_mult_bps }` validated by `@stumari/core` `validatePolicy` (the same function checkout uses; bounds in pricing-and-risk-model.md §5) |
 | `GET /api/dashboard/{hotelId}/units` | room types + units + export URLs + last sync |

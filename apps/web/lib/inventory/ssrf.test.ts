@@ -50,6 +50,38 @@ describe("assertSafeUrl", () => {
     "https://[::ffff:10.0.0.1]/x",
     "not a url",
   ])("rejects %s", (url) => expect(() => assertSafeUrl(url)).toThrow(UnsafeUrlError));
+
+  it("accepts plain-http loopback only under the test-only allowLoopback policy", () => {
+    const policy = { allowLoopback: true };
+    expect(() => assertSafeUrl("http://127.0.0.1:4000/cal.ics")).toThrow(UnsafeUrlError);
+    expect(assertSafeUrl("http://127.0.0.1:4000/cal.ics", policy).port).toBe("4000");
+    expect(assertSafeUrl("http://localhost/cal.ics", policy).hostname).toBe("localhost");
+    expect(assertSafeUrl("http://[::1]/cal.ics", policy).hostname).toBe("[::1]");
+    for (const url of ["http://10.0.0.1/cal.ics", "http://example.com/cal.ics", "http://u:p@127.0.0.1/cal.ics", "ftp://127.0.0.1/x"]) {
+      expect(() => assertSafeUrl(url, policy)).toThrow(UnsafeUrlError);
+    }
+  });
+});
+
+describe("fetchPublicText with allowLoopback (local E2E fixture feeds)", () => {
+  it("fetches a plain-http loopback calendar, and refuses it without the policy", async () => {
+    const { createServer } = await import("node:http");
+    const server = createServer((_req, res) => res.end("BEGIN:VCALENDAR"));
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address() as { port: number };
+    try {
+      const url = `http://127.0.0.1:${port}/cal.ics`;
+      expect(await fetchPublicText(url, { policy: { allowLoopback: true } })).toBe("BEGIN:VCALENDAR");
+      await expect(fetchPublicText(url)).rejects.toThrow(UnsafeUrlError);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("still refuses redirects to private addresses under allowLoopback", async () => {
+    const hop: Hop = async () => ({ status: 302, location: "https://10.0.0.1/x", body: Buffer.alloc(0) });
+    await expect(fetchPublicText("https://a.example/cal", { hop, policy: { allowLoopback: true } })).rejects.toThrow(UnsafeUrlError);
+  });
 });
 
 function fakeResolver(answers: Record<string, string[]>) {

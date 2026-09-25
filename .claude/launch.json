@@ -28,6 +28,20 @@
         "3210"
       ],
       "port": 3210
+    },
+    {
+      "name": "web-demo",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "web",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3000"
+      ],
+      "port": 3000
     }
   ]
 }

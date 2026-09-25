@@ -9,6 +9,8 @@ pnpm --filter @stumari/scripts bootstrap --cluster devnet
 pnpm --filter @stumari/scripts fund --to <wallet> [--amount 500]
 pnpm --filter @stumari/scripts timetravel --to +2h | +3d | +90m | 2026-10-20T10:00:00Z
 pnpm --filter @stumari/scripts smoke
+pnpm --filter @stumari/scripts e2e           # full loop on a reset localnet (docs/plan/e2e-report.md)
+pnpm --filter @stumari/scripts e2e:screens   # PNG screenshots with headless Edge
 pnpm --filter @stumari/scripts typecheck
 ```
 

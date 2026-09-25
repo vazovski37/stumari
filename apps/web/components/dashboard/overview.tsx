@@ -31,7 +31,7 @@ export function Overview({ overview }: { overview: HotelOverview }) {
           note={`${counts.pending ?? 0} awaiting confirmation`}
         />
         <Stat icon={<Lock aria-hidden="true" className="size-5" />} label="In escrow for you" value={usdc(payouts.pending_minor)} note="Released after check-in unless the guest disputes" />
-        <Stat icon={<Landmark aria-hidden="true" className="size-5" />} label="Paid out to your wallet" value={usdc(payouts.released_minor)} note={`${(counts.released ?? 0) + (counts.resolved ?? 0)} stays settled`} />
+        <Stat icon={<Landmark aria-hidden="true" className="size-5" />} label="Paid out to your wallet" value={usdc(payouts.released_minor)} note={`${(counts.released ?? 0) + (counts.resolved ?? 0)} stays settled, plus your share of cancellations`} />
         <Stat
           icon={<AlertTriangle aria-hidden="true" className="size-5" />}
           label="Needs attention"

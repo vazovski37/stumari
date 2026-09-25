@@ -108,6 +108,14 @@ describe("parseServerEnv", () => {
     expect(env.rpcUrl).toBe("http://127.0.0.1:8899");
   });
 
+  it("allows the test-only ICAL_ALLOW_LOOPBACK on localnet only, never on Vercel", () => {
+    expect(parseServerEnv({}).icalAllowLoopback).toBe(false);
+    expect(parseServerEnv({ ICAL_ALLOW_LOOPBACK: "true", STUMARI_CLUSTER: "localnet" }).icalAllowLoopback).toBe(true);
+    expect(envError({ ICAL_ALLOW_LOOPBACK: "true", STUMARI_CLUSTER: "mainnet-beta" })).toContain("ICAL_ALLOW_LOOPBACK");
+    expect(envError({ ICAL_ALLOW_LOOPBACK: "true", STUMARI_CLUSTER: "devnet" })).toContain("ICAL_ALLOW_LOOPBACK");
+    expect(envError({ ICAL_ALLOW_LOOPBACK: "true", VERCEL: "1", LIBSQL_URL: "libsql://x.turso.io" })).toContain("ICAL_ALLOW_LOOPBACK");
+  });
+
   it("forces demo mode off on mainnet", () => {
     expect(parseServerEnv({ STUMARI_DEMO_MODE: "true" }).demoMode).toBe(true);
     expect(parseServerEnv({ STUMARI_DEMO_MODE: "true", STUMARI_CLUSTER: "mainnet-beta" }).demoMode).toBe(false);

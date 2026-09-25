@@ -22,6 +22,7 @@
 - [Roadmap to 12 Oct](plan/roadmap.md) — milestones, build order, what only founders can do
 - [Runbook](plan/runbook.md) — setup, local chain, program deploy, devnet bootstrap, Vercel + Turso, cron, MCP, troubleshooting
 - [Backlog](plan/backlog.md) — open follow-ups from builds and reviews, by component
+- [E2E report](plan/e2e-report.md) — the full loop on localnet (20 steps), screenshots, demo-recording checklist
 
 ## Model
 - [Model report](../ml/reports/metrics.md) — held-out 2017 metrics: AUC 0.713 vs 0.634 for lead time alone, Brier 0.1917 vs 0.2136 base rate, expected calibration error 0.038

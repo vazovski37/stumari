@@ -1,4 +1,5 @@
 import { lookup as dnsLookup, type LookupAddress, type LookupAllOptions, type LookupOptions } from "node:dns";
+import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { BlockList, isIP, type LookupFunction } from "node:net";
 
@@ -78,16 +79,33 @@ export function guardedLookup(resolve: Resolve = dnsLookup): LookupFunction {
   };
 }
 
+/**
+ * Test-only relaxation for the local E2E, which serves a fixture calendar on 127.0.0.1: `http:` or
+ * `https:` URLs whose host is loopback. Set from `ICAL_ALLOW_LOOPBACK`, which the env schema
+ * refuses on mainnet and on Vercel.
+ */
+export interface UrlPolicy {
+  allowLoopback?: boolean;
+}
+
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+
+const isAllowedLoopback = (url: URL, policy: UrlPolicy) =>
+  policy.allowLoopback === true &&
+  (url.protocol === "http:" || url.protocol === "https:") &&
+  LOOPBACK_HOSTS.has(url.hostname.replace(/^\[|\]$/g, ""));
+
 /** Rejects anything but a credential-free `https:` URL whose literal IP host (if any) is public. */
-export function assertSafeUrl(raw: string | URL): URL {
+export function assertSafeUrl(raw: string | URL, policy: UrlPolicy = {}): URL {
   let url: URL;
   try {
     url = new URL(raw);
   } catch {
     throw new UnsafeUrlError("not a valid URL");
   }
-  if (url.protocol !== "https:") throw new UnsafeUrlError("only https: URLs are allowed");
   if (url.username || url.password) throw new UnsafeUrlError("URLs with credentials are not allowed");
+  if (isAllowedLoopback(url, policy)) return url;
+  if (url.protocol !== "https:") throw new UnsafeUrlError("only https: URLs are allowed");
   const host = url.hostname.replace(/^\[|\]$/g, "");
   if (isIP(host) && !isPublicAddress(host)) throw new UnsafeUrlError("the URL points to a non-public address");
   return url;
@@ -142,19 +160,39 @@ export const httpsHop: Hop = (url, signal, maxBytes) =>
     req.end();
   });
 
+/** The hop for loopback URLs under `UrlPolicy.allowLoopback` only: node:http(s) without the address guard. */
+const loopbackHop: Hop = (url, signal) =>
+  new Promise((resolve, reject) => {
+    const request = url.protocol === "http:" ? httpRequest : httpsRequest;
+    const req = request(url, { method: "GET", signal }, (res) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (chunk: Buffer) => chunks.push(chunk));
+      res.on("end", () =>
+        resolve({
+          status: res.statusCode ?? 0,
+          location: typeof res.headers.location === "string" ? res.headers.location : null,
+          body: Buffer.concat(chunks),
+        }),
+      );
+      res.on("error", reject);
+    });
+    req.on("error", reject);
+    req.end();
+  });
+
 /** GETs a hotel-supplied URL under the SSRF rules and returns the body as text. */
 export async function fetchPublicText(
   raw: string,
-  { hop = httpsHop, limits = ICAL_LIMITS }: { hop?: Hop; limits?: typeof ICAL_LIMITS } = {},
+  { hop = httpsHop, limits = ICAL_LIMITS, policy = {} }: { hop?: Hop; limits?: typeof ICAL_LIMITS; policy?: UrlPolicy } = {},
 ): Promise<string> {
   const signal = AbortSignal.timeout(limits.timeoutMs);
-  let url = assertSafeUrl(raw);
+  let url = assertSafeUrl(raw, policy);
   for (let redirects = 0; ; redirects++) {
-    const res = await hop(url, signal, limits.maxBytes);
+    const res = await (isAllowedLoopback(url, policy) ? loopbackHop : hop)(url, signal, limits.maxBytes);
     if (res.status >= 300 && res.status < 400) {
       if (!res.location) throw new Error(`HTTP ${res.status} without a Location header`);
       if (redirects >= limits.maxRedirects) throw new UnsafeUrlError(`more than ${limits.maxRedirects} redirects`);
-      url = assertSafeUrl(new URL(res.location, url));
+      url = assertSafeUrl(new URL(res.location, url), policy);
       continue;
     }
     if (res.status < 200 || res.status >= 300) throw new Error(`HTTP ${res.status}`);

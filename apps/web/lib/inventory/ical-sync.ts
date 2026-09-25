@@ -3,9 +3,12 @@ import { and, eq, notInArray, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { blocks, hotels, rooms, roomTypes } from "../db/schema";
 import { parseIcalBlocks } from "./ical-parse";
+import { serverEnv } from "../env";
 import { fetchPublicText } from "./ssrf";
 
 export type FetchCalendar = (url: string) => Promise<string>;
+
+const fetchImport: FetchCalendar = (url) => fetchPublicText(url, { policy: { allowLoopback: serverEnv().icalAllowLoopback } });
 
 export interface SyncResult {
   roomId: string;
@@ -38,7 +41,7 @@ export async function syncUnit(
   db: Db,
   unit: { id: string; ical_import_urls: string[] },
   timeZone: string,
-  { fetchCalendar = (url: string) => fetchPublicText(url), now = Math.floor(Date.now() / 1000) }: { fetchCalendar?: FetchCalendar; now?: number } = {},
+  { fetchCalendar = fetchImport, now = Math.floor(Date.now() / 1000) }: { fetchCalendar?: FetchCalendar; now?: number } = {},
 ): Promise<SyncResult> {
   const urls = unit.ical_import_urls;
   const results = await Promise.all(

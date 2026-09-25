@@ -52,8 +52,13 @@ Owned by the lead engineer; agents read the section for their component. Tick it
 - [x] `buildQuoteBody`: enforce MVP constants — `decimals == 6`, `deposit_bps == 10000`, unique option ids, non-empty `hotel_slug`.
 
 ## scripts
-- [ ] Add `drizzle-orm` and `@libsql/client` to `scripts/package.json` (today `scripts/lib/db.ts` imports `apps/web/lib/db` by relative path and resolves the libraries from `apps/web/node_modules`).
-- [ ] E2E: time travel only after every create in a run (quotes are stamped with wall-clock time; a chain ahead of the wall clock fails `create_booking` with `QuoteExpired`), and `bootstrap --cluster localnet --reset` at the start of each E2E run.
+- [ ] Add `drizzle-orm`, `@libsql/client` and `@modelcontextprotocol/sdk` to `scripts/package.json` (today `scripts/lib/db.ts` imports `apps/web/lib/db` and `scripts/e2e/mcp.ts` the MCP SDK by relative path, resolving them from `apps/web` / `apps/mcp` node_modules).
+- [x] E2E: time travel only after every create in a run (quotes are stamped with wall-clock time; a chain ahead of the wall clock fails `create_booking` with `QuoteExpired`), and `bootstrap --cluster localnet --reset` at the start of each E2E run.
+
+## demo recording
+- [ ] Start from a fresh demo DB (or reject the 'E2E Test Guesthouse' application and hide old test bookings).
+- [ ] Repeat-guest price gap is small with one released stay (0.25 USDC at 60 d); give Guest B up to 3 released stays or cut the sentence; use the Double room (two units) for the split screen.
+- [ ] Test wallet label says 'devnet' on localnet too (cosmetic; the guest banner names the real cluster).
 
 ## packages/escrow-client
 - [ ] Pin `latest` dependency specifiers (`@solana-program/*`, `codama`, `@codama/*`, `litesvm`) to the locked versions once no agent is installing.

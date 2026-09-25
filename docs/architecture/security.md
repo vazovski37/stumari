@@ -29,7 +29,7 @@ Never commit keys. `.gitignore` covers `*.json` keypairs under `onchain/keys/`, 
 | Terms changed after purchase | tiers, amount, times and `fee_bps` stored on the booking; config changes never apply retroactively |
 | Hotel never delivers / room not as described | 24 h dispute window after check-in; admin arbiter (disclosed stub) |
 | Double booking via OTA calendar lag | `Pending` → confirm after fresh re-sync; permissionless void after 2 h → full refund |
-| SSRF via iCal URLs | https only, private-IP/loopback denylist after DNS resolution, redirect re-check, size + time limits |
+| SSRF via iCal URLs | https only, private-IP/loopback denylist after DNS resolution (inside the socket lookup), redirect re-check, size + time limits; the test-only `ICAL_ALLOW_LOOPBACK` is accepted on localnet only (ADR-0017) |
 | Session forgery | HMAC-signed cookie, `httpOnly`, `sameSite=lax`, `secure` in prod; SIWS nonce single-use, 5-min TTL |
 | Application spam | per-IP rate limit, honeypot field, server-side validation |
 | Faucet abuse | demo mode only, never on mainnet, per-wallet + per-IP rate limits |
