@@ -56,7 +56,7 @@ The source of truth is [configuration.md](../architecture/configuration.md). The
 | `STUMARI_DEMO_MODE` | no | `true` on devnet | enables demo wallet + faucet; forced off on mainnet |
 | `NEXT_PUBLIC_SITE_URL` | yes | `http://localhost:3000` | absolute links (iCal feed URLs, booking links); its host is checked in SIWS messages |
 | `AMOUNT_CAP_MINOR` | no | `1500000000` (1,500 USDC) | per-booking cap during the pilot (`/pay` → `422 AMOUNT_CAP`) |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | no | | notify founders of new applications |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | no (required for `manual` confirm-mode hotels) | | notify founders of new applications and of bookings waiting for a manual confirm |
 
 `apps/web/.env.example` lists all of them. Generate secrets without printing any key material:
 

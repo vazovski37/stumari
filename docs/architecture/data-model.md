@@ -51,6 +51,7 @@ The chain is the source of truth for money and booking status; the DB mirrors it
 | onchain_hotel | text | Hotel PDA once registered |
 | registered_sig | text | |
 | status | text | `draft` \| `active` \| `paused` |
+| confirm_mode | text | `auto` (default: the server confirms after a clean calendar re-sync) \| `manual` (never auto-confirmed: the founders get one Telegram alert per booking, enter it in the hotel's own system, e.g. Mews, then confirm from the dashboard before the deadline; otherwise the guest is refunded) |
 | policy | json | `{ reference_template, enabled_templates[], resale_bps[6], min_mult_bps, max_mult_bps }` — defaults `standard`, all three, `[9000,8000,6500,4500,2500,1000]`, `8500`, `13000`; validated per pricing-and-risk-model.md §5 |
 | contact_email, contact_telegram | text | |
 | application_id | text fk → applications | |

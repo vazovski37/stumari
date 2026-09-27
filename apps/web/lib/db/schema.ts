@@ -27,6 +27,7 @@ export const bookingEventTypes = [
   "resolved",
   "voided",
   "sync_conflict",
+  "confirm_requested",
   "failed",
 ] as const;
 export const builtTxActions = ["create", "cancel", "dispute", "void"] as const;
@@ -100,6 +101,11 @@ export const hotels = sqliteTable("hotels", {
   onchain_hotel: text("onchain_hotel"),
   registered_sig: text("registered_sig"),
   status: text("status", { enum: ["draft", "active", "paused"] }).notNull().default("draft"),
+  /**
+   * `auto`: the server confirms after a clean calendar re-sync. `manual`: someone checks the hotel's
+   * own system (e.g. a PMS without an integration), enters the booking there, then confirms.
+   */
+  confirm_mode: text("confirm_mode", { enum: ["auto", "manual"] }).notNull().default("auto"),
   policy: text("policy", { mode: "json" }).$type<HotelPolicy>().notNull().default(DEFAULT_HOTEL_POLICY),
   contact_email: text("contact_email"),
   contact_telegram: text("contact_telegram"),

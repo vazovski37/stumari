@@ -277,7 +277,7 @@ function Timeline({ view, now, at }: { view: PublicBookingView; now: number; at:
       label: "Confirmed by the hotel",
       detail: confirmedOrLater
         ? "The room is yours."
-        : `Checking the hotel's calendars${view.confirm_deadline_ts ? `; if not confirmed by ${at(view.confirm_deadline_ts)} you can take a full refund` : ""}.`,
+        : `The hotel is checking the room is free${view.confirm_deadline_ts ? `. If it is not confirmed by ${at(view.confirm_deadline_ts)}, you get a full refund` : ""}.`,
       state: confirmedOrLater ? "done" : "current",
     });
     steps.push({

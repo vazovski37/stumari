@@ -1,0 +1,1 @@
+ALTER TABLE `hotels` ADD `confirm_mode` text DEFAULT 'auto' NOT NULL;

@@ -27,6 +27,7 @@ const hotel: HotelRow = {
   checkin_time: "14:00",
   checkout_time: "12:00",
   hotel_type: "City Hotel",
+  confirm_mode: "auto",
   payout_wallet: "Hz15VSLNydDp49sLpWvsJ4dxvfEf2KYoecJL9wc4Y5wa",
   onchain_hotel: null,
   registered_sig: null,

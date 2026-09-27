@@ -10,13 +10,16 @@ import {
   sendBuiltTx,
   type BookingView as ChainBooking,
 } from "@stumari/escrow-client";
+import { eq } from "drizzle-orm";
 import type { Db } from "../db/client";
+import { rooms } from "../db/schema";
 import { hasConflicts, unitConflicts } from "../inventory/availability";
 import { syncUnitIfStale } from "../inventory/ical-sync";
 import { onchainConfig } from "../solana/chain-config";
 import { chainNow } from "../solana/clock";
 import type { Chain } from "../solana/context";
-import { applyChainState, loadBookingRecord, recordSyncConflict, type SigField } from "./store";
+import { confirmRequestMessage, notifyTelegram } from "../telegram";
+import { applyChainState, loadBookingRecord, recordConfirmRequest, recordSyncConflict, type SigField } from "./store";
 import { publicBookingView, type BookingRecord, type BookingRow, type PublicBookingView } from "./view";
 
 export const bookingPdaOf = (id: string) => findBookingPda(hexToBytes(id));
@@ -84,8 +87,21 @@ export async function refreshRecord(c: Chain, db: Db, record: BookingRecord, { c
 /**
  * inventory-ical.md "Confirmation": after a payment lands, re-sync the unit's imports; with no
  * overlap with a block or an earlier occupying booking, the operator confirms before the deadline.
- * A conflict leaves the booking pending and is logged once as `sync_conflict`.
+ * A conflict leaves the booking pending and is logged once as `sync_conflict`. At a hotel in
+ * `manual` confirm mode the server never confirms: it alerts the founders once (Telegram) so
+ * someone enters the booking in the hotel's own system and confirms from the dashboard.
  */
+async function requestManualConfirm(c: Chain, db: Db, record: BookingRecord, deadlineTs: number, conflict: boolean): Promise<void> {
+  if (!(await recordConfirmRequest(db, record.booking.id, { deadline_ts: deadlineTs, conflict }))) return;
+  const telegram = c.env.telegram;
+  if (!telegram) {
+    console.warn(`booking ${record.booking.id} waits for a manual confirm, but no Telegram chat is configured`);
+    return;
+  }
+  const unit = await db.query.rooms.findFirst({ where: eq(rooms.id, record.booking.room_id), columns: { label: true } });
+  await notifyTelegram(telegram, confirmRequestMessage(record, { unitLabel: unit?.label ?? null, deadlineTs, siteUrl: c.env.siteUrl, conflict }));
+}
+
 export async function autoConfirm(c: Chain, db: Db, bookingId: string): Promise<void> {
   const record = await loadBookingRecord(db, bookingId);
   if (!record) return;
@@ -101,10 +117,13 @@ export async function autoConfirm(c: Chain, db: Db, bookingId: string): Promise<
     bookingId: row.id,
     createdBefore: { createdAt: row.created_at },
   });
-  if (hasConflicts(conflicts)) {
-    await recordSyncConflict(db, row.id, { blocks: conflicts.blocks, bookings: conflicts.bookings });
+  const conflict = hasConflicts(conflicts);
+  if (conflict) await recordSyncConflict(db, row.id, { blocks: conflicts.blocks, bookings: conflicts.bookings });
+  if (record.hotel.confirm_mode === "manual") {
+    await requestManualConfirm(c, db, { ...record, booking: row }, Number(account.confirmDeadlineTs), conflict);
     return;
   }
+  if (conflict) return;
   try {
     const { signature } = await sendBuiltTx(c.rpc, await buildConfirmTx({ rpc: c.rpc, operator: c.operator, booking: account }));
     await syncFromChain(c, db, row, { field: "confirm_sig", value: signature });

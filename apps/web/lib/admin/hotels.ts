@@ -54,6 +54,7 @@ const hotelFields = {
   checkin_time: hhmm,
   checkout_time: hhmm,
   hotel_type: z.enum(["City Hotel", "Resort Hotel"]),
+  confirm_mode: z.enum(["auto", "manual"]),
   contact_email: text(200).pipe(z.email().nullish()),
   contact_telegram: text(64),
 };

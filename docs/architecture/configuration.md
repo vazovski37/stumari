@@ -19,7 +19,7 @@
 | `NEXT_PUBLIC_SITE_URL` | yes | `http://localhost:3000` | absolute links (iCal feed URLs, booking links); its host is checked in SIWS messages |
 | `AMOUNT_CAP_MINOR` | no | `1500000000` (1,500 USDC) | per-booking cap during the pilot (`/pay` → `422 AMOUNT_CAP`) |
 | `ICAL_ALLOW_LOOPBACK` | no | unset | test only (E2E, ADR-0017): iCal import URLs may be plain-`http` on loopback hosts (`localhost`, `127.0.0.1`, `::1`); accepted only with `STUMARI_CLUSTER=localnet` and never on Vercel |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | no | | notify founders of new applications |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | no (required for `manual` confirm-mode hotels) | | notify founders of new applications and of bookings waiting for a manual confirm |
 
 `.env.example` in `apps/web` lists all of them.
 

@@ -43,7 +43,18 @@ function Field({ label, children, hint }: { label: string; children: React.React
 
 type Details = Pick<
   HotelRow,
-  "name" | "slug" | "city" | "country" | "address" | "phone" | "checkin_time" | "checkout_time" | "hotel_type" | "contact_email" | "contact_telegram"
+  | "name"
+  | "slug"
+  | "city"
+  | "country"
+  | "address"
+  | "phone"
+  | "checkin_time"
+  | "checkout_time"
+  | "hotel_type"
+  | "confirm_mode"
+  | "contact_email"
+  | "contact_telegram"
 >;
 
 export function DetailsStep({ hotel }: { hotel: HotelRow }) {
@@ -58,6 +69,7 @@ export function DetailsStep({ hotel }: { hotel: HotelRow }) {
     checkin_time: hotel.checkin_time,
     checkout_time: hotel.checkout_time,
     hotel_type: hotel.hotel_type,
+    confirm_mode: hotel.confirm_mode,
     contact_email: hotel.contact_email ?? "",
     contact_telegram: hotel.contact_telegram ?? "",
   });
@@ -101,6 +113,15 @@ export function DetailsStep({ hotel }: { hotel: HotelRow }) {
         </Field>
         <Field label="Check-out time">
           <input type="time" required className="field" {...bind("checkout_time")} />
+        </Field>
+        <Field
+          label="Booking confirmation"
+          hint="Manual: for hotels whose rooms live in a system we don't sync (e.g. Mews). You get a Telegram alert per booking, enter it there, then press Confirm within the window, or the guest is refunded."
+        >
+          <select className="field" {...bind("confirm_mode")}>
+            <option value="auto">Automatic (after a calendar re-sync)</option>
+            <option value="manual">Manual (check the hotel&apos;s own system first)</option>
+          </select>
         </Field>
         <Field label="Contact email (conflicts, disputes)">
           <input type="email" maxLength={200} className="field" {...bind("contact_email")} />

@@ -20,6 +20,9 @@ Do not promise GEL payouts, rates or a specific provider.
 
 Be honest about the remaining gap. After we confirm, Booking.com or Airbnb only sees the booking when it next reads our feed, on its own schedule (every 2 hours on Booking.com, every 3 hours on Airbnb), so it could still sell the same night in between. That is the same risk the hotel already has between Booking.com and Airbnb today.
 
+### "We use Mews / OtelMS / Exely. Does Stumari connect to it?"
+> "Not automatically yet. Each system is its own integration, and we're talking to them. Until then it works like this: when a guest pays on Stumari, we get an alert, check the dates in your system and enter the booking there, then confirm it. It takes a couple of minutes. If the room turns out to be taken, we don't confirm, and the guest gets all their money back automatically within 2 hours. You never have to handle a refund."
+
 ### "What if Stumari disappears?"
 > "The money never sits with us. Each booking's USDC sits in its own escrow account on Solana. The program can only pay three places: the guest's wallet, your wallet (fixed when the guest pays), or Stumari's fee, which is capped and written into the booking (0% during the pilot). The payout to you doesn't need us: after check-in plus 24 hours, anyone can trigger it, including you. Two honest limits: during the pilot we can still upgrade the program, and if a guest opens a dispute, our arbiter decides it. Before real money, both move to a multisig, or the program is frozen."
 

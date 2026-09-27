@@ -62,6 +62,8 @@ Owned by the lead engineer; agents read the section for their component. Tick it
 - [ ] G4: post-confirm conflict detector in the sync cron (new imported blocks vs confirmed bookings) → dashboard flag + founder alert.
 - [ ] G6: on HOLD_LOST / conflict, re-pick another free unit of the same room type.
 - [ ] `InventoryAdapter` interface (getAvailability, pushReservation, pushCancellation, parseWebhook) with iCal as the first implementation; one real adapter for the demo (Beds24 or Channex Open Channel staging).
+- [x] Manual confirm mode per hotel (`confirm_mode`), Telegram alert once per booking — for PMS hotels without an integration (e.g. Mews).
+- [ ] Manual-confirm hotels: consider a longer confirm window at night (global on-chain today), and a one-click "not available → void now" button in the alert flow.
 - [ ] Application form: make `channel_manager` a select (OtelMS, Exely, Cloudbeds, Beds24, HotelRunner, other, none).
 - [ ] Founders: email Exely (welcome@exely.com) for an Exely Connect partner key and OtelMS (partners@otelms.com) about a booking-channel API; ask both whether they import an external iCal per room.
 

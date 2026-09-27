@@ -36,6 +36,7 @@ Follow this order. Each step matches an admin endpoint in [api.md](../architectu
 - [ ] **Convert** the application into a draft hotel (`POST /api/admin/applications/{id}/convert`). Fill in items 1–4 and 9–11 (including 10b).
 - [ ] **Room types** with nightly rates (`POST /api/admin/hotels/{id}/room-types`).
 - [ ] **Units** per room type, with iCal import URLs (`POST …/room-types/{rtId}/units`). Each unit returns its **export URL**.
+- [ ] **Hotel on a PMS we don't sync (e.g. Mews, OtelMS, Exely) or multi-unit room types without iCal:** in Details set **Booking confirmation = Manual**, make sure `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` are set, and agree who answers the alerts. For each alert: check the dates in the hotel's system, create the reservation there (guest name, dates, "paid via Stumari, USDC"), then press **Confirm** in `/dashboard/{hotelId}` within 2 hours. Room not free: don't confirm; the guest is refunded automatically. Keep Stumari's calendar roughly right with manual blocks for sold-out dates.
 - [ ] Run a **sync** (`POST /api/dashboard/{hotelId}/sync`). Check that each unit shows `last_synced_at` and no `sync_error`, and that blocked dates match the hotel's Booking.com/Airbnb calendar for the next few weeks.
 - [ ] Set the **payout wallet** (the hotel's Phantom address).
 - [ ] **Register on-chain** (`POST /api/admin/hotels/{id}/register`). This creates the wallet's USDC account and runs `register_hotel`, and the hotel becomes `active`. Save the Explorer link.

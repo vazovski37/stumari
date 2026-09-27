@@ -105,7 +105,7 @@ Authorized when `session.wallet == hotels.payout_wallet` **or** `session.is_admi
 |---|---|
 | `GET /api/admin/applications` · `PATCH …/{id}` `{status, notes}` | pipeline |
 | `POST /api/admin/applications/{id}/convert` | draft hotel prefilled from the application |
-| `GET/POST /api/admin/hotels` · `PATCH /api/admin/hotels/{id}` | CRUD; on a registered hotel `status: paused\|active` sends `update_hotel(active)`, a new `payout_wallet` sends `update_hotel(authority)` + idempotent ATA create (affects new bookings only) |
+| `GET/POST /api/admin/hotels` · `PATCH /api/admin/hotels/{id}` | CRUD (incl. `confirm_mode: auto\|manual`); on a registered hotel `status: paused\|active` sends `update_hotel(active)`, a new `payout_wallet` sends `update_hotel(authority)` + idempotent ATA create (affects new bookings only) |
 | `POST /api/admin/hotels/{id}/room-types` · `PATCH …/room-types/{rtId}` | rates in USD (base units) |
 | `POST /api/admin/hotels/{id}/room-types/{rtId}/units` | `{ label, ical_import_urls? }` → `{ id, export_url }` |
 | `POST /api/admin/hotels/{id}/register` | idempotent ATA create for the payout wallet + `register_hotel` (an existing Hotel account is aligned with `update_hotel`); status → `active`. `409 NO_PAYOUT_WALLET` / `409 NO_UNITS` (needs ≥ 1 active unit). Activating an unregistered hotel: `409 NOT_REGISTERED`. A payout wallet equal to a key the web app holds (operator, admin): `400 INVALID_WALLET` |

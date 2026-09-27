@@ -117,6 +117,17 @@ function sameExceptUpdatedAt(a: BookingRow, b: BookingRow): boolean {
 }
 
 /** Logs a calendar conflict once per booking (the dashboard and admin show it). */
+/** Logs that a manual confirm was requested; true only the first time (so the alert goes out once). */
+export async function recordConfirmRequest(db: Db, bookingId: string, data: Record<string, unknown>): Promise<boolean> {
+  const existing = await db.query.bookingEvents.findFirst({
+    where: and(eq(bookingEvents.booking_id, bookingId), eq(bookingEvents.type, "confirm_requested")),
+    columns: { id: true },
+  });
+  if (existing) return false;
+  await db.insert(bookingEvents).values({ id: randomUUID(), booking_id: bookingId, type: "confirm_requested", sig: null, data, created_at: Math.floor(Date.now() / 1000) });
+  return true;
+}
+
 export async function recordSyncConflict(db: Db, bookingId: string, data: Record<string, unknown>): Promise<void> {
   const existing = await db.query.bookingEvents.findFirst({
     where: and(eq(bookingEvents.booking_id, bookingId), eq(bookingEvents.type, "sync_conflict")),
