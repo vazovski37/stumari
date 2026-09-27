@@ -38,6 +38,7 @@ Aim to submit on **2026-10-11** so there is a day of slack. Last updated: 2026-0
 | 9 | Teammate submission profile: **Vazovski** | Vazovski | 2026-10-06 | Name, country, Telegram |
 | 10 | Teammate submission profile: **luka** | luka | 2026-10-06 | Name, country, Telegram |
 | 11 | Accelerator decision | founders | 2026-10-08 | Currently **"Hackathon only"**. Decide whether to opt in to the accelerator before submitting. |
+| 12 | Pitch deck | founders (Claude drafts) | 2026-10-05 | Promised in the Georgian community form ([georgia-community-form.md](georgia-community-form.md)); also useful at Build Station (Oct 5–13). |
 
 ## Final check (on submission day)
 

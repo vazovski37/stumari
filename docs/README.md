@@ -33,6 +33,7 @@
 
 ## Colosseum submission
 - [Status tracker](submission/status.md) — filled and missing fields, final check
+- [Georgian community form](submission/georgia-community-form.md) — answers given to the Georgian Colosseum group (Build Station Oct 5–13, promised materials)
 - [Demo video script](submission/demo-video-script.md) (≤ 3:00, live product) · [Pitch video script](submission/pitch-video-script.md) (≤ 2:00)
 
 ## Research
