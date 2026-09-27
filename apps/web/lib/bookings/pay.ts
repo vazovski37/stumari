@@ -8,9 +8,11 @@ import { z } from "zod";
 import { ApiError } from "../api/errors";
 import { enforceRateLimits } from "../api/rate";
 import type { Db } from "../db/client";
-import { bookings, quotes } from "../db/schema";
+import { bookings, hotels, quotes, roomTypes } from "../db/schema";
 import { hasConflicts, unitConflicts } from "../inventory/availability";
 import { PAY_SYNC_MAX_AGE_SECS, syncUnitIfStale } from "../inventory/ical-sync";
+import { checkMewsStay, isMewsHotel } from "../inventory/mews";
+import { mewsPort } from "../mews/client";
 import { effectiveStatus } from "../quotes/create";
 import { GLOBAL_KEY, PAY_DAILY_GLOBAL_LIMIT, PAY_DAILY_IP_LIMIT } from "../rate-limit";
 import { assertOperatorBalance } from "../solana/balance";
@@ -158,6 +160,7 @@ export async function preparePayment(c: Chain, db: Db, quoteId: string, input: P
     bookingId,
   });
   if (hasConflicts(conflicts)) throw new ApiError(409, "HOLD_LOST", "The room was just booked elsewhere; please choose other dates");
+  await assertMewsStillFree(db, quote, bookingId, now);
 
   const balance = await fetchMaybeToken(c.rpc, await findAta(payer as Address, c.mint), { commitment: "confirmed" });
   const held = balance.exists ? balance.data.amount : 0n;
@@ -219,6 +222,35 @@ export async function preparePayment(c: Chain, db: Db, quoteId: string, input: P
     signer: payer,
     lastValidBlockHeight: Number(built.lastValidBlockHeight),
   };
+}
+
+/**
+ * Mews hotels (mews-inventory.md): the room type must still have Mews free units beyond the other
+ * Stumari bookings not yet in Mews. Fails open on Mews errors, like the iCal re-sync: the confirm
+ * step's `reservations/add` with CheckOverbooking decides, and a refusal there refunds in full.
+ */
+async function assertMewsStillFree(
+  db: Db,
+  quote: { hotel_id: string; room_type_id: string; checkin_date: string; checkout_date: string },
+  bookingId: string,
+  now: number,
+): Promise<void> {
+  const hotel = await db.query.hotels.findFirst({ where: eq(hotels.id, quote.hotel_id) });
+  if (!hotel || !isMewsHotel(hotel)) return;
+  const roomType = await db.query.roomTypes.findFirst({ where: eq(roomTypes.id, quote.room_type_id) });
+  const port = mewsPort();
+  if (!roomType) return;
+  // A Mews hotel with Mews disabled (missing or bad settings) could never confirm: refuse before payment.
+  if (!port) throw new ApiError(503, "INVENTORY_UNAVAILABLE", "This hotel's room inventory is temporarily unavailable; please try again later");
+  const stay = { checkin: quote.checkin_date, checkout: quote.checkout_date };
+  let available = true;
+  try {
+    available = (await checkMewsStay(db, port, hotel, roomType, stay, now, { excludeBookingId: bookingId })).available;
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    console.warn(`Mews availability before paying booking ${bookingId} failed (continuing): ${e instanceof Error ? e.message : String(e)}`);
+  }
+  if (!available) throw new ApiError(409, "HOLD_LOST", "The room was just booked elsewhere; please choose other dates");
 }
 
 async function updateGuestContact(db: Db, row: BookingRow, input: PayRequest, now: number): Promise<void> {

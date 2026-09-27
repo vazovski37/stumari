@@ -52,14 +52,16 @@ The chain is the source of truth for money and booking status; the DB mirrors it
 | onchain_hotel | text | Hotel PDA once registered |
 | registered_sig | text | |
 | status | text | `draft` \| `active` \| `paused` |
-| confirm_mode | text | `auto` (default: the server confirms after a clean calendar re-sync) \| `manual` (never auto-confirmed: the founders get one Telegram alert per booking, enter it in the hotel's own system, e.g. Mews, then confirm from the dashboard before the deadline; otherwise the guest is refunded) |
+| confirm_mode | text | `auto` (default: the server confirms after a clean calendar re-sync) \| `manual` (never auto-confirmed: the founders get one Telegram alert per booking, enter it in the hotel's own system, then confirm from the dashboard before the deadline; otherwise the guest is refunded). Ignored when `inventory_provider = mews` |
+| inventory_provider | text | `ical` (default: iCal imports + manual blocks) \| `mews` (availability also read from Mews; confirm creates the Mews reservation — [mews-inventory.md](mews-inventory.md)) |
+| mews_service_id, mews_rate_id | text | Mews bookable service and the rate Stumari reservations use (Mews hotels) |
 | policy | json | `{ reference_template, enabled_templates[], resale_bps[6], min_mult_bps, max_mult_bps }` — defaults `standard`, all three, `[9000,8000,6500,4500,2500,1000]`, `8500`, `13000`; validated per pricing-and-risk-model.md §5 |
 | contact_email, contact_telegram | text | |
 | application_id | text fk → applications | |
 | created_at, updated_at | int | |
 
 ### `room_types`
-| id pk | hotel_id fk | name | description | max_adults | max_children | base_rate_minor (text u64, per night) | weekend_rate_minor (text u64, nullable — Fri/Sat nights) | meal (`BB`\|`HB`\|`FB`\|`SC`) | photo_url | active | sort | created_at |
+| id pk | hotel_id fk | name | description | max_adults | max_children | base_rate_minor (text u64, per night) | weekend_rate_minor (text u64, nullable — Fri/Sat nights) | meal (`BB`\|`HB`\|`FB`\|`SC`) | photo_url | mews_room_type_id (Mews resource category, Mews hotels) | active | sort | created_at |
 
 ### `rooms` — physical units
 | id pk | room_type_id fk | label | ical_import_urls (json string[]) | export_token (text unique, 32 random bytes hex) | last_synced_at | sync_error | active |
@@ -104,6 +106,10 @@ Rules: `POST /api/quotes` holds a unit with **one atomic batch**: an `INSERT …
 | refund_minor, hotel_minor, fee_minor | text u64, from chain on terminal |
 | create_sig, confirm_sig, final_sig | |
 | confirm_deadline_ts, release_after_ts | from chain |
+| mews_customer_id, mews_reservation_id | Mews hotels: the booking's own guest profile (one per booking, name only; stored before `reservations/add`) and the one reservation created on confirm |
+| mews_customer_at | unix seconds when `mews_customer_id` was created; a cancel trusts "no reservation listed for this customer" only 180 s later |
+| mews_cancelled_at | set once the Mews side of a cancelled/voided booking is settled; cleared if a reservation is stored afterwards |
+| mews_lock_until | one Mews confirm attempt at a time (180 s; each attempt has a 60 s budget); also a 120 s cool-down after an ambiguous `reservations/add` failure. The value identifies the holder: released only by compare-and-set on it |
 | created_at, updated_at | |
 
 `/pay` upserts the single row for the quote's derived `booking_id` while it is `awaiting_signature`.
@@ -111,7 +117,7 @@ Rules: `POST /api/quotes` holds a unit with **one atomic batch**: an `INSERT …
 **Occupancy:** a booking occupies its unit's nights `[checkin_date, checkout_date)` when its status is `pending`, `confirmed`, `disputed`, `released` or `resolved`, or `awaiting_signature` while `quote.expires_at + 300 s > now` (the create may have landed unseen until then; after it, a create that has not landed never will and the row becomes `failed`). Only `cancelled`, `voided` and `failed` free nights. (`released`/`resolved` are terminal on-chain, but the guest may still be in the room.)
 
 ### `booking_events` — audit / public-label mirror
-| id pk | booking_id | type (`created`, `confirmed`, `cancelled`, `released`, `disputed`, `resolved`, `voided`, `sync_conflict`, `failed`) | sig | data (json) | created_at |
+| id pk | booking_id | type (`created`, `confirmed`, `cancelled`, `released`, `disputed`, `resolved`, `voided`, `sync_conflict`, `confirm_requested`, `failed`, `mews_reserved`, `mews_cancelled`) | sig | data (json) | created_at |
 
 ### `built_txs` — cache + allow-list for `/api/tx/send`
 | id pk | booking_id | quote_id | action (`create`, `cancel`, `dispute`, `void`) | message_hash (hex sha256 of message bytes) | tx_base64 | last_valid_block_height | expires_at | created_at |
@@ -133,7 +139,7 @@ Unit `u` is free for `[checkin, checkout)` iff no night in that range is covered
 2. a booking on `u` that **occupies** it (above);
 3. an `active`, unexpired quote holding `u` whose `client_id` differs from the caller's.
 
-A room type is available if at least one active unit is free. The quote endpoint picks the free unit with the lowest `label`.
+A room type is available if at least one active unit is free. The quote endpoint picks the free unit with the lowest `label`. At a Mews hotel the units are virtual slots and the stay also needs Mews free units beyond Stumari's claims not yet in Mews ([mews-inventory.md](mews-inventory.md#availability-rule)).
 
 ## Wallet history features (model inputs)
 

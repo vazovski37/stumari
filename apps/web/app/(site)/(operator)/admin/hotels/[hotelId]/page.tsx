@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { DetailsStep, PayoutStep, RegisterStep, RoomTypesStep, StatusStep, UnitsStep } from "@/components/admin/onboarding";
+import { DetailsStep, MewsConnection, PayoutStep, RegisterStep, RoomTypesStep, StatusStep, UnitsStep } from "@/components/admin/onboarding";
 import { PolicyEditor } from "@/components/dashboard/policy-editor";
 import { SignIn } from "@/components/operator/sign-in";
 import { NotAllowed } from "@/components/operator/ui";
@@ -55,6 +55,7 @@ export default async function HotelOnboardingPage({ params }: PageProps<"/admin/
   const env = serverEnv();
   const roomTypes = await hotelUnits(db, hotel, env.siteUrl, unixNow());
   const unitCount = roomTypes.reduce((n, rt) => n + rt.units.length, 0);
+  const mews = hotel.inventory_provider === "mews";
   const explorer = {
     hotel: hotel.onchain_hotel ? explorerUrl("address", hotel.onchain_hotel, env.cluster, env.rpcUrl) : null,
     tx: hotel.registered_sig ? explorerUrl("tx", hotel.registered_sig, env.cluster, env.rpcUrl) : null,
@@ -80,12 +81,13 @@ export default async function HotelOnboardingPage({ params }: PageProps<"/admin/
 
       <Step n={1} title="Hotel details" done={Boolean(hotel.address && hotel.phone)}>
         <DetailsStep hotel={hotel} />
+        {mews && <MewsConnection hotelId={hotel.id} />}
       </Step>
       <Step n={2} title="Room types and nightly rates" done={roomTypes.length > 0}>
-        <RoomTypesStep hotelId={hotel.id} roomTypes={roomTypes} />
+        <RoomTypesStep hotelId={hotel.id} roomTypes={roomTypes} mews={mews} />
       </Step>
       <Step n={3} title="Units and iCal import links" done={unitCount > 0}>
-        <UnitsStep hotelId={hotel.id} roomTypes={roomTypes} />
+        <UnitsStep hotelId={hotel.id} roomTypes={roomTypes} mews={mews} />
       </Step>
       <Step n={4} title="Contracts and occupancy" done>
         <PolicyEditor hotelId={hotel.id} policy={hotel.policy} />

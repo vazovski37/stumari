@@ -1,0 +1,1 @@
+ALTER TABLE `bookings` ADD `mews_customer_at` integer;

@@ -29,9 +29,15 @@ export const bookingEventTypes = [
   "sync_conflict",
   "confirm_requested",
   "failed",
+  "mews_reserved",
+  "mews_cancelled",
 ] as const;
 export const builtTxActions = ["create", "cancel", "dispute", "void"] as const;
 export const rateBuckets = ["apply", "faucet", "faucet_daily", "quote", "pay", "pay_daily", "tx", "nonce", "sync"] as const;
+
+/** Where a hotel's rooms live: iCal calendars (+ manual blocks) or a Mews property (mews-inventory.md). */
+export const inventoryProviders = ["ical", "mews"] as const;
+export type InventoryProvider = (typeof inventoryProviders)[number];
 
 export type ContractTemplate = (typeof contractTemplates)[number];
 export type RateBucket = (typeof rateBuckets)[number];
@@ -108,6 +114,14 @@ export const hotels = sqliteTable("hotels", {
    * own system (e.g. a PMS without an integration), enters the booking there, then confirms.
    */
   confirm_mode: text("confirm_mode", { enum: ["auto", "manual"] }).notNull().default("auto"),
+  /**
+   * `ical` (default): calendars + manual blocks. `mews`: availability is also read from Mews and a
+   * confirm creates the reservation there (docs/architecture/mews-inventory.md); `confirm_mode` is ignored.
+   */
+  inventory_provider: text("inventory_provider", { enum: inventoryProviders }).notNull().default("ical"),
+  /** Mews bookable service (usually "Accommodation") and the rate Stumari reservations use. */
+  mews_service_id: text("mews_service_id"),
+  mews_rate_id: text("mews_rate_id"),
   policy: text("policy", { mode: "json" }).$type<HotelPolicy>().notNull().default(DEFAULT_HOTEL_POLICY),
   contact_email: text("contact_email"),
   contact_telegram: text("contact_telegram"),
@@ -131,6 +145,8 @@ export const roomTypes = sqliteTable(
     weekend_rate_minor: text("weekend_rate_minor"),
     meal: text("meal", { enum: ["BB", "HB", "FB", "SC"] }).notNull().default("BB"),
     photo_url: text("photo_url"),
+    /** Mews resource category this room type sells (Mews hotels only). */
+    mews_room_type_id: text("mews_room_type_id"),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     sort: integer("sort").notNull().default(0),
     created_at: integer("created_at").notNull(),
@@ -252,6 +268,19 @@ export const bookings = sqliteTable(
     final_sig: text("final_sig"),
     confirm_deadline_ts: integer("confirm_deadline_ts"),
     release_after_ts: integer("release_after_ts"),
+    /** Mews hotels: the guest profile created for this booking (written before `reservations/add`). */
+    mews_customer_id: text("mews_customer_id"),
+    /** Unix seconds when `mews_customer_id` was created: a cancel waits a grace period before trusting "no reservation listed". */
+    mews_customer_at: integer("mews_customer_at"),
+    /** Mews hotels: the reservation created on confirm; at most one per booking. */
+    mews_reservation_id: text("mews_reservation_id"),
+    /** Set once the Mews side of a cancelled/voided booking is settled (reservation cancelled, or none existed). */
+    mews_cancelled_at: integer("mews_cancelled_at"),
+    /**
+     * Mews hotels: one confirm attempt at a time; also a cool-down after an ambiguous `reservations/add`
+     * failure. The value itself identifies the holder: it is released only by compare-and-set on it.
+     */
+    mews_lock_until: integer("mews_lock_until"),
     created_at: integer("created_at").notNull(),
     updated_at: integer("updated_at").notNull(),
   },

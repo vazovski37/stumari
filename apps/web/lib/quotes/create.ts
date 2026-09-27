@@ -5,8 +5,10 @@ import { ApiError } from "../api/errors";
 import type { Db } from "../db/client";
 import { quotes } from "../db/schema";
 import type { Cluster } from "../env-schema";
-import { assertFits, findPublicHotel, hotelPolicy, parseStay, SLUG } from "../hotels";
+import { assertFits, findPublicHotel, hotelPolicy, parseStay, SLUG, type HotelRow, type RoomTypeRow, type Stay } from "../hotels";
 import { insertQuoteHold } from "../inventory/holds";
+import { checkMewsStay, isMewsHotel } from "../inventory/mews";
+import { mewsNotConfiguredReason, mewsPort } from "../mews/client";
 import { parseGuestWallet } from "../wallets";
 import { hazardProvider, priceRequest } from "./pricing";
 
@@ -57,6 +59,7 @@ export async function createQuote(ctx: QuoteContext, input: QuoteRequest): Promi
   const stay = parseStay(hotel, input.checkin_date, input.checkout_date, now);
   assertFits(roomType, input.adults, input.children);
   const buyerWallet = input.buyer_wallet ? parseGuestWallet(input.buyer_wallet, ctx.serverKeys) : null;
+  if (isMewsHotel(hotel)) await assertMewsBookable(ctx, hotel, roomType, stay);
 
   const menu = await priceRequest(
     db,
@@ -126,6 +129,27 @@ export async function createQuote(ctx: QuoteContext, input: QuoteRequest): Promi
   });
   if (!unit) throw new ApiError(409, "UNAVAILABLE", `No ${roomType.name} is free for these dates`);
   return envelope;
+}
+
+/**
+ * Mews hotels (mews-inventory.md): the stay needs Mews free units beyond Stumari's claims not yet in
+ * Mews, checked before a unit is held. Fails closed: no live answer from Mews, no prices.
+ */
+async function assertMewsBookable(ctx: QuoteContext, hotel: HotelRow, roomType: RoomTypeRow, stay: Stay): Promise<void> {
+  const port = mewsPort();
+  if (!port) {
+    console.warn(`quote for Mews hotel ${hotel.id} refused: ${mewsNotConfiguredReason()}`);
+    throw new ApiError(503, "INVENTORY_UNAVAILABLE", "Live availability for this hotel is not connected; please try again later");
+  }
+  let check;
+  try {
+    check = await checkMewsStay(ctx.db, port, hotel, roomType, stay, ctx.now, { holdsExceptClient: ctx.clientId });
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    console.warn(`Mews availability for hotel ${hotel.id} failed: ${e instanceof Error ? e.message : String(e)}`);
+    throw new ApiError(503, "INVENTORY_UNAVAILABLE", "We could not check live availability; please try again shortly");
+  }
+  if (!check.available) throw new ApiError(409, "UNAVAILABLE", `No ${roomType.name} is free for these dates`);
 }
 
 export type QuoteRow = typeof quotes.$inferSelect;

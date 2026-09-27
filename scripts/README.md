@@ -11,6 +11,7 @@ pnpm --filter @stumari/scripts timetravel --to +2h | +3d | +90m | 2026-10-20T10:
 pnpm --filter @stumari/scripts smoke
 pnpm --filter @stumari/scripts e2e           # full loop on a reset localnet (docs/plan/e2e-report.md)
 pnpm --filter @stumari/scripts e2e:screens   # PNG screenshots with headless Edge
+pnpm --filter @stumari/scripts mews <setup|availability|price|book|show|cancel>   # Mews Connector API (demo)
 pnpm --filter @stumari/scripts typecheck
 ```
 
@@ -121,6 +122,50 @@ confirms; the guest cancels with `minRefundForCancel`. It asserts guest / hotel 
 balances and the amounts stored on the Booking against `splitCancel` from `@stumari/core`, that
 the vault is closed, and that the guest never held SOL. On devnet it costs the operator the
 Booking account rent (≈ 0.0034 SOL, never returned by design).
+
+## mews
+
+A CLI over `@stumari/mews-client` (`packages/mews-client/README.md`) for the Mews Connector API.
+It uses the **demo** environment by default. Any other host, including production
+`https://api.mews.com`, is refused unless `MEWS_ALLOW_PRODUCTION=1` (or `true`) is also set. Production needs
+a certified private integration (the hotel must be on Enterprise or have the Connectivity
+Add-on). Never automate a staff login.
+
+| Variable | Default | |
+|---|---|---|
+| `MEWS_PLATFORM_URL` | `https://api.mews-demo.com` | must be https |
+| `MEWS_CLIENT_TOKEN`, `MEWS_ACCESS_TOKEN` | — | required; never printed. For the demo, copy a pair from [docs.mews.com › Environments](https://docs.mews.com/connector-api/guidelines/environments) into your shell, not into a committed file |
+| `MEWS_CLIENT` | `Stumari 0.1.0` | the `Client` field of every request |
+| `MEWS_ALLOW_PRODUCTION` | — | `1` or `true` to allow a non-demo host (the web app accepts the same values) |
+
+Variables are read with the same precedence as the other scripts (process env > `scripts/.env` >
+`apps/web/.env.local`).
+
+```sh
+pnpm --filter @stumari/scripts mews setup                     # enterprise, timezone, service, room types, rates, age categories
+pnpm --filter @stumari/scripts mews availability --from 2026-11-03 --to 2026-11-06 [--room-type "Double Room"]
+pnpm --filter @stumari/scripts mews price --from 2026-11-03 --to 2026-11-05 --room-type "Double Room" --rate "Fully Flexible" --adults 2
+pnpm --filter @stumari/scripts mews book  --from 2026-11-03 --to 2026-11-05 --room-type "Double Room" --rate "Fully Flexible" \
+  --adults 2 --name "Test Stumari" --notes "Stumari demo — prepaid in USDC (test)"
+pnpm --filter @stumari/scripts mews show   --id <reservationId>
+pnpm --filter @stumari/scripts mews cancel --id <reservationId> [--notes "..."]
+```
+
+- Dates are `YYYY-MM-DD` in the Mews enterprise timezone. `--from` defaults to today + 30 days and
+  `--to` to `--from` + 7 days (availability) or + 1 night.
+- `--room-type` and `--rate` take an id or a (partial, unique) name. They default to the first room
+  type and the default rate. `--adults` defaults to 2 and `--children` to 0. `--service <id>`
+  selects another bookable service; `setup` lists them.
+- `availability` prints Mews's free units per night, with the checkout date excluded. `min` is what
+  can be sold for the whole range.
+- `book` creates the guest (`customers/add`), then a `Confirmed` reservation (`--state Optional` to
+  hold it) with overbooking checks on and no confirmation email. It records no payment in Mews:
+  the USDC prepayment goes only into the notes. On the demo, book only fake guests.
+- `cancel` cancels with no cancellation fee and no email, then shows the reservation.
+
+Live demo check (2026-09-28, "API Hotel Gross Pricing", Europe/Budapest): `book` of a Double Room for
+2026-11-03 → 11-05 sent `2026-11-03T14:00:00Z` → `2026-11-05T10:00:00Z` (15:00 / 11:00 CET). Free
+Double Rooms dropped from 5 to 4 on 11-03 and 11-04 (not on 11-05), and returned to 5 after `cancel`.
 
 ## Other files
 

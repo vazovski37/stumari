@@ -71,6 +71,17 @@ describe("applyChainState", () => {
     expect(later.final_sig).toBe("5CancelSig");
   });
 
+  it("never writes the Mews columns back from a stale row", async () => {
+    const id = await insertBooking(db, s, { roomId: s.units.D1, roomTypeId: s.double, checkin: "2026-10-22", checkout: "2026-10-24", status: "pending" });
+    const stale = await row(id);
+    // meanwhile the Mews sync stored a customer
+    await db.update(bookings).set({ mews_customer_id: "cust-1", mews_customer_at: T0 + 30 }).where(eq(bookings.id, id));
+    await applyChainState(db, stale, chain({ status: "confirmed" }));
+    const after = await row(id);
+    expect(after.mews_customer_id).toBe("cust-1");
+    expect(after.mews_customer_at).toBe(T0 + 30);
+  });
+
   it("records a confirm signature only once the chain shows the booking confirmed", async () => {
     const id = await insertBooking(db, s, { roomId: s.units.D1, roomTypeId: s.double, checkin: "2026-10-22", checkout: "2026-10-24", status: "pending" });
     const pending = await applyChainState(db, await row(id), chain({ status: "pending" }), { field: "confirm_sig", value: "5Early" });

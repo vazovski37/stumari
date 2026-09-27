@@ -11,10 +11,13 @@ import {
 import { ApiError } from "../api/errors";
 import type { Db } from "../db/client";
 import { dueBookings } from "../dashboard/bookings";
+import { isMewsHotel } from "../inventory/mews";
+import { mewsPort } from "../mews/client";
 import { onchainConfig } from "../solana/chain-config";
 import { chainNow } from "../solana/clock";
 import type { Chain } from "../solana/context";
-import { crankIfDue, syncFromChain } from "./lifecycle";
+import { crankIfDue, MEWS_CONFIRM_MARGIN_SECS, syncFromChain } from "./lifecycle";
+import { ensureMewsReservation } from "./mews-sync";
 import { loadBookingRecord } from "./store";
 import type { BookingRow } from "./view";
 
@@ -64,7 +67,18 @@ export async function operatorAction(
   }
   const { row, account } = await syncFromChain(c, db, record.booking);
   if (!account) throw notAllowed("NOT_ON_CHAIN", "This booking has not been paid");
-  assertOperatorAllowed(action, account, BigInt(await chainNow(c.rpc)));
+  const now = BigInt(await chainNow(c.rpc));
+  assertOperatorAllowed(action, account, now);
+  if (action === "confirm" && isMewsHotel(record.hotel)) {
+    // Same margin as autoConfirm: don't create a Mews reservation that confirm_booking could no longer follow.
+    if (!row.mews_reservation_id && now + BigInt(MEWS_CONFIRM_MARGIN_SECS) >= account.confirmDeadlineTs) {
+      throw notAllowed("MEWS_PENDING", "Too close to the confirm deadline to create the Mews reservation; the booking will be voided and refunded");
+    }
+    // A Mews booking is confirmed only with its Mews reservation (mews-inventory.md "Confirm").
+    const outcome = await ensureMewsReservation(db, { ...record, booking: row }, mewsPort());
+    if (outcome.kind === "unavailable") throw notAllowed("MEWS_UNAVAILABLE", `Mews will not take this stay (${outcome.refusal ?? "no free room for these dates"}); void the booking to refund the guest`);
+    if (outcome.kind === "retry") throw notAllowed("MEWS_PENDING", `The Mews reservation could not be created yet: ${outcome.reason}`);
+  }
 
   const ctx = { rpc: c.rpc, operator: c.operator, booking: account };
   const config = (await onchainConfig(c.rpc)) ?? undefined;

@@ -60,6 +60,8 @@ export interface DashboardRoomType {
   max_children: number;
   base_rate_minor: string;
   weekend_rate_minor: string | null;
+  /** Mews resource category (Mews hotels only). */
+  mews_room_type_id: string | null;
   active: boolean;
   units: DashboardUnit[];
 }
@@ -95,6 +97,7 @@ export async function hotelUnits(db: Db, hotel: { id: string; timezone: string }
     max_children: t.max_children,
     base_rate_minor: t.base_rate_minor,
     weekend_rate_minor: t.weekend_rate_minor,
+    mews_room_type_id: t.mews_room_type_id,
     active: t.active,
     units: units
       .filter((u) => u.room_type_id === t.id)

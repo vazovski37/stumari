@@ -1,7 +1,7 @@
 import { ed25519 } from "@noble/curves/ed25519";
 import { base58 } from "@scure/base";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_AMOUNT_CAP_MINOR, DEFAULT_PROGRAM_ID, EnvError, metaPixelIdFrom, parseServerEnv } from "./env-schema";
+import { DEFAULT_AMOUNT_CAP_MINOR, DEFAULT_PROGRAM_ID, EnvError, metaPixelIdFrom, mewsAllowProduction, parseServerEnv } from "./env-schema";
 import { publicConfig } from "./public-config";
 
 function keypair(seedByte: number) {
@@ -42,6 +42,8 @@ describe("parseServerEnv", () => {
       amountCapMinor: DEFAULT_AMOUNT_CAP_MINOR,
       telegram: null,
       metaPixelId: null,
+      mews: null,
+      mewsProblems: [],
     });
     expect(env.authSecret.length).toBeGreaterThanOrEqual(32);
   });
@@ -217,5 +219,50 @@ describe("metaPixelIdFrom", () => {
     for (const bad of [undefined, null, "", "   ", "abc", "12345'><script>", "1".repeat(21), "1234"]) {
       expect(metaPixelIdFrom(bad)).toBeNull();
     }
+  });
+});
+
+describe("Mews settings", () => {
+  const tokens = { MEWS_CLIENT_TOKEN: "client-token-value", MEWS_ACCESS_TOKEN: "access-token-value" };
+  /** A bad Mews setting disables Mews only: the environment still parses. */
+  const mewsOff = (source: Record<string, string>) => {
+    const env = parseServerEnv(source);
+    expect(env.mews).toBeNull();
+    const text = env.mewsProblems.join(" | ");
+    expect(text).not.toContain("client-token-value");
+    expect(text).not.toContain("access-token-value");
+    return text;
+  };
+
+  it("defaults to the demo environment", () => {
+    expect(parseServerEnv({ ...tokens })).toMatchObject({
+      mews: {
+        platformUrl: "https://api.mews-demo.com",
+        clientToken: "client-token-value",
+        accessToken: "access-token-value",
+        client: "Stumari 0.1.0",
+        production: false,
+      },
+      mewsProblems: [],
+    });
+  });
+
+  it("a bad optional Mews setting turns Mews off (with a value-free reason) instead of failing the app", () => {
+    expect(mewsOff({ MEWS_CLIENT_TOKEN: "client-token-value" })).toContain("set both or neither");
+    expect(mewsOff({ ...tokens, MEWS_PLATFORM_URL: "not a url" })).toContain("must be a URL");
+    expect(mewsOff({ ...tokens, MEWS_PLATFORM_URL: "http://api.mews-demo.com" })).toContain("https");
+    expect(mewsOff({ ...tokens, MEWS_PLATFORM_URL: "https://api.mews.com" })).toContain("MEWS_ALLOW_PRODUCTION=1");
+    expect(mewsOff({ ...tokens, MEWS_ALLOW_PRODUCTION: "yes" })).toContain("MEWS_ALLOW_PRODUCTION: must be");
+    // Without tokens Mews is simply off, and stray Mews settings do not matter.
+    expect(parseServerEnv({ MEWS_PLATFORM_URL: "nope", MEWS_ALLOW_PRODUCTION: "maybe" })).toMatchObject({ mews: null, mewsProblems: [] });
+  });
+
+  it("allows production with MEWS_ALLOW_PRODUCTION=1 or true (the same values as the package)", () => {
+    const prod = parseServerEnv({ ...tokens, MEWS_PLATFORM_URL: "https://api.mews.com/", MEWS_ALLOW_PRODUCTION: "1" }).mews;
+    expect(prod).toMatchObject({ platformUrl: "https://api.mews.com", production: true });
+    expect(parseServerEnv({ ...tokens, MEWS_PLATFORM_URL: "https://api.mews.com", MEWS_ALLOW_PRODUCTION: "true" }).mews?.production).toBe(true);
+    expect(["1", "true", " TRUE "].map(mewsAllowProduction)).toEqual([true, true, true]);
+    expect(["", "0", "false", undefined].map(mewsAllowProduction)).toEqual([false, false, false, false]);
+    expect(mewsAllowProduction("yes")).toBeNull();
   });
 });

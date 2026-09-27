@@ -38,6 +38,21 @@ const optionalString = z
   .transform((v) => (v === "" ? undefined : v))
   .optional();
 
+/** Mews Connector API environments (docs/architecture/mews-inventory.md). */
+export const MEWS_DEMO_URL = "https://api.mews-demo.com";
+const MEWS_DEMO_HOST = "api.mews-demo.com";
+export const DEFAULT_MEWS_CLIENT = "Stumari 0.1.0";
+
+export type MewsEnv = {
+  platformUrl: string;
+  clientToken: string;
+  accessToken: string;
+  /** `Client` sent with every request (app name + version). */
+  client: string;
+  /** Anything but the public demo host; only with MEWS_ALLOW_PRODUCTION=1. */
+  production: boolean;
+};
+
 const address = (name: string) =>
   z.string().trim().refine(isBase58Address, { message: `${name} must be a base58 Solana address` });
 
@@ -87,6 +102,12 @@ const rawSchema = z.object({
   ),
   TELEGRAM_BOT_TOKEN: optionalString,
   TELEGRAM_CHAT_ID: optionalString,
+  // Validated by parseMewsEnv: a bad optional Mews setting disables Mews, not the whole app.
+  MEWS_PLATFORM_URL: optionalString,
+  MEWS_CLIENT_TOKEN: optionalString,
+  MEWS_ACCESS_TOKEN: optionalString,
+  MEWS_CLIENT: optionalString,
+  MEWS_ALLOW_PRODUCTION: optionalString,
   NEXT_PUBLIC_META_PIXEL_ID: optionalString.pipe(
     z.string().regex(META_PIXEL_ID_PATTERN, { message: "NEXT_PUBLIC_META_PIXEL_ID must be the numeric pixel id (digits only)" }).optional(),
   ),
@@ -120,6 +141,13 @@ export type ServerEnv = {
   telegram: { botToken: string; chatId: string } | null;
   /** Meta Pixel id for ad measurement; loaded in the browser only after the visitor accepts (consent banner). */
   metaPixelId: string | null;
+  /** Mews Connector API credentials (single pilot hotel); null when the tokens are unset or a Mews setting is invalid. */
+  mews: MewsEnv | null;
+  /**
+   * Why Mews is off although something was set (value-free messages). A bad Mews setting never fails
+   * the whole environment: Mews hotels answer 503 until it is fixed, and startup logs a warning.
+   */
+  mewsProblems: string[];
 };
 
 export class EnvError extends Error {
@@ -155,6 +183,7 @@ export function parseServerEnv(source: Record<string, string | undefined>): Serv
   if (production && libsqlUrl.startsWith("libsql://") && !raw.LIBSQL_AUTH_TOKEN) {
     problems.push("LIBSQL_AUTH_TOKEN: required in production for a libsql:// database");
   }
+  const mews = parseMewsEnv(source);
   if (problems.length > 0) throw new EnvError(problems);
 
   const operator = raw.OPERATOR_SECRET_KEY ?? null;
@@ -183,5 +212,58 @@ export function parseServerEnv(source: Record<string, string | undefined>): Serv
         ? { botToken: raw.TELEGRAM_BOT_TOKEN, chatId: raw.TELEGRAM_CHAT_ID }
         : null,
     metaPixelId: raw.NEXT_PUBLIC_META_PIXEL_ID ?? null,
+    mews: mews.env,
+    mewsProblems: mews.problems,
+  };
+}
+
+/**
+ * MEWS_ALLOW_PRODUCTION: `1` or `true` (any case) allow a production Mews host; `0`, `false` or unset
+ * do not. The same values as `configFromEnv` in packages/mews-client.
+ */
+export function mewsAllowProduction(value: string | undefined): boolean | null {
+  const v = value?.trim().toLowerCase() ?? "";
+  if (v === "1" || v === "true") return true;
+  if (v === "" || v === "0" || v === "false") return false;
+  return null;
+}
+
+/**
+ * MEWS_*: both tokens or neither; https only; any host but the public demo counts as production and
+ * is refused unless MEWS_ALLOW_PRODUCTION is 1/true (Mews production access = a certified private
+ * integration). Never throws: a bad setting gives `env: null` plus value-free `problems`, so the rest
+ * of the app keeps running and Mews hotels answer 503 until it is fixed.
+ */
+export function parseMewsEnv(source: Readonly<Record<string, string | undefined>>): { env: MewsEnv | null; problems: string[] } {
+  const value = (name: string) => {
+    const v = source[name]?.trim();
+    return v ? v : undefined;
+  };
+  const clientToken = value("MEWS_CLIENT_TOKEN");
+  const accessToken = value("MEWS_ACCESS_TOKEN");
+  const rawUrl = value("MEWS_PLATFORM_URL");
+  const allowRaw = value("MEWS_ALLOW_PRODUCTION");
+  const problems: string[] = [];
+  if (!clientToken !== !accessToken) problems.push("MEWS_CLIENT_TOKEN, MEWS_ACCESS_TOKEN: set both or neither");
+  const allow = mewsAllowProduction(allowRaw);
+  if (allow === null) problems.push("MEWS_ALLOW_PRODUCTION: must be 1, true, 0 or false");
+  const platformUrl = (rawUrl ?? MEWS_DEMO_URL).replace(/\/+$/, "");
+  let url: URL | null = null;
+  try {
+    url = new URL(platformUrl);
+  } catch {
+    problems.push("MEWS_PLATFORM_URL: must be a URL");
+  }
+  const production = url === null || url.host.toLowerCase() !== MEWS_DEMO_HOST;
+  if (url && url.protocol !== "https:") problems.push("MEWS_PLATFORM_URL: must use https");
+  if (url && production && allow !== true) {
+    problems.push(`MEWS_PLATFORM_URL: only the Mews demo environment (${MEWS_DEMO_HOST}) is allowed unless MEWS_ALLOW_PRODUCTION=1 (or true)`);
+  }
+  // No tokens at all: Mews is simply off, whatever the other Mews settings say.
+  if (!clientToken && !accessToken) return { env: null, problems: [] };
+  if (problems.length > 0 || !clientToken || !accessToken || !url) return { env: null, problems };
+  return {
+    env: { platformUrl, clientToken, accessToken, client: value("MEWS_CLIENT") ?? DEFAULT_MEWS_CLIENT, production },
+    problems: [],
   };
 }

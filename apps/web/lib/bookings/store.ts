@@ -102,8 +102,15 @@ export async function applyChainState(
   }
 
   if (sameExceptUpdatedAt(next, row)) return row;
+  // The Mews columns are written only by the Mews sync (mews-sync.ts): a caller's row may predate them.
+  const chainColumns: Partial<BookingRow> = { ...next };
+  delete chainColumns.mews_customer_id;
+  delete chainColumns.mews_customer_at;
+  delete chainColumns.mews_reservation_id;
+  delete chainColumns.mews_cancelled_at;
+  delete chainColumns.mews_lock_until;
   const writes = [
-    db.update(bookings).set(next).where(eq(bookings.id, row.id)),
+    db.update(bookings).set(chainColumns).where(eq(bookings.id, row.id)),
     ...(account ? [db.update(quotes).set({ status: "used" }).where(eq(quotes.id, row.quote_id))] : []),
     ...(events.length > 0 ? [db.insert(bookingEvents).values(events)] : []),
   ];

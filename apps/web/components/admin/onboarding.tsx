@@ -1,11 +1,12 @@
 "use client";
 
 import { isCoreError, toMinor } from "@stumari/core";
-import { ExternalLink, Link2, Pause, Play, Plus, Save, ShieldCheck } from "lucide-react";
+import { ExternalLink, Link2, Pause, Play, PlugZap, Plus, Save, ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { ErrorNote, Pill } from "@/components/operator/ui";
 import { useAction } from "@/components/operator/use-action";
 import { apiPatch, apiPost } from "@/lib/client/api";
+import type { MewsTestResult } from "@/lib/admin/mews";
 import type { DashboardRoomType } from "@/lib/dashboard/units";
 import type { HotelRow } from "@/lib/hotels";
 import { formatUsdc } from "@/lib/money";
@@ -53,6 +54,9 @@ type Details = Pick<
   | "checkout_time"
   | "hotel_type"
   | "confirm_mode"
+  | "inventory_provider"
+  | "mews_service_id"
+  | "mews_rate_id"
   | "contact_email"
   | "contact_telegram"
 >;
@@ -70,6 +74,9 @@ export function DetailsStep({ hotel }: { hotel: HotelRow }) {
     checkout_time: hotel.checkout_time,
     hotel_type: hotel.hotel_type,
     confirm_mode: hotel.confirm_mode,
+    inventory_provider: hotel.inventory_provider,
+    mews_service_id: hotel.mews_service_id ?? "",
+    mews_rate_id: hotel.mews_rate_id ?? "",
     contact_email: hotel.contact_email ?? "",
     contact_telegram: hotel.contact_telegram ?? "",
   });
@@ -115,8 +122,27 @@ export function DetailsStep({ hotel }: { hotel: HotelRow }) {
           <input type="time" required className="field" {...bind("checkout_time")} />
         </Field>
         <Field
+          label="Inventory"
+          hint="Mews: availability is read live from the hotel's Mews property and each paid booking becomes a Confirmed Mews reservation (demo environment unless production tokens are configured)."
+        >
+          <select className="field" {...bind("inventory_provider")}>
+            <option value="ical">Calendars (iCal) and manual blocks</option>
+            <option value="mews">Mews (Connector API)</option>
+          </select>
+        </Field>
+        {d.inventory_provider === "mews" && (
+          <>
+            <Field label="Mews service id" hint="The bookable service, usually Accommodation (Test Mews connection lists them)">
+              <input className="field font-mono text-xs" spellCheck={false} {...bind("mews_service_id")} />
+            </Field>
+            <Field label="Mews rate id" hint="The rate Stumari reservations are booked on">
+              <input className="field font-mono text-xs" spellCheck={false} {...bind("mews_rate_id")} />
+            </Field>
+          </>
+        )}
+        <Field
           label="Booking confirmation"
-          hint="Manual: for hotels whose rooms live in a system we don't sync (e.g. Mews). You get a Telegram alert per booking, enter it there, then press Confirm within the window, or the guest is refunded."
+          hint="Manual: for hotels whose rooms live in a system we don't sync. You get a Telegram alert per booking, enter it there, then press Confirm within the window, or the guest is refunded. Ignored for Mews inventory."
         >
           <select className="field" {...bind("confirm_mode")}>
             <option value="auto">Automatic (after a calendar re-sync)</option>
@@ -139,6 +165,105 @@ export function DetailsStep({ hotel }: { hotel: HotelRow }) {
   );
 }
 
+/** Read-only check of the saved Mews mapping: setup + next week's free units per mapped room type. */
+export function MewsConnection({ hotelId }: { hotelId: string }) {
+  const { run, busy, error } = useAction();
+  const [result, setResult] = useState<MewsTestResult | null>(null);
+  return (
+    <div className="space-y-3 rounded-xl border border-line bg-white p-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={async () => {
+            const r = await run("mews", () => apiPost<MewsTestResult>(`/api/admin/hotels/${hotelId}/mews-test`, {}));
+            if (r) setResult(r);
+          }}
+          className="btn btn-secondary !py-2.5 text-sm disabled:opacity-60"
+        >
+          <PlugZap aria-hidden="true" className="size-4" />
+          {busy ? "Asking Mews…" : "Test Mews connection"}
+        </button>
+        {result && (
+          <span className="text-sm">
+            <Pill tone={result.environment === "demo" ? "warn" : "good"}>{result.environment}</Pill> {result.enterprise.name} ·{" "}
+            {result.enterprise.timezone} · {result.host}
+          </span>
+        )}
+      </div>
+      <ErrorNote error={error} />
+      {result && <MewsResult result={result} />}
+    </div>
+  );
+}
+
+function IdList({ title, rows }: { title: string; rows: { id: string; name: string; note?: string }[] }) {
+  return (
+    <div className="min-w-0">
+      <p className="font-medium">{title}</p>
+      <ul className="mt-1 space-y-0.5">
+        {rows.map((r) => (
+          <li key={r.id} className="flex flex-wrap gap-x-2">
+            <span>{r.name}</span>
+            {r.note && <span className="text-ink-soft">{r.note}</span>}
+            <code className="select-all break-all text-xs text-ink-soft">{r.id}</code>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function MewsResult({ result }: { result: MewsTestResult }) {
+  return (
+    <div className="space-y-3 text-sm">
+      {result.problems.length > 0 ? (
+        <ul className="list-disc space-y-0.5 pl-5 text-wine">
+          {result.problems.map((p) => (
+            <li key={p}>{p}</li>
+          ))}
+        </ul>
+      ) : (
+        <p>Mapping complete.</p>
+      )}
+      <div className="grid gap-3 lg:grid-cols-3">
+        <IdList title="Services" rows={result.bookable_services.map((s) => ({ ...s, note: s.id === result.service.id ? "(in use)" : undefined }))} />
+        <IdList title="Mews room types" rows={result.mews_room_types.map((r) => ({ ...r, note: r.capacity ? `sleeps ${r.capacity}` : undefined }))} />
+        <IdList title="Rates" rows={result.rates.map((r) => ({ ...r, note: r.is_default ? "(default)" : undefined }))} />
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-left text-xs">
+          <thead>
+            <tr className="text-ink-soft">
+              <th className="py-1 pr-3 font-medium">Stumari room type → Mews</th>
+              {result.nights.map((n) => (
+                <th key={n} className="px-1 py-1 font-mono font-medium">
+                  {n.slice(5)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {result.room_types.map((rt) => (
+              <tr key={rt.id} className="border-t border-line">
+                <td className="py-1 pr-3">
+                  {rt.name} → {rt.mews_name ?? <span className="text-wine">{rt.mews_room_type_id ? "unknown id" : "not mapped"}</span>}
+                </td>
+                {result.nights.map((n, i) => (
+                  <td key={n} className="px-1 py-1 font-mono">
+                    {rt.free ? rt.free[i] : "–"}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="mt-1 text-xs text-ink-soft">Free Mews units per night (hotel time), from tomorrow.</p>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- 2. room types
 
 const MEALS = [
@@ -148,19 +273,20 @@ const MEALS = [
   ["SC", "Self catering"],
 ] as const;
 
-export function RoomTypesStep({ hotelId, roomTypes }: { hotelId: string; roomTypes: DashboardRoomType[] }) {
+export function RoomTypesStep({ hotelId, roomTypes, mews = false }: { hotelId: string; roomTypes: DashboardRoomType[]; mews?: boolean }) {
   return (
     <div className="space-y-4">
       {roomTypes.map((rt) => (
-        <RoomTypeRow key={rt.id} hotelId={hotelId} rt={rt} />
+        <RoomTypeRow key={rt.id} hotelId={hotelId} rt={rt} mews={mews} />
       ))}
       <NewRoomType hotelId={hotelId} />
     </div>
   );
 }
 
-function RoomTypeRow({ hotelId, rt }: { hotelId: string; rt: DashboardRoomType }) {
+function RoomTypeRow({ hotelId, rt, mews }: { hotelId: string; rt: DashboardRoomType; mews: boolean }) {
   const { run, busy, error } = useAction();
+  const [mewsId, setMewsId] = useState(rt.mews_room_type_id ?? "");
   const [rate, setRate] = useState(minorToUsd(rt.base_rate_minor));
   const [weekend, setWeekend] = useState(minorToUsd(rt.weekend_rate_minor));
   const base = usdToMinor(rate);
@@ -203,6 +329,22 @@ function RoomTypeRow({ hotelId, rt }: { hotelId: string; rt: DashboardRoomType }
           {rt.active ? "Stop selling" : "Sell again"}
         </button>
       </div>
+      {mews && (
+        <div className="flex flex-wrap items-end gap-2">
+          <Field label="Mews room type id">
+            <input value={mewsId} onChange={(e) => setMewsId(e.target.value)} className="field w-[22rem] max-w-full font-mono text-xs" spellCheck={false} />
+          </Field>
+          <button
+            type="button"
+            disabled={busy !== null || mewsId.trim() === (rt.mews_room_type_id ?? "")}
+            onClick={() => run("mews", () => apiPatch(path, { mews_room_type_id: mewsId.trim() }))}
+            className="btn btn-secondary !py-2.5 text-sm disabled:opacity-60"
+          >
+            <Save aria-hidden="true" className="size-4" />
+            {busy === "mews" ? "Saving…" : "Save Mews room type"}
+          </button>
+        </div>
+      )}
       <ErrorNote error={error} />
     </div>
   );
@@ -272,10 +414,17 @@ function NewRoomType({ hotelId }: { hotelId: string }) {
 
 // ---------------------------------------------------------------- 3. units + iCal
 
-export function UnitsStep({ hotelId, roomTypes }: { hotelId: string; roomTypes: DashboardRoomType[] }) {
+export function UnitsStep({ hotelId, roomTypes, mews = false }: { hotelId: string; roomTypes: DashboardRoomType[]; mews?: boolean }) {
   if (roomTypes.length === 0) return <p className="text-sm text-ink-soft">Add a room type first.</p>;
   return (
     <div className="space-y-4">
+      {mews && (
+        <p className="rounded-xl border border-line bg-white p-3 text-sm">
+          <strong>Mews hotel:</strong> units here are virtual slots, not rooms, and need no iCal links. Each Stumari hold or booking of a room
+          type takes one slot for its nights, so the number of units caps how many Stumari bookings of that room type can share a night. Mews
+          decides the rest: live free units at quote and payment, and the reservation at confirm.
+        </p>
+      )}
       <p className="text-sm text-ink-soft">
         One unit per physical room. Paste each unit&apos;s iCal export link from Booking.com / Airbnb (the hotel copies it from their own
         extranet — never ask for their password). Multi-unit room types: do not promise iCal; use manual blocks in the dashboard.

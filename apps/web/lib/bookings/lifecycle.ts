@@ -15,10 +15,13 @@ import type { Db } from "../db/client";
 import { rooms } from "../db/schema";
 import { hasConflicts, unitConflicts } from "../inventory/availability";
 import { syncUnitIfStale } from "../inventory/ical-sync";
+import { isMewsHotel } from "../inventory/mews";
+import { mewsPort } from "../mews/client";
 import { onchainConfig } from "../solana/chain-config";
 import { chainNow } from "../solana/clock";
 import type { Chain } from "../solana/context";
 import { confirmRequestMessage, notifyTelegram } from "../telegram";
+import { ensureMewsReservation, settleMewsAfterExit } from "./mews-sync";
 import { applyChainState, loadBookingRecord, recordConfirmRequest, recordSyncConflict, type SigField } from "./store";
 import { publicBookingView, type BookingRecord, type BookingRow, type PublicBookingView } from "./view";
 
@@ -32,7 +35,10 @@ export function viewOf(c: Chain, record: BookingRecord, now: number): PublicBook
   return publicBookingView(record, { now, cluster: c.env.cluster, rpcUrl: c.env.rpcUrl });
 }
 
-/** Re-reads the chain and mirrors it into the DB. */
+/**
+ * Re-reads the chain and mirrors it into the DB. A cancelled or voided booking linked to a Mews
+ * reservation gets that reservation cancelled (mews-inventory.md "Cancel"); the sync cron retries.
+ */
 export async function syncFromChain(
   c: Chain,
   db: Db,
@@ -40,7 +46,10 @@ export async function syncFromChain(
   sig?: { field: SigField; value: string },
 ): Promise<{ row: BookingRow; account: ChainBooking | null }> {
   const account = await fetchChainBooking(c, row.id);
-  return { row: await applyChainState(db, row, account, sig), account };
+  const next = await applyChainState(db, row, account, sig);
+  // The row may predate the Mews columns' latest writes, so settleMewsAfterExit reads them itself.
+  if (next.status === "cancelled" || next.status === "voided") await settleMewsAfterExit(db, next.id, mewsPort);
+  return { row: next, account };
 }
 
 const logCrankFailure = (what: string, id: string, e: unknown) => {
@@ -119,6 +128,10 @@ export async function autoConfirm(c: Chain, db: Db, bookingId: string): Promise<
   });
   const conflict = hasConflicts(conflicts);
   if (conflict) await recordSyncConflict(db, row.id, { blocks: conflicts.blocks, bookings: conflicts.bookings });
+  if (isMewsHotel(record.hotel)) {
+    if (!conflict) await confirmThroughMews(c, db, { ...record, booking: row }, account, now);
+    return;
+  }
   if (record.hotel.confirm_mode === "manual") {
     await requestManualConfirm(c, db, { ...record, booking: row }, Number(account.confirmDeadlineTs), conflict);
     return;
@@ -129,5 +142,50 @@ export async function autoConfirm(c: Chain, db: Db, bookingId: string): Promise<
     await syncFromChain(c, db, row, { field: "confirm_sig", value: signature });
   } catch (e) {
     logCrankFailure("confirm", row.id, e);
+  }
+}
+
+/**
+ * Do not start a Mews confirm attempt this close to the confirm deadline (confirm_booking could miss
+ * it). Longer than the attempt budget (mews-sync.ts MEWS_ATTEMPT_BUDGET_MS, 60 s), so an attempt that
+ * starts just before the margin still leaves about a minute for confirm_booking.
+ */
+export const MEWS_CONFIRM_MARGIN_SECS = 120;
+
+/**
+ * Mews hotels (mews-inventory.md "Confirm"): create the Confirmed Mews reservation (at most one per
+ * booking), then `confirm_booking`. No Mews availability, or a business-rule refusal of
+ * `reservations/add` (minimum stay, closed to arrival, …) → admin `void_booking` right away (full
+ * refund; the program lets the admin void a pending booking at any time). A transient Mews error
+ * leaves the booking pending for the sync cron to retry until the deadline, after which the
+ * permissionless void refunds the guest and cancels any reservation that was created.
+ */
+async function confirmThroughMews(c: Chain, db: Db, record: BookingRecord, account: ChainBooking, now: number): Promise<void> {
+  const id = record.booking.id;
+  if (BigInt(now) + BigInt(MEWS_CONFIRM_MARGIN_SECS) >= account.confirmDeadlineTs && !record.booking.mews_reservation_id) return;
+  const outcome = await ensureMewsReservation(db, record, mewsPort());
+  if (outcome.kind === "retry") {
+    console.warn(`Mews reservation for booking ${id} not created yet (retrying until the deadline): ${outcome.reason}`);
+    return;
+  }
+  if (outcome.kind === "unavailable") {
+    await recordSyncConflict(db, id, { mews: { free: outcome.free, ...(outcome.refusal ? { refusal: outcome.refusal } : {}) } });
+    // A Mews refusal while rooms look free may be a mapping or configuration mistake: make it loud.
+    if (outcome.refusal) console.error(`Mews refused booking ${id} at hotel ${record.hotel.id} (voiding, full refund): ${outcome.refusal}`);
+    try {
+      const config = (await onchainConfig(c.rpc)) ?? undefined;
+      const built = await buildVoidTx({ rpc: c.rpc, operator: c.operator, booking: account, config, authority: c.admin });
+      const { signature } = await sendBuiltTx(c.rpc, built);
+      await syncFromChain(c, db, record.booking, { field: "final_sig", value: signature });
+    } catch (e) {
+      logCrankFailure("void (no Mews availability)", id, e);
+    }
+    return;
+  }
+  try {
+    const { signature } = await sendBuiltTx(c.rpc, await buildConfirmTx({ rpc: c.rpc, operator: c.operator, booking: account }));
+    await syncFromChain(c, db, record.booking, { field: "confirm_sig", value: signature });
+  } catch (e) {
+    logCrankFailure("confirm", id, e);
   }
 }

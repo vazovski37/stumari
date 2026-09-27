@@ -11,6 +11,7 @@
     "smoke": "tsx smoke.ts",
     "e2e": "tsx e2e.ts",
     "e2e:screens": "tsx e2e/screens.ts",
+    "mews": "tsx mews.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

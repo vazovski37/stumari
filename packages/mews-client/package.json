@@ -1,0 +1,11 @@
+{
+  "name": "@stumari/mews-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed fetch-based client for the Mews Connector API operations Stumari uses: setup, availability, pricing, reservation add/cancel. zod-validated, 429-aware, token-safe errors.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "vitest run", "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": { "zod": "^4.0.0" },
+  "devDependencies": { "typescript": "^5.9.0", "vitest": "^5.0.0", "@types/node": "^24.0.0" }
+}

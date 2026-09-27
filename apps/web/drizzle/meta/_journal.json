@@ -22,6 +22,20 @@
       "when": 1790526880048,
       "tag": "0002_application_intent",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1790548856570,
+      "tag": "0003_mews_inventory",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790550255598,
+      "tag": "0004_mews_customer_at",
+      "breakpoints": true
     }
   ]
 }

@@ -13,7 +13,7 @@ import { z } from "zod";
 import { ApiError } from "../api/errors";
 import type { Db } from "../db/client";
 import type { ServerEnv } from "../env-schema";
-import { DEFAULT_HOTEL_POLICY, hotels, rooms, roomTypes } from "../db/schema";
+import { DEFAULT_HOTEL_POLICY, hotels, inventoryProviders, rooms, roomTypes } from "../db/schema";
 import { exportUrl, importUrls } from "../dashboard/units";
 import { SLUG, type HotelRow, type RoomTypeRow } from "../hotels";
 import type { Chain } from "../solana/context";
@@ -43,6 +43,14 @@ const timeZone = z.string().refine(
   { message: "Unknown IANA timezone" },
 );
 
+/** A Mews id (GUID), or null to clear it. */
+const mewsId = z
+  .string()
+  .trim()
+  .transform((v) => (v === "" ? null : v.toLowerCase()))
+  .pipe(z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/, { message: "A Mews id (GUID)" }).nullable())
+  .nullish();
+
 const hotelFields = {
   name: z.string().trim().min(1).max(120),
   slug: z.string().regex(SLUG, { message: "Lowercase letters, digits and dashes" }),
@@ -55,6 +63,9 @@ const hotelFields = {
   checkout_time: hhmm,
   hotel_type: z.enum(["City Hotel", "Resort Hotel"]),
   confirm_mode: z.enum(["auto", "manual"]),
+  inventory_provider: z.enum(inventoryProviders),
+  mews_service_id: mewsId,
+  mews_rate_id: mewsId,
   contact_email: text(200).pipe(z.email().nullish()),
   contact_telegram: text(64),
 };
@@ -192,6 +203,8 @@ const roomTypeFields = {
   weekend_rate_minor: minor.nullish(),
   meal: z.enum(["BB", "HB", "FB", "SC"]),
   photo_url: text(2_000).pipe(z.url({ protocol: /^https$/ }).nullish()),
+  /** Mews resource category (Mews hotels): the room type Stumari sells and reserves in Mews. */
+  mews_room_type_id: mewsId,
   sort: z.number().int().min(0).max(1_000),
 };
 

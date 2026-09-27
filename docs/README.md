@@ -13,6 +13,7 @@
 - [API](architecture/api.md) — REST, auth, dashboard, admin, cron, MCP tools
 - [Configuration](architecture/configuration.md) — environment variables, on-chain config, demo data
 - [Inventory and iCal](architecture/inventory-ical.md) — import/export, confirmation safety
+- [Mews inventory](architecture/mews-inventory.md) — Mews as an inventory provider: availability rule, confirm/cancel, idempotency
 - [Security](architecture/security.md) — key custody, threats, mainnet checklist
 
 ## Decisions

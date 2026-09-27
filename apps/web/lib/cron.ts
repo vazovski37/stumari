@@ -4,9 +4,11 @@ import { and, asc, eq, inArray, lt, lte, or } from "drizzle-orm";
 import { ApiError } from "./api/errors";
 import { pruneNonces } from "./auth/siws";
 import { autoConfirm, crankIfDue, syncFromChain } from "./bookings/lifecycle";
+import { settleMewsAfterExit, unsettledMewsExits } from "./bookings/mews-sync";
 import type { Db } from "./db/client";
 import { bookings } from "./db/schema";
 import { CRON_SYNC_MAX_AGE_SECS, staleUnits, syncUnit } from "./inventory/ical-sync";
+import { mewsPort } from "./mews/client";
 import { expireQuotes } from "./quotes/create";
 import { pruneRateEvents } from "./rate-limit";
 import { chainNow } from "./solana/clock";
@@ -49,8 +51,9 @@ export function authorizeCron(request: Request, secret: string | null): void {
 
 /**
  * `sync`: iCal imports for stale units, quote expiry, reconciliation of `awaiting_signature` and
- * `pending` bookings with the chain (auto-confirming pending ones without conflicts), and pruning
- * of old rate-limit events and sign-in nonces.
+ * `pending` bookings with the chain (auto-confirming pending ones without conflicts; at Mews hotels
+ * that creates the Mews reservation), retries of Mews cancellations for cancelled/voided bookings,
+ * and pruning of old rate-limit events and sign-in nonces.
  */
 export async function runSyncJob(c: Chain, db: Db) {
   const wallNow = Math.floor(Date.now() / 1000);
@@ -76,12 +79,16 @@ export async function runSyncJob(c: Chain, db: Db) {
       .set({ updated_at: wallNow })
       .where(and(inArray(bookings.id, open.map((r) => r.id)), lt(bookings.updated_at, wallNow)));
   }
+  const mewsExits = await pool(await unsettledMewsExits(db, CRON_BATCH), CRON_CONCURRENCY, async (id) => {
+    if ((await settleMewsAfterExit(db, id, mewsPort)) === "failed") throw new Error(`Mews cancel of booking ${id} failed`);
+  });
   const pruned = await pruneRateEvents(db, wallNow);
   const noncesPruned = await pruneNonces(db, wallNow);
   return {
     units: synced,
     quotes_expired: quotesExpired,
     bookings: reconciled,
+    mews_cancellations: mewsExits,
     rate_events_pruned: pruned,
     nonces_pruned: noncesPruned,
   };

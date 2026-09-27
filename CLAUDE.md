@@ -9,7 +9,7 @@ Stumari (სტუმარი, "guest"): stablecoin checkout for merchants with
 - `spec/vectors/refund.json` — Rust and TS must both pass every case.
 
 ## Layout
-`onchain/` Anchor 1.1.2 workspace · `packages/core` pure TS domain logic (no Solana deps) · `packages/escrow-client` Codama Kit client · `apps/web` Next.js (landing, checkout, dashboard, admin, API) · `apps/mcp` MCP server · `ml/` Python training · `scripts/` bootstrap/E2E/build helpers · `docs/` specs, ADRs, plan, sales, submission.
+`onchain/` Anchor 1.1.2 workspace · `packages/core` pure TS domain logic (no Solana deps) · `packages/escrow-client` Codama Kit client · `packages/mews-client` Mews Connector API client (demo env by default; production only with `MEWS_ALLOW_PRODUCTION`) · `apps/web` Next.js (landing, checkout, dashboard, admin, API) · `apps/mcp` MCP server · `ml/` Python training · `scripts/` bootstrap/E2E/build helpers · `docs/` specs, ADRs, plan, sales, submission.
 
 ## Conventions
 - Money: `bigint` in TS, `u64` on-chain, **decimal strings** in JSON/DB (`"123450000"` = 123.45 USDC, 6 decimals). Never floats for money.
