@@ -33,7 +33,7 @@ pnpm dev                                                      # http://localhost
 pnpm --filter @stumari/scripts e2e                            # the whole loop headless: 20 steps, balances checked against the refund math
 ```
 
-Setup, devnet bootstrap, Vercel deployment and the MCP server for Claude Desktop: [docs/plan/runbook.md](docs/plan/runbook.md). What the E2E proves, with screenshots: [docs/plan/e2e-report.md](docs/plan/e2e-report.md).
+**Live landing:** https://stumari.azurewebsites.net ([deploy-azure.md](docs/plan/deploy-azure.md)). Setup, devnet bootstrap, deployment and the MCP server for Claude Desktop: [docs/plan/runbook.md](docs/plan/runbook.md). What the E2E proves, with screenshots: [docs/plan/e2e-report.md](docs/plan/e2e-report.md).
 
 **Program id** (fixed across clusters): `6Y17gFD9dWPJF6GtpzABJZY7Pk8j5CLh268zZyW5U6nf`.
 

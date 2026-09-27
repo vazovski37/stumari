@@ -23,6 +23,7 @@
 - [Roadmap to 12 Oct](plan/roadmap.md) — milestones, build order, what only founders can do
 - [Runbook](plan/runbook.md) — setup, local chain, program deploy, devnet bootstrap, Vercel + Turso, cron, MCP, troubleshooting
 - [Backlog](plan/backlog.md) — open follow-ups from builds and reviews, by component
+- [Deploy on Azure](plan/deploy-azure.md) — **live at https://stumari.azurewebsites.net**: resources, redeploy command, admin/Telegram/pixel settings, F1→B1 before ads
 - [Go live with the landing](plan/go-live-landing.md) — put the landing + apply/demo forms on a public URL before devnet (Vercel + Turso, env vars, Telegram alerts, pixel)
 - [E2E report](plan/e2e-report.md) — the full loop on localnet (20 steps), screenshots, demo-recording checklist
 

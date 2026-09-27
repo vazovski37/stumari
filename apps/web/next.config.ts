@@ -31,8 +31,13 @@ const securityHeaders = [
   { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" },
 ];
 
+// Azure App Service (docs/plan/deploy-azure.md) runs the self-contained server: NEXT_OUTPUT=standalone.
+// The trace root is the monorepo root so workspace packages and hoisted modules are bundled.
+const standalone = process.env.NEXT_OUTPUT === "standalone";
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  ...(standalone ? { output: "standalone" as const, outputFileTracingRoot: resolve(process.cwd(), "../..") } : {}),
   env: { STUMARI_ARTIFACT_PROGRAM_ID: artifactProgramId() },
   transpilePackages: ["@stumari/core", "@stumari/escrow-client"],
   serverExternalPackages: ["@libsql/client", "libsql"],
