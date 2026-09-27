@@ -22,6 +22,7 @@
 - [Roadmap to 12 Oct](plan/roadmap.md) — milestones, build order, what only founders can do
 - [Runbook](plan/runbook.md) — setup, local chain, program deploy, devnet bootstrap, Vercel + Turso, cron, MCP, troubleshooting
 - [Backlog](plan/backlog.md) — open follow-ups from builds and reviews, by component
+- [Go live with the landing](plan/go-live-landing.md) — put the landing + apply/demo forms on a public URL before devnet (Vercel + Turso, env vars, Telegram alerts, pixel)
 - [E2E report](plan/e2e-report.md) — the full loop on localnet (20 steps), screenshots, demo-recording checklist
 
 ## Model
@@ -29,10 +30,13 @@
 
 ## Go-to-market
 - [Pilot offer](sales/offer.md) — the single source of what we promise hotels (ADR-0013)
-- [Call script](sales/call-script.md) · [Objections](sales/objections.md) · [One-pager](sales/one-pager.md) (EN/RU/KA) · [Onboarding checklist](sales/onboarding-checklist.md) · [Lead tracker](sales/leads.csv)
+- [Call sheet](sales/call-sheet.md) — one page for phone calls (pitch EN/KA/RU, qualifying questions, links to send)
+- [Facebook kit](sales/facebook-kit.md) — page texts, organic posts, ads (EN/KA/RU), targeting, UTM links, Meta crypto-ad policy notes; ad images at `/ads`
+- [Call script](sales/call-script.md) ([ქართ.](sales/call-script.ka.md), [рус.](sales/call-script.ru.md)) · [Objections](sales/objections.md) ([ქართ.](sales/objections.ka.md), [рус.](sales/objections.ru.md)) · [One-pager](sales/one-pager.md) (EN/RU/KA) · [Onboarding checklist](sales/onboarding-checklist.md) · [Lead tracker](sales/leads.csv)
 
 ## Colosseum submission
 - [Status tracker](submission/status.md) — filled and missing fields, final check
+- [Weekly update 2026-09-28](submission/weekly-update-2026-09-28.md) — 1-minute video script
 - [Georgian community form](submission/georgia-community-form.md) — answers given to the Georgian Colosseum group (Build Station Oct 5–13, promised materials)
 - [Demo video script](submission/demo-video-script.md) (≤ 3:00, live product) · [Pitch video script](submission/pitch-video-script.md) (≤ 2:00)
 

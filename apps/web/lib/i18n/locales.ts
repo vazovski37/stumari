@@ -2,8 +2,11 @@ export const locales = ["en", "ka", "ru"] as const;
 export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = "en";
 
-/** Paths that exist in every locale (relative to the locale root). */
-export type LocalizedPath = "" | "/apply";
+/**
+ * Paths that exist in every locale (relative to the locale root). `/apply?type=demo` is the short
+ * "book a demo" variant of the apply page (ad traffic).
+ */
+export type LocalizedPath = "" | "/apply" | "/apply?type=demo";
 
 export const localeNames: Record<Locale, string> = {
   en: "English",

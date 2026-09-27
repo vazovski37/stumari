@@ -1,0 +1,1 @@
+ALTER TABLE `applications` ADD `intent` text DEFAULT 'pilot' NOT NULL;

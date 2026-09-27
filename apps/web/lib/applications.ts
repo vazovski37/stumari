@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   applicationChannels,
+  applicationIntents,
   applicationRoles,
   cryptoAcceptance,
   HONEYPOT_FIELD,
@@ -26,7 +27,8 @@ export const applicationInput = z
     city: z.string().trim().min(1).max(80).default("Tbilisi"),
     rooms_count: z.number().int().min(1).max(1000).nullish().transform((v) => v ?? null),
     contact_name: z.string().trim().min(1).max(120),
-    role: z.enum(applicationRoles),
+    /** Asked on the full pilot form only; the short demo form leaves it out. */
+    role: z.enum(applicationRoles).nullish().transform((v) => v ?? null),
     phone: optionalText(40).refine((v) => v === null || /^\+?[0-9 ()-]{6,40}$/.test(v), {
       message: "Use digits, spaces and an optional leading +",
     }),
@@ -45,11 +47,16 @@ export const applicationInput = z
     accepts_crypto_today: z.enum(cryptoAcceptance).nullish().transform((v) => v ?? null),
     message: optionalText(2000),
     locale: z.enum(locales),
+    intent: z.enum(applicationIntents).default("pilot"),
     utm: z
       .partialRecord(z.enum(utmKeys), z.string().trim().max(200))
       .nullish()
       .transform((v) => (v && Object.keys(v).length > 0 ? (v as Record<string, string>) : null)),
     consent: z.literal(true, { message: "Consent is required" }),
+  })
+  .refine((a) => a.intent === "demo" || a.role !== null, {
+    message: "Choose your role",
+    path: ["role"],
   })
   .refine((a) => a.phone !== null || a.telegram !== null, {
     message: "Add a WhatsApp phone number or a Telegram username",

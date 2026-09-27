@@ -54,7 +54,7 @@ Do not promise USDT, other chains or other tokens.
 Record `ical_single_unit` in the lead notes. See [inventory-ical.md](../architecture/inventory-ical.md).
 
 ### "Can I take real bookings today?"
-> "Right now you can try everything with test money. Real USDC bookings start after our security review. We'll tell you the exact date as soon as it's set."
+> "Not yet. Right now we can show you the whole flow with test money, on a screen-share or on the setup call. Real USDC bookings start after our security review. We'll tell you the exact date as soon as it's set."
 
 Don't give a date that the founders have not confirmed. Real bookings are subject to the pilot limit of 1,500 USDC per booking.
 

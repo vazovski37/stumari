@@ -1,4 +1,4 @@
-import { ArrowRight, LockKeyhole } from "lucide-react";
+import { ArrowRight, CalendarClock, LockKeyhole } from "lucide-react";
 import Link from "next/link";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { localePath, type Locale } from "@/lib/i18n/locales";
@@ -28,10 +28,14 @@ export function Hero({ locale, hero }: { locale: Locale; hero: Dictionary["hero"
               {hero.ctaPrimary}
               <ArrowRight aria-hidden="true" className="size-4" />
             </Link>
-            <a href="#how" className="btn btn-secondary">
-              {hero.ctaSecondary}
-            </a>
+            <Link href={localePath(locale, "/apply?type=demo")} className="btn btn-secondary">
+              <CalendarClock aria-hidden="true" className="size-4" />
+              {hero.ctaDemo}
+            </Link>
           </div>
+          <a href="#how" className="mt-4 inline-flex text-sm font-medium text-ink-soft underline underline-offset-4 hover:text-wine">
+            {hero.ctaSecondary}
+          </a>
         </div>
 
         <figure className="card relative p-6 sm:p-7" aria-label={card.label}>

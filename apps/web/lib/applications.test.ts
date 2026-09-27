@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applicationInput, describeIssues, isHoneypotFilled } from "./applications";
+import { applicationMessage } from "./telegram";
 
 const minimal = {
   hotel_name: "  Old Tbilisi Guesthouse ",
@@ -116,5 +117,76 @@ describe("isHoneypotFilled", () => {
     expect(isHoneypotFilled(minimal)).toBe(false);
     expect(isHoneypotFilled(null)).toBe(false);
     expect(isHoneypotFilled("website")).toBe(false);
+  });
+});
+
+describe("applicationInput intent", () => {
+  const demo = {
+    contact_name: "Nino",
+    hotel_name: "Old Tbilisi Guesthouse",
+    telegram: "@oldtbilisi",
+    locale: "ka",
+    intent: "demo",
+    consent: true,
+  };
+
+  it("defaults to the pilot form", () => {
+    expect(applicationInput.parse(minimal).intent).toBe("pilot");
+  });
+
+  it("accepts the short demo form without a role, city or channel questions", () => {
+    const parsed = applicationInput.parse({ ...demo, rooms_count: 8, utm: { utm_source: "facebook", utm_content: "usdc" } });
+    expect(parsed).toMatchObject({
+      intent: "demo",
+      role: null,
+      city: "Tbilisi",
+      rooms_count: 8,
+      channels: [],
+      has_ical: null,
+      utm: { utm_source: "facebook", utm_content: "usdc" },
+    });
+  });
+
+  it("still requires a name, hotel, a way to reach them and consent on the demo form", () => {
+    expect(issuesOf({ ...demo, telegram: null }).map((i) => i.path)).toEqual(["phone"]);
+    expect(issuesOf({ ...demo, consent: false }).map((i) => i.path)).toContain("consent");
+    expect(issuesOf({ ...demo, contact_name: undefined, hotel_name: undefined }).map((i) => i.path)).toEqual(expect.arrayContaining(["contact_name", "hotel_name"]));
+  });
+
+  it("requires a role on the pilot form", () => {
+    expect(issuesOf({ ...minimal, role: undefined }).map((i) => i.path)).toEqual(["role"]);
+    expect(issuesOf({ ...minimal, role: null }).map((i) => i.path)).toEqual(["role"]);
+  });
+
+  it("rejects unknown intents", () => {
+    expect(issuesOf({ ...demo, intent: "newsletter" }).map((i) => i.path)).toContain("intent");
+  });
+});
+
+describe("applicationMessage", () => {
+  it("labels demo requests and shows the ad source", () => {
+    const text = applicationMessage(
+      "id-1",
+      applicationInput.parse({
+        contact_name: "Nino",
+        hotel_name: "Old Tbilisi Guesthouse",
+        phone: "+995 555 12 34 56",
+        locale: "ka",
+        intent: "demo",
+        utm: { utm_source: "facebook", utm_campaign: "pilot" },
+        consent: true,
+      }),
+    );
+    expect(text.split("\n")[0]).toBe("New demo request (15-min call): Old Tbilisi Guesthouse");
+    expect(text).toContain("Contact: Nino\n");
+    expect(text).toContain("Source: utm_source=facebook, utm_campaign=pilot");
+    expect(text).not.toContain("null");
+  });
+
+  it("keeps the pilot application headline and role", () => {
+    const text = applicationMessage("id-2", applicationInput.parse(minimal));
+    expect(text.split("\n")[0]).toBe("New pilot application: Old Tbilisi Guesthouse (Tbilisi)");
+    expect(text).toContain("Contact: Nino (owner)");
+    expect(text).not.toContain("Source:");
   });
 });

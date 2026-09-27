@@ -3,7 +3,9 @@
     "title": "Stumari — stablecoin checkout for independent hotels",
     "description": "Get paid in USDC 24 hours after check-in, with cancellation terms priced for each guest. Founding-hotel pilot for 10 independent hotels in Tbilisi.",
     "applyTitle": "Apply for the founding-hotel pilot — Stumari",
-    "applyDescription": "Tell us about your hotel. We reply on WhatsApp or Telegram within 24 hours to book a 20-minute setup call."
+    "applyDescription": "Tell us about your hotel. We reply on WhatsApp or Telegram within 24 hours to book a 20-minute setup call.",
+    "demoTitle": "Book a 15-minute demo — Stumari",
+    "demoDescription": "See how stablecoin checkout with per-guest cancellation terms would work for your hotel. Leave a WhatsApp number or Telegram and we'll set up a 15-minute call."
   },
   "nav": {
     "sections": "On this page",
@@ -25,6 +27,7 @@
     "caveat": "Unless the guest opens a dispute in those 24 hours. Disputes are decided by Stumari's arbiter, which during the pilot is a single Stumari key.",
     "ctaPrimary": "Apply for the pilot",
     "ctaSecondary": "See how it works",
+    "ctaDemo": "Book a 15-minute demo",
     "card": {
       "label": "Example booking",
       "room": "Double room · 3 nights",
@@ -190,7 +193,8 @@
   "cta": {
     "title": "Be one of the first 10 hotels",
     "body": "Tell us about your property. We'll message you on WhatsApp or Telegram within 24 hours to book a 20-minute setup call.",
-    "button": "Apply for the pilot"
+    "button": "Apply for the pilot",
+    "demoButton": "Book a demo"
   },
   "footer": {
     "tagline": "Stablecoin checkout for merchants with cancellable inventory. Starting with independent hotels in Tbilisi.",
@@ -260,6 +264,31 @@
       "rateLimited": "Too many applications from this connection. Please try again in 10 minutes.",
       "generic": "Something went wrong. Please try again in a minute."
     }
+  },
+  "demo": {
+    "eyebrow": "15-minute demo",
+    "title": "Book a 15-minute demo",
+    "lead": "Leave a WhatsApp number or a Telegram username. We'll message you within 24 hours to pick a time, then show you how guests pay in USDC and how each guest's cancellation terms are priced.",
+    "points": [
+      "No payment and no commitment.",
+      "Pilot: we set up your booking page with you; real-money bookings open after our security review.",
+      "We check together whether your Booking.com and Airbnb calendars can connect.",
+      "In Georgian, English or Russian."
+    ],
+    "fullFormPrompt": "Ready to join the pilot?",
+    "fullFormLink": "Fill in the full application",
+    "submit": "Book my demo",
+    "success": {
+      "title": "Request received. Thank you!",
+      "body": "We'll message you on WhatsApp or Telegram within 24 hours to pick a time for your 15-minute demo."
+    }
+  },
+  "consent": {
+    "label": "Cookie choice",
+    "body": "May we load the Meta Pixel? It tells us whether our Facebook and Instagram ads bring hotels here. Meta then sets cookies and sees which pages you visit and whether you send a form.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "privacy": "Privacy notice"
   },
   "notFound": {
     "title": "Page not found",

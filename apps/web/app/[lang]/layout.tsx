@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fontVariables } from "@/app/fonts";
+import { AdConsent } from "@/components/analytics/ad-consent";
+import { UtmCapture } from "@/components/analytics/utm-capture";
+import { metaPixelIdFrom } from "@/lib/env-schema";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { locales, resolveLocale } from "@/lib/i18n/locales";
 import { siteUrl } from "@/lib/site";
 import "../globals.css";
+
+// Read at build time like every NEXT_PUBLIC_* value. Unset or malformed: no banner, no pixel.
+const metaPixelId = metaPixelIdFrom(process.env.NEXT_PUBLIC_META_PIXEL_ID);
 
 // '/' and '/apply' are served from /en via rewrites in next.config.ts.
 export const dynamicParams = false;
@@ -32,6 +38,8 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
           {dict.nav.skip}
         </a>
         {children}
+        <UtmCapture />
+        {metaPixelId && <AdConsent pixelId={metaPixelId} strings={dict.consent} privacyHref="/privacy" />}
       </body>
     </html>
   );

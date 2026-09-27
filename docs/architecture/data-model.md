@@ -21,7 +21,7 @@ The chain is the source of truth for money and booking status; the DB mirrors it
 | city | text | required, default "Tbilisi" |
 | rooms_count | int | |
 | contact_name | text | required |
-| role | text | `owner` / `manager` / `other` |
+| role | text | `owner` / `manager` / `other`; required when `intent` = `pilot`, not asked on the demo form |
 | phone | text | WhatsApp-capable phone |
 | email | text | |
 | telegram | text | |
@@ -32,7 +32,8 @@ The chain is the source of truth for money and booking status; the DB mirrors it
 | accepts_crypto_today | text | `no` / `sometimes` / `often` |
 | message | text | |
 | locale | text | `en` / `ka` / `ru` |
-| utm | json | source attribution |
+| intent | text | `pilot` (full apply form, default) / `demo` (short "book a 15-minute demo" form at `/{lang}/apply?type=demo`) |
+| utm | json | source attribution: `utm_source/medium/campaign/term/content` and `ref` from the apply URL, or else from the first tagged page of the browser tab (session storage `stumari.utm`, first visit wins) |
 | consent | int (bool) | required true — consent to be contacted |
 | ip_hash | text | sha256(ip + AUTH_SECRET) |
 | status | text | `new` → `contacted` → `qualified` → `pilot` / `rejected` |

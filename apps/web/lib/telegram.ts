@@ -6,14 +6,15 @@ import { formatUsdc } from "./money";
 /** Plain-text summary of a new application for the founders' Telegram chat. */
 export function applicationMessage(id: string, a: ApplicationInput): string {
   const lines = [
-    `New pilot application: ${a.hotel_name} (${a.city})`,
+    a.intent === "demo" ? `New demo request (15-min call): ${a.hotel_name}` : `New pilot application: ${a.hotel_name} (${a.city})`,
     a.rooms_count !== null ? `Rooms: ${a.rooms_count}` : null,
-    `Contact: ${a.contact_name} (${a.role})`,
+    `Contact: ${a.contact_name}${a.role ? ` (${a.role})` : ""}`,
     a.phone ? `Phone/WhatsApp: ${a.phone}` : null,
     a.telegram ? `Telegram: ${a.telegram}` : null,
     a.email ? `Email: ${a.email}` : null,
     a.channels.length > 0 ? `Channels: ${a.channels.join(", ")}` : null,
     `Locale: ${a.locale}`,
+    a.utm ? `Source: ${Object.entries(a.utm).map(([k, v]) => `${k}=${v}`).join(", ")}` : null,
     `id: ${id}`,
   ];
   return lines.filter((l): l is string => l !== null).join("\n");

@@ -1,7 +1,7 @@
 import { ed25519 } from "@noble/curves/ed25519";
 import { base58 } from "@scure/base";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_AMOUNT_CAP_MINOR, DEFAULT_PROGRAM_ID, EnvError, parseServerEnv } from "./env-schema";
+import { DEFAULT_AMOUNT_CAP_MINOR, DEFAULT_PROGRAM_ID, EnvError, metaPixelIdFrom, parseServerEnv } from "./env-schema";
 import { publicConfig } from "./public-config";
 
 function keypair(seedByte: number) {
@@ -41,6 +41,7 @@ describe("parseServerEnv", () => {
       siteUrl: "http://localhost:3000",
       amountCapMinor: DEFAULT_AMOUNT_CAP_MINOR,
       telegram: null,
+      metaPixelId: null,
     });
     expect(env.authSecret.length).toBeGreaterThanOrEqual(32);
   });
@@ -184,5 +185,37 @@ describe("publicConfig with the on-chain Config", () => {
     const config = publicConfig(parseServerEnv({}), { feeBps: 150, releaseDelaySecs: 120 });
     expect(config.pilot_offer.fee_bps).toBe(150);
     expect(config.pilot_offer.payout_delay_hours).toBeCloseTo(120 / 3600, 4);
+  });
+});
+
+describe("NEXT_PUBLIC_META_PIXEL_ID", () => {
+  it("is optional and blank means unset", () => {
+    expect(parseServerEnv({}).metaPixelId).toBeNull();
+    expect(parseServerEnv({ NEXT_PUBLIC_META_PIXEL_ID: "  " }).metaPixelId).toBeNull();
+  });
+
+  it("accepts a numeric pixel id", () => {
+    expect(parseServerEnv({ NEXT_PUBLIC_META_PIXEL_ID: " 1234567890123456 " }).metaPixelId).toBe("1234567890123456");
+  });
+
+  it("rejects anything but digits, without echoing the value", () => {
+    for (const bad of ["12345abc", "fbq('init')", "1234 5678", "-12345", "123"]) {
+      const message = envError({ NEXT_PUBLIC_META_PIXEL_ID: bad });
+      expect(message).toContain("NEXT_PUBLIC_META_PIXEL_ID");
+      expect(message).not.toContain(bad);
+    }
+  });
+});
+
+describe("metaPixelIdFrom", () => {
+  it("returns the trimmed id when it is digits only", () => {
+    expect(metaPixelIdFrom("1234567890")).toBe("1234567890");
+    expect(metaPixelIdFrom(" 1234567890\n")).toBe("1234567890");
+  });
+
+  it("returns null for unset or malformed values instead of throwing", () => {
+    for (const bad of [undefined, null, "", "   ", "abc", "12345'><script>", "1".repeat(21), "1234"]) {
+      expect(metaPixelIdFrom(bad)).toBeNull();
+    }
   });
 });

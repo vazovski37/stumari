@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { localePath, type Locale, type LocalizedPath } from "@/lib/i18n/locales";
+import type { Utm } from "@/lib/utm";
 import { LanguageSwitcher } from "./language-switcher";
 import { Logo } from "./logo";
 
@@ -9,11 +10,13 @@ type Props = {
   nav: Dictionary["nav"];
   /** Localized page the switcher links between; omit on English-only pages. */
   switcherPath?: LocalizedPath;
+  /** Attribution tags the language switcher carries to the other locales (apply page). */
+  switcherUtm?: Utm;
   /** Show in-page section links (landing page only). */
   sections?: boolean;
 };
 
-export function SiteHeader({ locale, nav, switcherPath, sections = false }: Props) {
+export function SiteHeader({ locale, nav, switcherPath, switcherUtm, sections = false }: Props) {
   const anchors = [
     { href: "#how", label: nav.how },
     { href: "#pricing", label: nav.model },
@@ -41,7 +44,7 @@ export function SiteHeader({ locale, nav, switcherPath, sections = false }: Prop
           </nav>
         )}
         <div className="ml-auto flex items-center gap-3">
-          {switcherPath !== undefined && <LanguageSwitcher locale={locale} path={switcherPath} label={nav.language} />}
+          {switcherPath !== undefined && <LanguageSwitcher locale={locale} path={switcherPath} label={nav.language} utm={switcherUtm} />}
           {switcherPath !== "/apply" && (
             <Link href={localePath(locale, "/apply")} className="btn btn-primary hidden !px-4 !py-2 text-sm sm:inline-flex">
               {nav.apply}

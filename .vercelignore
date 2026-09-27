@@ -1,0 +1,35 @@
+# Files the Vercel CLI uploads for `vercel deploy` from the repo root (docs/plan/go-live-landing.md).
+# Git-connected deploys build from committed files only; this file matters for CLI deploys, which
+# would otherwise upload everything not in Vercel's default list (keys, local databases, ml/ data).
+# Allowlist: every top-level entry is ignored unless re-included below.
+/*
+!apps
+!packages
+!scripts
+!onchain
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!tsconfig.base.json
+
+# onchain: only the program id and IDL (next.config.ts reads onchain/artifacts/program-id.txt)
+onchain/*
+!onchain/artifacts
+onchain/artifacts/*.so
+
+# never upload secrets, keypairs, local databases or build output
+.env
+.env.*
+!.env.example
+keys/
+*.keypair.json
+id.json
+.data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+node_modules/
+.next/
+*.tsbuildinfo
+test-results/

@@ -17,7 +17,7 @@ const yesNo = (v: boolean | null) => (v === null ? "not sure" : v ? "yes" : "no"
 
 /** The pilot pipeline: status + notes per application, and "convert" into a draft hotel. */
 export function ApplicationsList({ items }: { items: ApplicationItem[] }) {
-  if (items.length === 0) return <Empty>No applications yet. They arrive from the Apply form on the landing page.</Empty>;
+  if (items.length === 0) return <Empty>No applications yet. They arrive from the Apply and Book a demo forms on the landing page.</Empty>;
   return (
     <ul className="space-y-4">
       {items.map((a) => (
@@ -50,7 +50,10 @@ function ApplicationCard({ a }: { a: ApplicationItem }) {
             {formatHotelTime(a.created_at, "Asia/Tbilisi")} · {a.locale.toUpperCase()} · {a.rooms_count ?? "?"} rooms
           </p>
         </div>
-        {a.ical_single_unit === false && <Pill tone="warn">multi-unit room types: do not promise iCal</Pill>}
+        <div className="flex flex-wrap gap-2">
+          {a.intent === "demo" ? <Pill tone="good">Demo request · 15-min call</Pill> : <Pill tone="plain">Pilot application</Pill>}
+          {a.ical_single_unit === false && <Pill tone="warn">multi-unit room types: do not promise iCal</Pill>}
+        </div>
       </div>
       <dl className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2 lg:grid-cols-3">
         <div>
@@ -97,6 +100,16 @@ function ApplicationCard({ a }: { a: ApplicationItem }) {
           <dt className="inline text-ink-soft">Takes crypto today: </dt>
           <dd className="inline">{a.accepts_crypto_today ?? "—"}</dd>
         </div>
+        {a.utm && (
+          <div>
+            <dt className="inline text-ink-soft">Source: </dt>
+            <dd className="inline break-all">
+              {Object.entries(a.utm)
+                .map(([k, v]) => `${k}=${v}`)
+                .join(", ")}
+            </dd>
+          </div>
+        )}
       </dl>
       {a.message && <p className="rounded-xl bg-sand/70 px-4 py-3 text-sm whitespace-pre-line">{a.message}</p>}
 

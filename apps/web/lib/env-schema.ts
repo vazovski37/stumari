@@ -19,6 +19,19 @@ const defaultRpcUrl: Record<Cluster, string> = {
   "mainnet-beta": "https://api.mainnet-beta.solana.com",
 };
 
+/** Meta Pixel ids are numeric (Events Manager → Data sources). */
+export const META_PIXEL_ID_PATTERN = /^[0-9]{5,20}$/;
+
+/**
+ * The configured Meta Pixel id, or null when unset or malformed (then no consent banner is shown and no
+ * pixel loads). Lenient on purpose: the landing layout reads it at build time without the full server env;
+ * `parseServerEnv` rejects a malformed value loudly.
+ */
+export function metaPixelIdFrom(raw: string | undefined | null): string | null {
+  const value = raw?.trim() ?? "";
+  return META_PIXEL_ID_PATTERN.test(value) ? value : null;
+}
+
 const optionalString = z
   .string()
   .trim()
@@ -74,6 +87,9 @@ const rawSchema = z.object({
   ),
   TELEGRAM_BOT_TOKEN: optionalString,
   TELEGRAM_CHAT_ID: optionalString,
+  NEXT_PUBLIC_META_PIXEL_ID: optionalString.pipe(
+    z.string().regex(META_PIXEL_ID_PATTERN, { message: "NEXT_PUBLIC_META_PIXEL_ID must be the numeric pixel id (digits only)" }).optional(),
+  ),
 });
 
 export type ServerEnv = {
@@ -102,6 +118,8 @@ export type ServerEnv = {
   siteUrl: string;
   amountCapMinor: bigint;
   telegram: { botToken: string; chatId: string } | null;
+  /** Meta Pixel id for ad measurement; loaded in the browser only after the visitor accepts (consent banner). */
+  metaPixelId: string | null;
 };
 
 export class EnvError extends Error {
@@ -164,5 +182,6 @@ export function parseServerEnv(source: Record<string, string | undefined>): Serv
       raw.TELEGRAM_BOT_TOKEN && raw.TELEGRAM_CHAT_ID
         ? { botToken: raw.TELEGRAM_BOT_TOKEN, chatId: raw.TELEGRAM_CHAT_ID }
         : null,
+    metaPixelId: raw.NEXT_PUBLIC_META_PIXEL_ID ?? null,
   };
 }

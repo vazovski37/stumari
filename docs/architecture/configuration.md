@@ -20,6 +20,7 @@
 | `AMOUNT_CAP_MINOR` | no | `1500000000` (1,500 USDC) | per-booking cap during the pilot (`/pay` → `422 AMOUNT_CAP`) |
 | `ICAL_ALLOW_LOOPBACK` | no | unset | test only (E2E, ADR-0017): iCal import URLs may be plain-`http` on loopback hosts (`localhost`, `127.0.0.1`, `::1`); accepted only with `STUMARI_CLUSTER=localnet` and never on Vercel |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | no (required for `manual` confirm-mode hotels) | | notify founders of new applications and of bookings waiting for a manual confirm |
+| `NEXT_PUBLIC_META_PIXEL_ID` | no | unset | Meta Pixel id, digits only (Facebook/Instagram ad measurement). Unset: no cookie banner, no pixel. Set: the `/{lang}` pages show a consent banner and load the pixel only after "Accept" (PageView, plus `Lead` with `content_name` = `pilot`\|`demo` after an application is sent). Inlined at build time. Turn off "Automatic advanced matching" in Events Manager |
 
 `.env.example` in `apps/web` lists all of them.
 

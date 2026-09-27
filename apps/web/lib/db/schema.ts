@@ -3,7 +3,7 @@
  * Timestamps are unix seconds; money is a decimal string of base units; JSON is TEXT.
  */
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
-import { applicationRoles, applicationStatuses, cryptoAcceptance } from "../application-fields";
+import { applicationIntents, applicationRoles, applicationStatuses, cryptoAcceptance } from "../application-fields";
 import { locales } from "../i18n/locales";
 
 export const contractTemplates = ["flexible", "standard", "nonrefundable"] as const;
@@ -76,6 +76,8 @@ export const applications = sqliteTable(
     accepts_crypto_today: text("accepts_crypto_today", { enum: cryptoAcceptance }),
     message: text("message"),
     locale: text("locale", { enum: locales }).notNull(),
+    /** `pilot`: the full apply form. `demo`: the short "book a demo" form (ad traffic). */
+    intent: text("intent", { enum: applicationIntents }).notNull().default("pilot"),
     utm: text("utm", { mode: "json" }).$type<Record<string, string>>(),
     consent: integer("consent", { mode: "boolean" }).notNull(),
     ip_hash: text("ip_hash"),

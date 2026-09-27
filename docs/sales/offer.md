@@ -7,7 +7,8 @@
 - Independent hotels and guesthouses in Tbilisi (roughly 5–40 rooms), owner- or manager-run.
 - They already sell on Booking.com and/or Airbnb, or take direct bookings over WhatsApp/Telegram/Instagram.
 - Best fit: they already get guests who cannot pay by card and ask to pay in crypto. Many of these guests have Russian-issued cards, which do not work abroad.
-- Not a fit (for now): chain hotels, or properties that need a PMS or channel-manager integration. We connect over iCal only. Multi-unit room types need a check of their extranet first (see below).
+- Not a fit (for now): chain hotels. Multi-unit room types need a check of their extranet first (see below).
+- Hotels on a PMS or channel manager we don't sync (for example Mews, OtelMS or Exely) can pilot with **manual confirmation**: when a guest pays, we get an alert, check the dates and enter the booking in the hotel's system, then confirm it. If the room is not free, nobody confirms and the guest is refunded in full automatically within 2 hours. This needs a staff login for us, or someone at the hotel who answers the alert within 2 hours ([manual confirm mode](../architecture/inventory-ical.md#confirmation-write-back-safety)). Automatic calendar sync is iCal only; we give no date for PMS or channel-manager integrations.
 
 ## The offer (copy exactly)
 
@@ -31,7 +32,7 @@
 | Enforceable terms | Every booking's refund schedule is written into its own Solana escrow before the guest pays. It is the same for both sides, and the program's rules let neither side change it (during the pilot Stumari can still upgrade the program; see [objections.md](objections.md#what-if-stumari-disappears)). |
 | Automatic payouts | USDC reaches your wallet 24 h after check-in unless the guest opens a dispute, with no invoice and no chasing. |
 | Automatic refunds | If a guest cancels, the escrow refunds them by the schedule and pays you the rest in the same transaction. |
-| Calendar sync | Stumari reads your Booking.com/Airbnb calendars (iCal) and gives you a feed to paste back, so a room sold on Stumari is blocked there too. |
+| Calendar sync | Stumari reads your Booking.com/Airbnb calendars (iCal) and gives you a feed to paste back, so a room sold on Stumari is blocked there too. On a PMS we don't sync, we confirm each booking by hand instead (see above). |
 | A dashboard | Sign in with your wallet. See bookings, payouts, calendars and contract settings. |
 | An AI-agent channel | AI agents can find your rooms and book them through Stumari's MCP server under the same terms. |
 
@@ -45,7 +46,7 @@
 
 ## We promise / We do not promise
 
-From [ADR-0013](../decisions/README.md). Never say or imply anything in the right column.
+From [ADR-0013](../decisions/README.md), plus the manual-confirmation row added with manual confirm mode. Never say or imply anything in the right column.
 
 | We promise | We do not promise |
 |---|---|
@@ -55,4 +56,5 @@ From [ADR-0013](../decisions/README.md). Never say or imply anything in the righ
 | Guests need no SOL. Stumari pays network fees. | Legal, tax or regulatory compliance, or advice on it. Ask your accountant. |
 | 0% fee until 2026-12-31, then 1.5%, written into each booking before the guest pays | Guaranteed revenue. Prices are set to *target* your current expected revenue. |
 | Per-booking cap of 1,500 USDC during the pilot | Payouts to exchange deposit addresses |
-| | iCal onboarding for multi-unit room types before we have checked your extranet together |
+| Manual confirmation for hotels on a PMS we don't sync; if the room is not free, a full automatic refund to the guest within 2 hours | iCal onboarding for multi-unit room types before we have checked your extranet together |
+| | A date for automatic PMS or channel-manager integration |

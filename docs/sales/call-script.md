@@ -4,7 +4,7 @@
 
 **Who:** the owner or manager of an independent hotel or guesthouse in Tbilisi. Call in Georgian or Russian, whichever they answer in.
 **Goal of the call:** book the free 20-minute setup call. Do not try to onboard them on this call.
-**Have open before dialling:** the landing page, the demo hotel page (`/h/stumari-demo`) with the devnet test wallet funded (click "Get 500 test USDC" beforehand), and Solana Explorer on devnet.
+**Have open before dialling:** the landing page, `{SITE}/model` (how the prices are set), and the demo screenshots in [e2e-report.md](../plan/e2e-report.md) ([e2e-screens/](../plan/e2e-screens/)). Guest checkout on the public site is **not open yet** (`/h/*`, `/b/*` and `/my` show "Checkout is not open yet"), so there is no demo link to send. If you want to show the checkout live, run it on your own laptop on the local chain before the call (section 4).
 
 ## 1. Opener (30 s)
 
@@ -18,7 +18,14 @@ If they say no: "When is a better time?" Log `next_date` and hang up.
 2. **Guests who want to pay in crypto:** "Do you get guests whose cards don't work, for example Russian cards, who ask to pay in USDT or other crypto? How do you handle that today?"
    - Listen for the usual answer: *"they send USDT to my wallet (or my brother's)."* That is the day-one use case. Note `accepts_crypto` = `no` / `sometimes` / `often`.
 3. **Cancellation pain:** "What happens when a guest cancels late or doesn't show up? Does your cancellation policy fit every guest?"
-4. **Calendar system:** "Which system manages your calendar: OtelMS, Exely, Cloudbeds, Beds24, something else, or just the Booking.com extranet? On Booking.com, is each room its own listing, or one room type with several rooms?" Log `channel_manager` and `ical_single_unit`. No channel manager and one room per listing: iCal works today. A channel manager or multi-room types: say calendars connect through their channel manager, which we are integrating, and don't promise a date ([research](../research/channel-managers.md)).
+4. **Calendar system:** "Which system manages your calendar: OtelMS, Exely, Mews, Cloudbeds, Beds24, something else, or just the Booking.com extranet? On Booking.com, is each room its own listing, or one room type with several rooms?" Log `channel_manager` and `ical_single_unit`. Then answer by case:
+   - **No system, one room per listing:** "Then we connect your calendars directly over iCal, on the setup call."
+   - **"We use Mews / OtelMS / Exely"** (same answer as [objections.md](objections.md#we-use-mews--otelms--exely-does-stumari-connect-to-it)):
+     > "Not automatically yet. Each system is its own integration, and we're talking to them. Until then it works like this: when a guest pays on Stumari, we get an alert, check the dates in your system and enter the booking there, then confirm it. It takes a couple of minutes. If the room turns out to be taken, we don't confirm, and the guest gets all their money back automatically within 2 hours. You never have to handle a refund."
+
+     This needs a staff login to their system for us, or someone on their side who answers the alert within 2 hours ([manual confirm mode](../architecture/inventory-ical.md#confirmation-write-back-safety)).
+   - **Several identical rooms as one type, no system:** "Let's look at your extranet together on the setup call before we promise anything." Do not promise iCal.
+   - Never promise a date for an automatic integration ([research](../research/channel-managers.md)).
 
 ## 3. Pitch (30 s)
 
@@ -28,16 +35,21 @@ Lead with their answer to question 2. About 75 words; say it, don't read it.
 
 Only if they ask: guests need no SOL (we pay network fees); calendars sync with Booking.com/Airbnb and every booking stays *pending* until we re-check the calendar ([double bookings](objections.md#what-about-double-bookings-with-bookingcom)).
 
-## 4. Live demo (2–3 min, share screen or send the link)
+## 4. Demo (2–3 min, screen-share from the founder's laptop)
 
-Skip it if they are short on time. Send the link in the follow-up instead.
+Skip it if they are short on time; offer the 15-minute demo instead (the apply link in section 6). Guest checkout on the public site is not open yet, so **never send a demo checkout link**. Show it one of two ways:
+
+- **Live on the local chain**, screen-shared from the founder's laptop. Before the call: `pnpm --filter @stumari/scripts bootstrap --cluster localnet`, then `pnpm dev` (and `pnpm --filter web cron` in a second terminal), and open `http://localhost:3000/h/stumari-demo` ([runbook section 3](../plan/runbook.md#3-local-development)). Fund the test wallet with "Get 500 test USDC". Share only that browser window.
+- **Screenshots** from [e2e-report.md](../plan/e2e-report.md) ([e2e-screens/](../plan/e2e-screens/)), plus `{SITE}/model` for how prices are set.
+
+> **Restore later:** once devnet has a public URL, put the live demo link (`{SITE}/h/stumari-demo`) back into this section and the follow-up messages.
 
 1. **Landing page** (`/`, `/ka` or `/ru`): "This is what a hotel sees. Here are the pilot terms and the Apply button."
-2. **Demo hotel checkout** (`/h/stumari-demo`): pick dates about 5 days out, so the cancellation shows a 50% refund → **See prices** → three contracts with different prices. "Your current policy costs exactly your normal rate. Flexible costs a bit more and non-refundable costs less, by this guest's estimated cancellation risk, priced to target the same expected revenue whichever one they choose. It's a target, not a guarantee. You set how far prices can move." Pick **Standard**, then pay with the **Test wallet (devnet, not real money)**.
-3. **Booking page** (`/b/{id}`): show status, the terms timeline, and "refund if you cancel now". Open the **Explorer link**: "That is the escrow account. It holds this booking's money and rules." Wait until the status shows **Confirmed**; a pending booking always refunds 100%.
+2. **Demo hotel checkout** (`/h/stumari-demo`, local): pick dates about 5 days out, so the cancellation shows a 50% refund → **See prices** → three contracts with different prices. "Your current policy costs exactly your normal rate. Flexible costs a bit more and non-refundable costs less, by this guest's estimated cancellation risk, priced to target the same expected revenue whichever one they choose. It's a target, not a guarantee. You set how far prices can move." Pick **Standard**, then pay with the **Test wallet** (not real money).
+3. **Booking page** (`/b/{id}`): show status, the terms timeline, and "refund if you cancel now". Open the **Explorer link** (local chain): "That is the escrow account. It holds this booking's money and rules." Wait until the status shows **Confirmed**; a pending booking always refunds 100%.
 4. **Cancel**: click Cancel → the refund arrives at once by the schedule. Standard gives 100% more than 7 days before check-in and 50% between 7 and 3 days. Show the transaction on Explorer: "The guest's refund and the hotel's share are paid in one transaction. Nobody had to approve it."
 
-Say plainly that this is a devnet demo with test money. Real bookings start after our security review. Do not give a date that the founders have not confirmed.
+Say plainly that this is a demo on a local test chain with test money. Guest checkout is not open yet; real bookings start after our security review. Do not give a date that the founders have not confirmed.
 
 ## 5. Close (1 min)
 
@@ -49,7 +61,7 @@ Say plainly that this is a devnet demo with test money. Real bookings start afte
 
 ## 6. Follow-up messages
 
-Fill in `{…}` before sending. *Machine-drafted — RU and KA need native review.*
+Fill in `{…}` before sending. `{apply_link}` = the demo form in their language, e.g. `{SITE}/ka/apply?type=demo&utm_source=call&utm_medium=phone` (see [call-sheet.md](call-sheet.md#the-link-to-send)). Send only the apply/demo link, never a checkout link. *Machine-drafted — RU and KA need native review.*
 
 ### After a "yes" (setup booked)
 
@@ -65,13 +77,13 @@ Fill in `{…}` before sending. *Machine-drafted — RU and KA need native revie
 ### After "send me info"
 
 **EN**
-> Hi {name}, as promised, here is a short summary of Stumari: {one_pager_text}. You can see the live demo here: {demo_link} (test money, nothing real is charged). If it makes sense, reply with a time for a 20-minute setup call. — {your name}
+> Hi {name}, as promised, here is a short summary of Stumari: {one_pager_text}. If it makes sense, leave your number here and we'll agree a time for a 15-minute demo: {apply_link} — {your name}
 
 **RU**
-> Здравствуйте, {name}! Как договорились, вот краткое описание Stumari: {one_pager_text}. Живое демо здесь: {demo_link} (тестовые деньги, ничего реально не списывается). Если интересно, напишите удобное время для 20-минутной настройки. — {your name}
+> Здравствуйте, {name}! Как договорились, вот краткое описание Stumari: {one_pager_text}. Если интересно, оставьте номер здесь, и мы договоримся о времени демо на 15 минут: {apply_link} — {your name}
 
 **KA**
-> გამარჯობა, {name}! როგორც შევთანხმდით, აი Stumari-ს მოკლე აღწერა: {one_pager_text}. ცოცხალი დემო აქ არის: {demo_link} (სატესტო თანხა, რეალურად არაფერი ჩამოიჭრება). თუ დაგაინტერესებთ, მომწერეთ თქვენთვის მოსახერხებელი დრო 20-წუთიანი დაყენებისთვის. — {your name}
+> გამარჯობა, {name}! როგორც შევთანხმდით, აი Stumari-ს მოკლე აღწერა: {one_pager_text}. თუ დაგაინტერესებთ, აქ დატოვეთ ნომერი და 15-წუთიან დემოზე შევთანხმდებით: {apply_link} — {your name}
 
 ### No answer (second attempt, 2–3 days later)
 
@@ -82,4 +94,4 @@ Fill in `{…}` before sending. *Machine-drafted — RU and KA need native revie
 > Здравствуйте, {name}! Это {your name} из Stumari (Тбилиси). Мы помогаем отелям принимать оплату в стейблкоинах от гостей, у которых не работают карты: с автоматическим возвратом и выплатой на ваш собственный кошелёк. Для первых 10 отелей комиссия Stumari 0% до конца 2026 года. Удобно созвониться на 5 минут на этой неделе?
 
 **KA**
-> გამარჯობა, {name}! გწერთ {your name}, Stumari-დან (თბილისი). ვეხმარებით სასტუმროებს, მიიღონ სტეიბლქოინით გადახდა იმ სტუმრებისგან, ვისაც ბარათი არ უმუშავებს: თანხის ავტომატური დაბრუნებითა და ანაზღაურებით თქვენს საკუთარ საფულეზე. პირველი 10 სასტუმროსთვის Stumari-ს საკომისიო 0%-ია 2026 წლის ბოლომდე. ამ კვირაში 5-წუთიანი საუბარი მოგიხერხდებათ?
+> გამარჯობა, {name}! გწერთ {your name}, Stumari-დან (თბილისი). ვეხმარებით სასტუმროებს, მიიღონ სტეიბლქოინით გადახდა იმ სტუმრებისგან, ვისაც ბარათი არ უმუშავებს: თანხის ავტომატური დაბრუნებითა და თანხის ჩარიცხვით თქვენს საკუთარ საფულეზე. პირველი 10 სასტუმროსთვის Stumari-ს საკომისიო 0%-ია 2026 წლის ბოლომდე. ამ კვირაში 5-წუთიანი საუბარი მოგიხერხდებათ?

@@ -244,3 +244,15 @@ In Claude Desktop, go to Settings → Developer → **Edit Config**. This opens 
 | `409 SIMULATION_FAILED` with a program error | e.g. `QuoteExpired`, `HotelInactive`, `Paused`; operator out of SOL | Get a new quote; check the hotel is registered; top up the operator (alert below 1 SOL) |
 | Test wallet balance gone | `localStorage` cleared or new browser profile → new key | Click "Get 500 test USDC" again (devnet money only) |
 | Cron returns 401 | missing/incorrect `Authorization: Bearer` header | Match `CRON_SECRET` exactly |
+
+## 11. Landing-only deploy (before devnet is funded)
+
+The landing page (EN/KA/RU), `/apply`, `/privacy`, `/model` and `/admin` (SIWS plus the Applications tab) run without any chain settings. Deploy them with only `NEXT_PUBLIC_SITE_URL`, `LIBSQL_URL`, `LIBSQL_AUTH_TOKEN`, `AUTH_SECRET`, `ADMIN_WALLETS`, the optional `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`, `STUMARI_CLUSTER=devnet`, `STUMARI_PROGRAM_ID` and `STUMARI_DEMO_MODE=false`.
+
+Without `STUMARI_MINT` and `OPERATOR_SECRET_KEY`, the guest pages (`/h/*`, `/b/*`, `/my`) show "Checkout is not open yet" instead of a checkout, and chain routes answer `503 CHAIN_NOT_CONFIGURED`. Adding the chain variables and redeploying switches them on.
+
+Step-by-step founder guide (accounts, Turso, env vars, the CLI deploy from the repo root with Root Directory `apps/web`, the Telegram bot, verification, and what changes when devnet is funded): **[go-live-landing.md](go-live-landing.md)**.
+
+- A CLI deploy (`vercel deploy --prod` from the repo root) uploads only what the root `.vercelignore` allows. It never uploads `onchain/keys/`, `.env*`, local databases or `ml/`.
+- No `vercel.json` is needed. Root Directory, Node 24.x and the region are dashboard settings, and the install and build commands stay on their defaults.
+- Vercel Hobby is for non-commercial use only, and a site that runs ads counts as commercial. Use Pro before the ads start.

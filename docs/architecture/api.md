@@ -22,14 +22,15 @@ All endpoints are Next.js route handlers under `apps/web/app/api`. JSON in/out. 
 | Route | Audience | Notes |
 |---|---|---|
 | `/`, `/ka`, `/ru` | hotels | landing (i18n) |
-| `/apply` (`/ka/apply`, `/ru/apply`) | hotels | pilot application |
+| `/apply` (`/ka/apply`, `/ru/apply`) | hotels | pilot application; `?type=demo` is the short "book a 15-minute demo" form for ad and call traffic (keeps `utm_*`) |
 | `/h/[slug]` | guests | hotel page + dates + "See prices" → quote menu (each option has a "Why this price" drawer with the explain block: P(cancel), per-window q, risk cost, multiplier, resale assumptions) → pay. If a wallet is already connected, the quote request includes it as `buyer_wallet` (history pricing); otherwise the wallet is chosen at pay time. |
 | `/model` | everyone | "How pricing works": renders `ml/reports/reliability.json` (calibration chart), the metrics summary and the honest limitations; linked from every explain drawer and from the landing page |
 | `/b/[bookingId]` | guests | booking status, terms timeline, refund-if-cancel-now, cancel / dispute |
 | `/my` | guests | connect wallet → "Find my bookings" |
 | `/dashboard/[hotelId]` | hotel (or admin) | bookings, payouts, units + iCal, manual blocks, policy |
 | `/admin` | admin | applications, hotels onboarding, bookings, disputes, cron |
-| `/privacy` | all | |
+| `/privacy` | all | includes the Meta Pixel section and consent control when `NEXT_PUBLIC_META_PIXEL_ID` is set |
+| `/ads` | founders | hidden (noindex) gallery of ad images: `/ads/{en,ka,ru}/{usdc,contracts,founding}.png` (1080×1080) and `-wide.png` (1200×630), prerendered at build |
 
 Checkout, booking, dashboard and admin are English-only in the MVP. `booking_url = ${NEXT_PUBLIC_SITE_URL}/b/{booking_id}`.
 
@@ -50,7 +51,7 @@ Checkout, booking, dashboard and admin are English-only in the MVP. `booking_url
 | `POST /api/bookings/{id}/tx` | `{ action: "cancel"\|"dispute"\|"void", wallet }` | `{ tx, signer, lastValidBlockHeight, refund_minor? }` · `409 NOT_ALLOWED` with reason · `429` (per IP 60 / 10 min; per (IP, wallet) 30 / 10 min — never keyed on the unauthenticated wallet alone). If `refund_minor` is below the refund the page showed, the booking page does not submit: it shows the new amount and asks again. For cancel, the server sets `min_refund` = refund at now + 90 s by the booking's tiers (escrow-program.md). |
 | `POST /api/bookings/{id}/refresh` | | re-reads chain, updates DB, lazily cranks, returns view |
 | `GET /api/wallets/{wallet}/bookings` | | public views of that wallet's bookings (on-chain data anyway) |
-| `POST /api/applications` | application fields | `201 { id }` · `400` · `429`; honeypot → `201` and discarded; optional Telegram notification |
+| `POST /api/applications` | application fields incl. `intent: pilot\|demo` (the short demo form at `/{lang}/apply?type=demo` sends name, hotel, WhatsApp/Telegram, rooms) and `utm` | `201 { id }` · `400` · `429`; honeypot → `201` and discarded; optional Telegram notification |
 | `GET /api/ical/{export_token}` | | `text/calendar` (inventory-ical.md) |
 | `POST /api/demo/faucet` | `{ wallet }` | demo mode only, never mainnet: mints 500 mock USDC to the wallet's ATA (operator is mint authority); 3/hour per (IP, wallet), 10/hour/IP, 200/day in all; `503 OPERATOR_LOW_BALANCE` under 0.05 SOL |
 
@@ -70,7 +71,7 @@ Checkout, booking, dashboard and admin are English-only in the MVP. `booking_url
 
 `can_dispute` = status confirmed && checkin_ts ≤ now < release_after_ts. `refund_if_cancel_now_minor` is the cancel's `min_refund` — the refund by the tier schedule at chain now + 90 s (`minRefundForCancel`) — also while `pending`: a pending booking gets everything back only if the hotel has not confirmed when the cancel lands, and the UI states that as conditional (ADR-0012). `/submitted` fills `create_sig` / `confirm_sig` / `final_sig` from the transaction's own escrow instruction — the one whose IDL `booking` account (parsed with the generated Codama parser) is this booking's PDA; the PDA anywhere else does not count — and a column is written once, only when the chain shows that step happened. `now` is the chain clock (unix seconds) the view was built at; clients time the refund schedule and check-in step by it. **Never** includes guest name/email/phone or the guest wallet. Other conventions: `lastValidBlockHeight` is a JSON number (a safe integer); hotel slugs match `^[a-z0-9][a-z0-9-]{0,63}$`; error bodies are `{ error: { code: "UPPER_SNAKE", message } }`.
 
-**Clocks.** Quotes, holds and DB timestamps use wall-clock time. Everything the program will check against its `Clock` — lazy cranks, the `can_*` flags, `refund_if_cancel_now_minor` and `min_refund` — uses the chain's Clock sysvar (cached 2 s, wall time as fallback), so a surfnet after time travel behaves like the program. **Program id:** at startup the web app compares `STUMARI_PROGRAM_ID` with `onchain/artifacts/program-id.txt` (copied into the build); on a mismatch it logs an error and every chain route answers `503 PROGRAM_ID_MISMATCH`, while the landing page keeps serving. Routes that need unset chain settings answer `503 CHAIN_NOT_CONFIGURED`.
+**Clocks.** Quotes, holds and DB timestamps use wall-clock time. Everything the program will check against its `Clock` — lazy cranks, the `can_*` flags, `refund_if_cancel_now_minor` and `min_refund` — uses the chain's Clock sysvar (cached 2 s, wall time as fallback), so a surfnet after time travel behaves like the program. **Program id:** at startup the web app compares `STUMARI_PROGRAM_ID` with `onchain/artifacts/program-id.txt` (copied into the build); on a mismatch it logs an error and every chain route answers `503 PROGRAM_ID_MISMATCH`, while the landing page keeps serving. Routes that need unset chain settings answer `503 CHAIN_NOT_CONFIGURED`. **Landing-only deployment:** without `STUMARI_MINT` or `OPERATOR_SECRET_KEY` the landing, `/apply` (pilot and `?type=demo`), `/privacy`, `/model`, `/ads` and SIWS + `/admin` work; `/h/*`, `/b/*` and `/my` render a "Checkout is not open yet" page and the guest header hides "My bookings" and the wallet ([go-live-landing.md](../plan/go-live-landing.md)).
 
 ## Auth (Sign-In With Solana)
 
