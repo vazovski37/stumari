@@ -28,12 +28,8 @@ export default async function HotelPage({ params }: PageProps<"/h/[slug]">) {
 
   return (
     <>
-      <section className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(50rem_22rem_at_90%_-20%,var(--color-amber-soft),transparent_70%)]"
-        />
-        <div className="relative mx-auto max-w-6xl px-4 pt-10 pb-8 sm:px-6">
+      <section className="border-b border-line bg-surface">
+        <div className="mx-auto max-w-6xl px-4 pt-10 pb-8 sm:px-6">
           <p className="eyebrow">Direct booking · pay in USDC</p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">{profile.name}</h1>
           <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-soft">
@@ -52,7 +48,7 @@ export default async function HotelPage({ params }: PageProps<"/h/[slug]">) {
             )}
           </p>
           <p className="mt-5 flex max-w-2xl gap-2 text-sm leading-relaxed text-ink-soft">
-            <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-vine" />
+            <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-positive" />
             You choose your cancellation terms; each option is priced for your dates. Your payment waits in an escrow on
             Solana: refunds follow your terms automatically, and the hotel is paid after check-in.
           </p>

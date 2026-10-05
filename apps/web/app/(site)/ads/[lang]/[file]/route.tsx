@@ -2,14 +2,16 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import type { ReactNode } from "react";
+import { WORDMARK } from "@/components/brand-paths";
 import { adCopy, adFileName, adFormats, adVariants, parseAdFile, type AdCopy, type AdFormat, type AdVariant } from "../../copy";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { locales, resolveLocale, type Locale } from "@/lib/i18n/locales";
 
 /**
  * Ad creatives as PNG: /ads/{en|ka|ru}/{usdc|contracts|founding}.png (1080×1080) and …-wide.png
- * (1200×630). All 18 are rendered at build time. Colours follow the landing (globals.css, OG image).
- * DejaVu Sans (subset, license next to it) is bundled because it has Georgian and Cyrillic glyphs.
+ * (1200×630). All 18 are rendered at build time. Black and white like the landing (docs/product/brand.md).
+ * Google Sans (static Latin/Cyrillic/Georgian subsets, license next to them) is bundled because satori
+ * cannot read variable fonts; it is the site's Georgian face (app/fonts.ts).
  */
 export const dynamicParams = false;
 
@@ -21,19 +23,19 @@ export function generateStaticParams() {
 
 const fontDir = join(process.cwd(), "app", "(site)", "ads", "_fonts");
 const [regular, bold] = await Promise.all([
-  readFile(join(fontDir, "DejaVuSans.ttf")),
-  readFile(join(fontDir, "DejaVuSans-Bold.ttf")),
+  readFile(join(fontDir, "GoogleSans-Regular.subset.ttf")),
+  readFile(join(fontDir, "GoogleSans-Bold.subset.ttf")),
 ]);
 
 const c = {
-  paper: "#faf6ef",
-  paperSoft: "rgba(250, 246, 239, 0.82)",
-  paperFaint: "rgba(250, 246, 239, 0.62)",
-  wine: "#7a1f30",
-  wineDeep: "#4e121d",
-  amber: "#d99a2b",
-  amberSoft: "#f4e3c1",
-  line: "rgba(250, 246, 239, 0.22)",
+  paper: "#ffffff",
+  paperSoft: "rgba(255, 255, 255, 0.8)",
+  paperFaint: "rgba(255, 255, 255, 0.6)",
+  /** Second line of a headline: the landing's grey accent line. */
+  muted: "rgba(255, 255, 255, 0.55)",
+  black: "#000000",
+  inkSoft: "#565656",
+  line: "rgba(255, 255, 255, 0.22)",
 };
 
 /** Georgian and Russian run longer than English. */
@@ -59,8 +61,8 @@ export async function GET(_request: Request, { params }: RouteContext<"/ads/[lan
     width,
     height,
     fonts: [
-      { name: "DejaVu Sans", data: regular, weight: 400, style: "normal" },
-      { name: "DejaVu Sans", data: bold, weight: 700, style: "normal" },
+      { name: "Google Sans", data: regular, weight: 400, style: "normal" },
+      { name: "Google Sans", data: bold, weight: 700, style: "normal" },
     ],
   });
 }
@@ -77,9 +79,9 @@ function Frame({ padding, children }: { padding: number; children: ReactNode }) 
         flexDirection: "column",
         justifyContent: "space-between",
         padding,
-        background: `linear-gradient(160deg, ${c.wine} 0%, ${c.wineDeep} 62%)`,
+        background: c.black,
         color: c.paper,
-        fontFamily: "DejaVu Sans",
+        fontFamily: "Google Sans",
       }}
     >
       {children}
@@ -90,22 +92,17 @@ function Frame({ padding, children }: { padding: number; children: ReactNode }) 
 function Brand({ tag, size }: { tag: string; size: number }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: size * 0.4 }}>
-        <svg width={size * 1.5} height={size * 1.5} viewBox="0 0 32 32">
-          <rect width="32" height="32" rx="8" fill={c.wine} stroke={c.line} />
-          <path d="M9 27V15a7 7 0 0 1 14 0v12z" fill={c.paper} />
-          <circle cx="16" cy="19" r="3.25" fill={c.amber} />
-        </svg>
-        <span style={{ fontSize: size, fontWeight: 700 }}>Stumari</span>
-      </div>
+      <svg width={(WORDMARK.width / WORDMARK.height) * size} height={size} viewBox={`0 0 ${WORDMARK.width} ${WORDMARK.height}`}>
+        <path d={WORDMARK.d} fill={c.paper} fillRule="evenodd" />
+      </svg>
       <span
         style={{
           fontSize: size * 0.62,
           fontWeight: 700,
-          color: c.wineDeep,
-          background: c.amberSoft,
-          padding: `${size * 0.22}px ${size * 0.5}px`,
-          borderRadius: 999,
+          color: c.paper,
+          border: `2px solid ${c.line}`,
+          padding: `${size * 0.2}px ${size * 0.45}px`,
+          borderRadius: size * 0.18,
         }}
       >
         {tag}
@@ -122,10 +119,10 @@ function Cta({ copy, size }: { copy: AdCopy; size: number }) {
           style={{
             fontSize: size,
             fontWeight: 700,
-            color: c.wineDeep,
-            background: c.amber,
+            color: c.black,
+            background: c.paper,
             padding: `${size * 0.5}px ${size * 1.05}px`,
-            borderRadius: 999,
+            borderRadius: size * 0.2,
           }}
         >
           {`${copy.common.cta} →`}
@@ -143,8 +140,8 @@ function Panel({ text, size }: { text: string; size: number }) {
       style={{
         display: "flex",
         padding: `${size * 1.1}px ${size * 1.2}px`,
-        borderRadius: size * 0.9,
-        background: "rgba(250, 246, 239, 0.1)",
+        borderRadius: size * 0.35,
+        background: "rgba(255, 255, 255, 0.08)",
         border: `2px solid ${c.line}`,
         width: "100%",
       }}
@@ -165,14 +162,14 @@ function ContractList({ contracts, size }: { contracts: Contract[]; size: number
             flexDirection: "column",
             gap: size * 0.2,
             padding: `${size * 0.55}px ${size * 0.8}px`,
-            borderRadius: size * 0.7,
-            background: i === 1 ? c.paper : "rgba(250, 246, 239, 0.1)",
-            color: i === 1 ? c.wineDeep : c.paper,
+            borderRadius: size * 0.3,
+            background: i === 1 ? c.paper : "rgba(255, 255, 255, 0.08)",
+            color: i === 1 ? c.black : c.paper,
             border: `2px solid ${i === 1 ? c.paper : c.line}`,
           }}
         >
           <span style={{ fontSize: size, fontWeight: 700 }}>{contract.name}</span>
-          <span style={{ fontSize: size * 0.72, color: i === 1 ? c.wine : c.paperSoft }}>{contract.terms}</span>
+          <span style={{ fontSize: size * 0.72, color: i === 1 ? c.inkSoft : c.paperSoft }}>{contract.terms}</span>
         </div>
       ))}
     </div>
@@ -184,7 +181,7 @@ function Checks({ items, size }: { items: string[]; size: number }) {
     <div style={{ display: "flex", flexDirection: "column", gap: size * 0.6, width: "100%" }}>
       {items.map((item) => (
         <div key={item} style={{ display: "flex", gap: size * 0.6, alignItems: "flex-start", width: "100%" }}>
-          <span style={{ fontSize: size, fontWeight: 700, color: c.amber }}>✓</span>
+          <span style={{ fontSize: size, fontWeight: 700, color: c.paper }}>✓</span>
           <span style={{ fontSize: size, color: c.paperSoft, lineHeight: 1.35, flex: 1 }}>{item}</span>
         </div>
       ))}
@@ -197,7 +194,7 @@ function square(variant: AdVariant, copy: AdCopy, contracts: Contract[], s: numb
     <span style={{ fontSize: size * s, fontWeight: 700, lineHeight: 1.12, letterSpacing: -1 }}>{text}</span>
   );
   const accent = (text: string, size = 42) => (
-    <span style={{ fontSize: size * s, color: c.amberSoft, lineHeight: 1.25 }}>{text}</span>
+    <span style={{ fontSize: size * s, color: c.muted, lineHeight: 1.25 }}>{text}</span>
   );
   let middle: ReactNode;
   if (variant === "usdc") {
@@ -217,7 +214,7 @@ function square(variant: AdVariant, copy: AdCopy, contracts: Contract[], s: numb
         {accent(v.accent, 36)}
         <ContractList contracts={contracts} size={29 * s} />
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <span style={{ fontSize: 27 * s, fontWeight: 700, color: c.amber }}>{v.stat}</span>
+          <span style={{ fontSize: 27 * s, fontWeight: 700, color: c.paper }}>{v.stat}</span>
           <span style={{ fontSize: 19 * s, color: c.paperFaint }}>{v.statNote}</span>
         </div>
       </div>
@@ -226,7 +223,7 @@ function square(variant: AdVariant, copy: AdCopy, contracts: Contract[], s: numb
     const v = copy.founding;
     middle = (
       <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-        <span style={{ fontSize: 50 * s, fontWeight: 700, color: c.amberSoft }}>{v.headline}</span>
+        <span style={{ fontSize: 50 * s, fontWeight: 700, color: c.muted }}>{v.headline}</span>
         <span style={{ fontSize: 190, fontWeight: 700, lineHeight: 1, letterSpacing: -6 }}>{v.big}</span>
         <span style={{ fontSize: 38 * s, lineHeight: 1.3 }}>{v.accent}</span>
         <div style={{ display: "flex", marginTop: 10, width: "100%" }}>
@@ -253,19 +250,19 @@ function wide(variant: AdVariant, copy: AdCopy, contracts: Contract[], s: number
   if (variant === "usdc") {
     left = column([
       <span key="h" style={{ fontSize: 56 * s, fontWeight: 700, lineHeight: 1.12 }}>{copy.usdc.headline}</span>,
-      <span key="a" style={{ fontSize: 32 * s, color: c.amberSoft, lineHeight: 1.3 }}>{copy.usdc.accent}</span>,
+      <span key="a" style={{ fontSize: 32 * s, color: c.muted, lineHeight: 1.3 }}>{copy.usdc.accent}</span>,
     ]);
     right = <Panel text={copy.usdc.body} size={20 * s} />;
   } else if (variant === "contracts") {
     left = column([
       <span key="h" style={{ fontSize: 46 * s, fontWeight: 700, lineHeight: 1.12 }}>{copy.contracts.headline}</span>,
-      <span key="a" style={{ fontSize: 26 * s, color: c.amberSoft, lineHeight: 1.3 }}>{copy.contracts.accent}</span>,
+      <span key="a" style={{ fontSize: 26 * s, color: c.muted, lineHeight: 1.3 }}>{copy.contracts.accent}</span>,
     ]);
     right = <ContractList contracts={contracts} size={21 * s} />;
   } else {
     left = column(
       [
-        <span key="h" style={{ fontSize: 36 * s, fontWeight: 700, color: c.amberSoft }}>{copy.founding.headline}</span>,
+        <span key="h" style={{ fontSize: 36 * s, fontWeight: 700, color: c.muted }}>{copy.founding.headline}</span>,
         <span key="b" style={{ fontSize: 150, fontWeight: 700, letterSpacing: -5, lineHeight: 1 }}>{copy.founding.big}</span>,
         <span key="a" style={{ fontSize: 25 * s, lineHeight: 1.3 }}>{copy.founding.accent}</span>,
       ],

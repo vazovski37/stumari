@@ -38,26 +38,26 @@ export default async function ApplyPage({ params, searchParams }: PageProps<"/[l
       />
       <main id="main" className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[0.8fr_1.4fr] lg:py-16">
         <div className="lg:sticky lg:top-28 lg:self-start">
-          <Link href={localePath(locale)} className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-wine">
+          <Link href={localePath(locale)} className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-brand">
             <ArrowLeft aria-hidden="true" className="size-4" />
             {dict.apply.back}
           </Link>
           {intent === "demo" ? (
             <>
               <p className="eyebrow mt-8">{dict.demo.eyebrow}</p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{dict.demo.title}</h1>
+              <h1 className="headline mt-4 text-4xl sm:text-5xl">{dict.demo.title}</h1>
               <p className="mt-4 text-lg leading-relaxed text-ink-soft">{dict.demo.lead}</p>
               <ul className="mt-8 space-y-3">
                 {dict.demo.points.map((point) => (
                   <li key={point} className="flex gap-2.5 text-sm font-medium text-ink">
-                    <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-vine" />
+                    <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-positive" />
                     {point}
                   </li>
                 ))}
               </ul>
               <p className="mt-8 text-sm text-ink-soft">
                 {dict.demo.fullFormPrompt}{" "}
-                <Link href={localePath(locale, "/apply")} className="inline-flex items-center gap-1 font-medium text-wine underline underline-offset-2">
+                <Link href={localePath(locale, "/apply")} className="inline-flex items-center gap-1 font-medium text-brand underline underline-offset-2">
                   {dict.demo.fullFormLink}
                   <ArrowRight aria-hidden="true" className="size-3.5" />
                 </Link>
@@ -66,13 +66,13 @@ export default async function ApplyPage({ params, searchParams }: PageProps<"/[l
           ) : (
             <>
               <p className="eyebrow mt-8">{dict.pilot.eyebrow}</p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{dict.apply.title}</h1>
+              <h1 className="headline mt-4 text-4xl sm:text-5xl">{dict.apply.title}</h1>
               <p className="mt-4 text-lg leading-relaxed text-ink-soft">{dict.apply.lead}</p>
-              <ol className="mt-8 space-y-4 border-l border-line pl-5">
+              <ol className="mt-8 space-y-4 border-l-2 border-ink pl-5">
                 {dict.how.steps.map((step, i) => (
                   <li key={step.title}>
                     <p className="text-sm font-semibold text-ink">
-                      <span className="text-wine">{i + 1}.</span> {step.title}
+                      <span className="font-label text-xs text-ink-soft">{String(i + 1).padStart(2, "0")}</span> {step.title}
                     </p>
                   </li>
                 ))}

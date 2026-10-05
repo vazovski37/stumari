@@ -3,6 +3,7 @@
 ## Product
 - [Vision and positioning](product/vision-and-positioning.md) — problem, insight, what we do not claim, Colosseum positioning
 - [MVP scope](product/mvp-scope.md) — the six-step loop, stubs, cuts, definition of done
+- [Brand](product/brand.md) — the stumari wordmark (master + generated files), black-and-white palette, Inter Tight / Inter / Martian Mono, layout rules
 
 ## Architecture (specs = contracts)
 - [Overview](architecture/overview.md) — components, keys, flows, environments, layout
@@ -43,6 +44,7 @@
 - [Demo video script](submission/demo-video-script.md) (≤ 3:00, live product) · [Pitch video script](submission/pitch-video-script.md) (≤ 2:00)
 
 ## Research
+- [Crypto legality in Georgia](research/crypto-legality-georgia.md) — **read before onboarding a real hotel:** Organic Law on the NBG Art. 39¹ prohibits paying with virtual assets (stablecoins included) outside NBG-defined VASP cases; the lawful pattern is a registered VASP settling the merchant in GEL; tax, AML, sanctions, open questions for a lawyer
 - [Mews](research/mews.md) — connecting a Mews hotel: private integration (Enterprise or Connectivity Add-on, certification), demo environment, Connector API operations; never automate a staff login
 - [Double booking and channel managers](research/channel-managers.md) — iCal latency and eligibility, gaps in today's design, Georgian PMS/CM market (OtelMS, Exely), integration routes (Exely Connect, Channex, Beds24, SiteMinder), no unified API
 - [Competitive landscape](research/landscape.md) — Copilot API data: win rates by cluster, tag lift, precedents, threats

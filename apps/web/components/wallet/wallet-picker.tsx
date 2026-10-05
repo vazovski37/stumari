@@ -35,7 +35,7 @@ export function WalletPicker({ open, onClose }: { open: boolean; onClose: () => 
   }
 
   const option =
-    "flex w-full items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 text-left transition-colors hover:border-wine disabled:opacity-60";
+    "flex w-full items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 text-left transition-colors hover:border-brand disabled:opacity-60";
 
   return (
     <dialog
@@ -49,14 +49,14 @@ export function WalletPicker({ open, onClose }: { open: boolean; onClose: () => 
         <h2 id="wallet-picker-title" className="font-sans text-lg font-semibold">
           Choose a wallet
         </h2>
-        <button type="button" onClick={onClose} className="rounded-full p-1.5 text-ink-soft hover:bg-sand" aria-label="Close">
+        <button type="button" onClick={onClose} className="rounded-full p-1.5 text-ink-soft hover:bg-surface" aria-label="Close">
           <X aria-hidden="true" className="size-5" />
         </button>
       </div>
       <div className="space-y-3 px-5 py-5">
         {config.demoMode && (
           <button type="button" className={option} disabled={busy !== null} onClick={() => choose("demo", "demo")}>
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-amber-soft text-wine-deep">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-warn-soft text-brand-deep">
               <FlaskConical aria-hidden="true" className="size-5" />
             </span>
             <span>
@@ -75,11 +75,11 @@ export function WalletPicker({ open, onClose }: { open: boolean; onClose: () => 
           </button>
         ))}
         {wallets.length === 0 && (
-          <p className="flex gap-3 rounded-xl bg-sand px-4 py-3 text-sm text-ink-soft">
+          <p className="flex gap-3 rounded-xl bg-surface px-4 py-3 text-sm text-ink-soft">
             <WalletIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
             <span>
               No Solana wallet was found in this browser. Install{" "}
-              <a href="https://phantom.com/download" target="_blank" rel="noreferrer" className="font-medium text-wine underline">
+              <a href="https://phantom.com/download" target="_blank" rel="noreferrer" className="font-medium text-brand underline">
                 Phantom
               </a>{" "}
               and reload{config.demoMode ? ", or use the test wallet above" : ""}. You pay in USDC only; Stumari covers the network fee.
@@ -87,7 +87,7 @@ export function WalletPicker({ open, onClose }: { open: boolean; onClose: () => 
           </p>
         )}
         {error && (
-          <p role="alert" className="rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay">
+          <p role="alert" className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">
             {error}
           </p>
         )}

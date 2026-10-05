@@ -20,7 +20,7 @@ type DemoStrings = Dictionary["demo"];
 type Status = { kind: "idle" | "submitting" | "done" } | { kind: "error"; message: string };
 
 const inputClass =
-  "mt-1.5 block w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-ink shadow-xs outline-none transition-colors placeholder:text-ink-soft/85 focus:border-wine focus:ring-2 focus:ring-wine/20 aria-[invalid=true]:border-clay aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-clay/20";
+  "mt-1.5 block w-full rounded-md border border-line bg-white px-3.5 py-2.5 text-ink shadow-xs outline-none transition-colors placeholder:text-ink-soft/85 focus:border-ink focus:ring-2 focus:ring-ink/15 aria-[invalid=true]:border-danger aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-danger/20";
 
 function triState(value: FormDataEntryValue | null): boolean | null {
   if (value === "yes") return true;
@@ -132,7 +132,7 @@ export function ApplyForm({
   if (status.kind === "done") {
     return (
       <div className="card p-8 text-center" role="status">
-        <CircleCheck aria-hidden="true" className="mx-auto size-12 text-vine" />
+        <CircleCheck aria-hidden="true" className="mx-auto size-12 text-positive" />
         <h2 ref={successRef} tabIndex={-1} className="mt-4 text-2xl font-semibold outline-none">
           {success.title}
         </h2>
@@ -147,7 +147,7 @@ export function ApplyForm({
   const bad = (name: string) => invalid.has(name) || undefined;
 
   const errorNote = status.kind === "error" && (
-    <p role="alert" className="flex items-start gap-2 rounded-xl border border-clay/30 bg-clay/5 p-4 text-sm text-clay">
+    <p role="alert" className="flex items-start gap-2 rounded-md border border-danger/30 bg-danger/5 p-4 text-sm text-danger">
       <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
       {status.message}
     </p>
@@ -159,11 +159,11 @@ export function ApplyForm({
     </div>
   );
   const consent = (
-    <label className="flex gap-3 rounded-xl bg-sand p-4 text-sm leading-relaxed text-ink">
-      <input name="consent" type="checkbox" required aria-invalid={bad("consent")} className="mt-0.5 size-4 shrink-0 accent-wine" />
+    <label className="flex gap-3 rounded-md bg-surface p-4 text-sm leading-relaxed text-ink">
+      <input name="consent" type="checkbox" required aria-invalid={bad("consent")} className="mt-0.5 size-4 shrink-0 accent-brand" />
       <span>
         {f.consent}{" "}
-        <Link href={privacyHref} className="font-medium text-wine underline underline-offset-2">
+        <Link href={privacyHref} className="font-medium text-brand underline underline-offset-2">
           {f.privacyLink}
         </Link>
       </span>
@@ -285,7 +285,7 @@ export function ApplyForm({
 function Fieldset({ legend, hint, children }: { legend: string; hint?: string; children: ReactNode }) {
   return (
     <fieldset className="relative space-y-5">
-      <legend className="font-display text-xl font-semibold text-ink">{legend}</legend>
+      <legend className="font-display text-xl font-extrabold tracking-[-0.02em] text-ink">{legend}</legend>
       {hint && <p className="-mt-3 text-sm text-ink-soft">{hint}</p>}
       {children}
     </fieldset>
@@ -364,8 +364,8 @@ function Choice({
   required?: boolean;
 }) {
   return (
-    <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-line bg-white px-3.5 py-2 text-sm text-ink transition-colors hover:border-ink-soft has-[:checked]:border-wine has-[:checked]:bg-wine/5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-wine/30">
-      <input type={type} name={name} value={value} required={required} className="size-4 accent-wine" />
+    <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-line bg-white px-3.5 py-2 text-sm text-ink transition-colors hover:border-ink-soft has-[:checked]:border-brand has-[:checked]:bg-brand/5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand/30">
+      <input type={type} name={name} value={value} required={required} className="size-4 accent-brand" />
       {label}
     </label>
   );

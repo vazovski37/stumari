@@ -28,7 +28,7 @@ export function ContractCompare({ guests, labels }: Props) {
   return (
     <div className="card overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 pt-5 pb-4">
-        <span className="rounded-full bg-amber-soft px-3 py-1 text-xs font-semibold tracking-wide text-wine-deep uppercase">
+        <span className="rounded-sm bg-surface px-2 py-1 font-label text-[0.65rem] font-medium tracking-wide uppercase">
           {labels.illustrative}
         </span>
         <span className="text-xs text-ink-soft">{labels.caption}</span>
@@ -48,12 +48,12 @@ export function ContractCompare({ guests, labels }: Props) {
             tabIndex={i === active ? 0 : -1}
             onClick={() => setActive(i)}
             onKeyDown={onKeyDown}
-            className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
-              i === active ? "border-wine bg-wine text-paper" : "border-line text-ink hover:border-ink-soft"
+            className={`rounded-md border px-3 py-2.5 text-left transition-colors ${
+              i === active ? "border-brand bg-brand text-paper" : "border-line text-ink hover:border-ink"
             }`}
           >
             <span className="block text-sm font-semibold">{g.label}</span>
-            <span className={`block text-xs ${i === active ? "text-paper/85" : "text-ink-soft"}`}>{g.detail}</span>
+            <span className={`block text-xs ${i === active ? "text-white/70" : "text-ink-soft"}`}>{g.detail}</span>
           </button>
         ))}
       </div>
@@ -80,7 +80,7 @@ export function ContractCompare({ guests, labels }: Props) {
                     </td>
                   ) : (
                     <>
-                      <td className="py-3 text-right font-display text-base font-semibold whitespace-nowrap text-ink tabular-nums">
+                      <td className="py-3 text-right font-display text-base font-bold whitespace-nowrap text-ink tabular-nums">
                         {row.price}
                       </td>
                       <td className="py-3 pl-3 text-right whitespace-nowrap text-ink-soft tabular-nums">{row.change}</td>

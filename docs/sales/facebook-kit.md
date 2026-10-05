@@ -42,10 +42,10 @@
 
 ## 2. Profile and cover images (the landing brand)
 
-Brand tokens from `apps/web/app/globals.css`: paper `#faf6ef`, sand `#f2eadd`, ink `#1f1a17`, wine `#7a1f30`, wine-deep `#4e121d`, amber `#d99a2b`, vine `#2f6a4e`. Headlines in **Literata** (Latin/Cyrillic) or **Noto Serif Georgian**; body in **Inter** / **Noto Sans Georgian** (all free on Google Fonts).
+The brand is black and white, built on the stumari wordmark ([brand.md](../product/brand.md)). Headlines are set in **Inter Tight** ExtraBold for Latin and Cyrillic, or **Google Sans** Bold for Georgian. Body text is **Inter** / **Google Sans**. All are free on Google Fonts.
 
-- **Profile picture:** the site mark from `apps/web/app/icon.svg` (a cream arch doorway `#faf6ef` with an amber dot `#d99a2b` on wine `#7a1f30`). Export a square PNG of at least 720×720 with a full-bleed wine background (no rounded corners: Facebook crops to a circle) and scale the arch to about 60% of the width so nothing touches the circle's edge.
-- **Cover:** upload 1640×624. Paper background, a thin wine arch motif on one side, and the landing headline in wine: KA „თანხა — სტუმრის შესვლიდან 24 საათში." with the subline „გაუქმების პირობები — ყველა სტუმრისთვის ცალკე." (RU: «Деньги — через 24 часа после заезда.» / «Условия отмены — под каждого гостя.»). Keep all text in the middle two-thirds: phones crop the sides. No prices, no coin imagery, no charts.
+- **Profile picture:** upload `apps/web/public/brand/stumari-avatar-1024.png` (`{SITE}/brand/stumari-avatar-1024.png`). It is the white wordmark centred on full-bleed black and small enough that Facebook's circular crop never touches it. Use the same file for Telegram and X.
+- **Cover:** upload 1640×624. Black background, the landing headline in white Google Sans Bold: KA „თანხა — სტუმრის შესვლიდან 24 საათში." The subline goes in 50% white: „გაუქმების პირობები — ყველა სტუმრისთვის ცალკე." (RU: «Деньги — через 24 часа после заезда.» / «Условия отмены — под каждого гостя.»). Keep all text in the middle two-thirds, because phones crop the sides. Leave out the wordmark, since the profile picture already shows it. No prices, no coin imagery, no charts, no colour.
 - **Ad images** come from the site: the gallery at `{SITE}/ads` lists them all. Files are `{SITE}/ads/{lang}/{usdc|contracts|founding}.png` (1080×1080, feed and Stories) and `…-wide.png` (1200×630, link ads), named after the three ad variants **usdc**, **contracts** and **founding** (section 4). Every image carries a demo button (EN "Book a 15-minute demo", RU equivalent, KA „დემოს დანიშვნა"), so the ads point at the demo form (section 6). Open each image before uploading and check it says the same as the ad text.
 
 ## 3. First organic posts (3 per language)

@@ -26,10 +26,10 @@ export function ConsentBanner({
     >
       <div className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border border-line bg-paper p-4 shadow-lg sm:flex-row sm:items-end sm:gap-4 sm:p-5">
         <div className="flex gap-3">
-          <Cookie aria-hidden="true" className="mt-0.5 hidden size-5 shrink-0 text-wine sm:block" />
+          <Cookie aria-hidden="true" className="mt-0.5 hidden size-5 shrink-0 text-brand sm:block" />
           <p className="text-[13px] leading-snug text-ink sm:text-sm sm:leading-relaxed">
             {strings.body}{" "}
-            <Link href={privacyHref} className="font-medium text-wine underline underline-offset-2">
+            <Link href={privacyHref} className="font-medium text-brand underline underline-offset-2">
               {strings.privacy}
             </Link>
           </p>

@@ -25,7 +25,7 @@ function Step({ n, title, done, children }: { n: number; title: string; done: bo
     <section aria-labelledby={`step-${n}`} className="card space-y-4 p-5 sm:p-6">
       <h2 id={`step-${n}`} className="flex items-center gap-3 text-xl font-semibold tracking-tight">
         {done ? (
-          <CheckCircle2 aria-label="done" className="size-6 shrink-0 text-vine" />
+          <CheckCircle2 aria-label="done" className="size-6 shrink-0 text-positive" />
         ) : (
           <Circle aria-label="to do" className="size-6 shrink-0 text-line" />
         )}

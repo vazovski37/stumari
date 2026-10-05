@@ -5,15 +5,15 @@ import { formatUsdc } from "@/lib/money";
 /** Server- and client-safe building blocks for the dashboard and the admin console. */
 
 const STATUS_TONE: Record<BookingStatus, string> = {
-  awaiting_signature: "bg-sand text-ink-soft",
-  pending: "bg-amber-soft text-wine-deep",
-  confirmed: "bg-vine-soft text-vine",
-  cancelled: "bg-sand text-ink",
-  released: "bg-vine-soft text-vine",
-  disputed: "bg-clay/10 text-clay",
-  resolved: "bg-sand text-ink",
-  voided: "bg-sand text-ink",
-  failed: "bg-clay/10 text-clay",
+  awaiting_signature: "bg-surface text-ink-soft",
+  pending: "bg-warn-soft text-brand-deep",
+  confirmed: "bg-positive-soft text-positive",
+  cancelled: "bg-surface text-ink",
+  released: "bg-positive-soft text-positive",
+  disputed: "bg-danger/10 text-danger",
+  resolved: "bg-surface text-ink",
+  voided: "bg-surface text-ink",
+  failed: "bg-danger/10 text-danger",
 };
 
 export function StatusBadge({ status }: { status: BookingStatus }) {
@@ -25,7 +25,7 @@ export function StatusBadge({ status }: { status: BookingStatus }) {
 }
 
 export function Pill({ tone, children }: { tone: "good" | "warn" | "bad" | "plain"; children: ReactNode }) {
-  const cls = { good: "bg-vine-soft text-vine", warn: "bg-amber-soft text-wine-deep", bad: "bg-clay/10 text-clay", plain: "bg-sand text-ink" }[tone];
+  const cls = { good: "bg-positive-soft text-positive", warn: "bg-warn-soft text-brand-deep", bad: "bg-danger/10 text-danger", plain: "bg-surface text-ink" }[tone];
   return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${cls}`}>{children}</span>;
 }
 
@@ -48,14 +48,14 @@ export function Section({ id, title, action, children }: { id?: string; title: s
 export function ErrorNote({ error }: { error: string | null }) {
   if (!error) return null;
   return (
-    <p role="alert" className="rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay">
+    <p role="alert" className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">
       {error}
     </p>
   );
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <p className="rounded-xl bg-sand/70 px-4 py-6 text-center text-sm text-ink-soft">{children}</p>;
+  return <p className="rounded-xl bg-surface/70 px-4 py-6 text-center text-sm text-ink-soft">{children}</p>;
 }
 
 /** Shown to a signed-in wallet that may not open this page. */

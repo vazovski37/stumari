@@ -16,6 +16,7 @@ type Props = {
   sections?: boolean;
 };
 
+/** Black bar with the white wordmark: the master logo's field (docs/product/brand.md). */
 export function SiteHeader({ locale, nav, switcherPath, switcherUtm, sections = false }: Props) {
   const anchors = [
     { href: "#how", label: nav.how },
@@ -25,17 +26,17 @@ export function SiteHeader({ locale, nav, switcherPath, switcherUtm, sections = 
     { href: "#faq", label: nav.faq },
   ];
   return (
-    <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75">
+    <header className="on-dark sticky top-0 z-30 border-b border-white/10">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
-        <Link href={localePath(locale)} aria-label={nav.home} className="shrink-0">
+        <Link href={localePath(locale)} aria-label={nav.home} className="shrink-0 py-2">
           <Logo />
         </Link>
         {sections && (
-          <nav aria-label={nav.sections} className="ml-6 hidden lg:block">
-            <ul className="flex items-center gap-6 text-sm font-medium text-ink-soft">
+          <nav aria-label={nav.sections} className="ml-8 hidden lg:block">
+            <ul className="flex items-center gap-6 text-sm font-medium text-white/65">
               {anchors.map((a) => (
                 <li key={a.href}>
-                  <a href={a.href} className="transition-colors hover:text-wine">
+                  <a href={a.href} className="transition-colors hover:text-white">
                     {a.label}
                   </a>
                 </li>
@@ -46,7 +47,7 @@ export function SiteHeader({ locale, nav, switcherPath, switcherUtm, sections = 
         <div className="ml-auto flex items-center gap-3">
           {switcherPath !== undefined && <LanguageSwitcher locale={locale} path={switcherPath} label={nav.language} utm={switcherUtm} />}
           {switcherPath !== "/apply" && (
-            <Link href={localePath(locale, "/apply")} className="btn btn-primary hidden !px-4 !py-2 text-sm sm:inline-flex">
+            <Link href={localePath(locale, "/apply")} className="btn btn-light hidden !px-4 !py-2 text-sm sm:inline-flex">
               {nav.apply}
             </Link>
           )}

@@ -51,7 +51,7 @@ export function MyBookings() {
       </div>
     );
   }
-  if (error) return <p className="text-clay">{error}</p>;
+  if (error) return <p className="text-danger">{error}</p>;
   const bookings = result?.wallet === connected.address ? result.bookings : null;
   if (!bookings) return <p className="text-ink-soft">Looking up bookings for {shortAddress(connected.address)}…</p>;
   if (bookings.length === 0) return <p className="text-ink-soft">No bookings for {shortAddress(connected.address)} yet.</p>;
@@ -70,7 +70,7 @@ export function MyBookings() {
                 {formatUsdc(BigInt(b.amount_minor))} USDC
               </p>
             </div>
-            <span className="rounded-full bg-sand px-3 py-1 text-xs font-semibold">{STATUS_LABEL[b.status]}</span>
+            <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold">{STATUS_LABEL[b.status]}</span>
             <ArrowRight aria-hidden="true" className="size-4 text-ink-soft" />
           </Link>
         </li>

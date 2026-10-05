@@ -7,7 +7,7 @@ Project draft: https://colosseum.com/arena/projects/stumari. Category **Stableco
 | Final submission opens | 2026-10-06 4:00 AM | 2026-10-06 3:00 PM |
 | **Final submission closes** | **2026-10-12 11:59 PM** | **2026-10-13 10:59 AM** |
 
-Aim to submit on **2026-10-11** so there is a day of slack. Last updated: 2026-09-25.
+Aim to submit on **2026-10-11** so there is a day of slack. Last updated: 2026-10-01.
 
 ## Filled (2026-09-25)
 
@@ -29,7 +29,7 @@ Aim to submit on **2026-10-11** so there is a day of slack. Last updated: 2026-0
 |---|---|---|---|---|
 | 1 | Team country | Vazovski, luka | 2026-09-30 | Georgia |
 | 2 | Team Telegram | Vazovski, luka | 2026-09-30 | |
-| 3 | Logo | founders | 2026-10-03 | Square PNG. Use the same mark on the landing page. |
+| 3 | Logo | founders | 2026-10-03 | **Ready 2026-10-01:** upload `apps/web/public/brand/stumari-logo-1024.png` (square, the master composition). The landing uses the same wordmark ([brand.md](../product/brand.md)). |
 | 4 | GitHub link + repo context | founders (Claude drafts the README) | 2026-10-09 | **Repo created 2026-09-29: https://github.com/vazovski37/stumari (private).** Before submitting, make it public (`gh repo edit vazovski37/stumari --visibility public --accept-visibility-change-consequences`) or give Colosseum's judges access. README: what it is, how to run ([runbook.md](../plan/runbook.md)), program id `6Y17gFD9dWPJF6GtpzABJZY7Pk8j5CLh268zZyW5U6nf`, what is stubbed. History scanned for key material on 2026-09-29: clean. |
 | 5 | Demo video (≤ 3 min, **live product**) | founders (script: [demo-video-script.md](demo-video-script.md)) | record 2026-10-09, upload 2026-10-10 | Needs the devnet demo end to end (roadmap M4), the calibration plot in `ml/reports/`, and the MCP clip |
 | 6 | Live product link + access instructions | founders | 2026-10-06 | Vercel URL (custom domain if ready, M5). Access text: "Devnet. Open `/h/stumari-demo`, choose **Test wallet**, click **Get 500 test USDC**, book, then cancel on the booking page. No install needed. Phantom users: switch to Testnet Mode → Solana Devnet." |
@@ -57,3 +57,4 @@ Aim to submit on **2026-10-11** so there is a day of slack. Last updated: 2026-0
   ```
   Keypair arrays pretty-printed over several lines are not caught by the array regex, which is one more reason keypairs live only in gitignored `onchain/keys/`. The base58 command also matches signatures, which are 64 bytes too. On 2026-09-25 its only hits were `spec/vectors/quote.json` (a test quote signature). Open any other hit and confirm it is a signature, not a secret key. If a real key was ever committed, rotate it: rewriting history does not un-leak it.
 - [ ] Both teammates are on the submission.
+- [ ] Before making the repo public, read `.claude/memory/`. It holds names and Colosseum handles, and no secrets or contacts should be in it. Trim anything you don't want public, then run `scripts/claude-memory.sh push`.

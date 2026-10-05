@@ -57,7 +57,7 @@ export function BookingsTable({
             role="tab"
             aria-selected={i === filter}
             onClick={() => setFilter(i)}
-            className={`rounded-full border px-3 py-1 text-sm font-medium ${i === filter ? "border-wine bg-wine text-paper" : "border-line text-ink-soft hover:border-ink-soft"}`}
+            className={`rounded-full border px-3 py-1 text-sm font-medium ${i === filter ? "border-brand bg-brand text-paper" : "border-line text-ink-soft hover:border-ink-soft"}`}
           >
             {f.label}
           </button>
@@ -93,7 +93,7 @@ export function BookingsTable({
                     <td className="px-3 py-3">
                       <span className="block font-medium">{b.guest.name ?? "Guest"}</span>
                       {b.guest.email && (
-                        <a href={`mailto:${b.guest.email}`} className="block text-wine hover:underline">
+                        <a href={`mailto:${b.guest.email}`} className="block text-brand hover:underline">
                           {b.guest.email}
                         </a>
                       )}
@@ -120,7 +120,7 @@ export function BookingsTable({
                     <td className="px-3 py-3">
                       <StatusBadge status={b.status} />
                       {b.conflict && b.status === "pending" && (
-                        <span className="mt-1 flex items-center gap-1 text-xs font-medium text-clay">
+                        <span className="mt-1 flex items-center gap-1 text-xs font-medium text-danger">
                           <AlertTriangle aria-hidden="true" className="size-3.5" /> Calendar conflict
                         </span>
                       )}
@@ -150,7 +150,7 @@ export function BookingsTable({
                             {busy === `release:${b.id}` ? "Releasing…" : "Release"}
                           </button>
                         )}
-                        <Link href={`/b/${b.id}`} className="inline-flex items-center gap-1 text-sm text-wine hover:underline" target="_blank">
+                        <Link href={`/b/${b.id}`} className="inline-flex items-center gap-1 text-sm text-brand hover:underline" target="_blank">
                           Booking page <ExternalLink aria-hidden="true" className="size-3.5" />
                         </Link>
                       </div>

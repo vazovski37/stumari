@@ -20,48 +20,40 @@
     "home": "Stumari home"
   },
   "hero": {
-    "eyebrow": "Stablecoin checkout for independent hotels · Tbilisi pilot",
-    "title": "Get paid 24 hours after check-in.",
-    "titleAccent": "Set cancellation terms that fit each guest.",
-    "lead": "Guests pay in USDC into an escrow that holds your terms. You receive the money in your own wallet 24 hours after they check in, and each guest's cancellation terms are priced for that request.",
-    "caveat": "Unless the guest opens a dispute in those 24 hours. Disputes are decided by Stumari's arbiter, which during the pilot is a single Stumari key.",
+    "eyebrow": "Stablecoin checkout for independent hotels",
+    "title": "Take bookings paid in USDC.",
+    "titleAccent": "Get paid 24 hours after check-in.",
+    "lead": "For guests whose cards don't work in Georgia. Refunds and payouts happen on their own.",
+    "footnote": "Unless the guest opens a dispute in those 24 hours.",
     "ctaPrimary": "Apply for the pilot",
-    "ctaSecondary": "See how it works",
     "ctaDemo": "Book a 15-minute demo",
     "card": {
       "label": "Example booking",
       "room": "Double room · 3 nights",
-      "dates": "Check-in Sat 14 Nov, 14:00",
       "amount": "240.00 USDC",
-      "held": "held in this booking's escrow",
-      "contract": "Standard contract",
-      "timelineTitle": "What happens next",
       "steps": [
-        { "when": "Until 7 Nov, 14:00", "what": "Guest cancels → full refund" },
-        { "when": "Until 11 Nov, 14:00", "what": "Guest cancels → 50% back, 50% to you" },
-        { "when": "After 11 Nov, 14:00", "what": "No refund" },
-        { "when": "15 Nov, 14:00", "what": "240.00 USDC paid to your wallet" }
-      ]
+        "Guest pays in USDC",
+        "Held in this booking's escrow",
+        "Paid to your wallet 24 h after check-in"
+      ],
+      "cancel": "Cancels early? Refunded by the terms they chose."
     }
   },
   "problems": {
-    "title": "Three ways independent hotels lose money today",
+    "title": "Why hotels lose money today",
     "items": [
       {
-        "stat": "15–25%",
-        "title": "OTA commission on every booking",
-        "body": "Big booking sites take 15–25% base commission, more with visibility boosters, and pay out weeks later."
+        "stat": "1,579,764",
+        "title": "visitors from Russia in 2025. Their Visa and Mastercard cards don't work here."
       },
       {
         "stat": "27%",
-        "title": "of ordinary bookings cancel, all under one policy",
-        "body": "A family booking six months ahead and a speculative booking two days out get the same blanket terms, so you either lose guests or carry the risk.",
-        "source": "37% overall, including no-shows and group blocks (Hotel Booking Demand, 119,390 bookings)"
+        "title": "of ordinary bookings cancel, all under one policy.",
+        "source": "Hotel Booking Demand dataset, 119,390 bookings"
       },
       {
-        "stat": "1,579,764",
-        "title": "visitors from Russia in 2025",
-        "body": "Russian-issued Visa and Mastercard cards do not work abroad, so many of these guests already pay small hotels in USDT or USDC informally — straight to an owner's personal wallet, with no receipt and no refund rule. Stripe has never supported Georgia."
+        "stat": "15–25%",
+        "title": "commission to booking sites, paid out weeks later."
       }
     ]
   },
@@ -70,78 +62,91 @@
     "steps": [
       {
         "title": "Connect in one call",
-        "body": "On a free 20-minute call we connect your Booking.com and Airbnb calendars over iCal where available, set your room rates and choose the contracts you want to offer."
+        "body": "In 20 minutes we link your Booking.com and Airbnb calendars where possible and set your rates."
       },
       {
         "title": "Guests choose their terms",
-        "body": "Your booking link shows each guest a short menu (Flexible, Standard, Non-refundable), each priced for their request. They pay in USDC from a wallet such as Phantom. AI agents can book the same way."
+        "body": "Flexible, Standard or Non-refundable, each priced for that guest."
       },
       {
         "title": "Get paid after check-in",
-        "body": "USDC reaches your wallet 24 hours after check-in. If a guest cancels earlier, the escrow refunds them by their schedule and pays you the rest in the same step."
+        "body": "USDC reaches your wallet 24 hours after check-in."
       }
     ]
   },
   "model": {
     "eyebrow": "Pricing",
-    "title": "The model writes the contract",
-    "lead": "Most hotels have one cancellation policy for everyone. Stumari's model estimates how likely each request is to be cancelled, and when, then prices every contract to target the same expected revenue from this guest as your current policy.",
-    "points": [
-      "Your current policy always costs your normal rate.",
-      "A more generous contract costs more, by this guest's estimated risk. A stricter one costs less.",
-      "You choose which contracts to offer and the price bounds."
-    ],
+    "title": "Cancellation terms priced for each guest",
+    "lead": "The model estimates how likely each booking is to cancel, then prices every option to target the revenue your current policy earns.",
     "compare": {
       "illustrative": "Example",
       "caption": "Base rate 100.00 USDC · your current policy: Standard",
       "guests": [
-        { "label": "Books 60 days ahead", "detail": "Model estimate: about 18% chance of cancelling" },
-        { "label": "Books 2 days ahead", "detail": "Model estimate: about 7% chance of cancelling" }
+        {
+          "label": "Books 60 days ahead",
+          "detail": "Model estimate: about 18% chance of cancelling"
+        },
+        {
+          "label": "Books 2 days ahead",
+          "detail": "Model estimate: about 7% chance of cancelling"
+        }
       ],
       "contract": "Contract",
       "price": "Guest pays",
       "vsBase": "vs. your rate",
       "notShown": "Not shown: this close to check-in it has the same terms as Standard",
-      "footnote": "Real output of the current model for one example request: a city-hotel room with breakfast, 2 adults, 2 nights, quoted on 2 October 2026 to a new wallet with no past stays, default resale settings. Real prices depend on your rates, your settings and each request. Every option shown is priced to target the same expected revenue as your current policy."
+      "footnote": "Real output of the current model for one example request: 2 adults, 2 nights, a new wallet. Your prices depend on your rates and settings."
     },
     "templates": {
-      "flexible": { "name": "Flexible", "terms": "Full refund until 24 h before check-in, then 50%" },
-      "standard": { "name": "Standard", "terms": "Full refund until 7 days before, 50% until 3 days, then none" },
-      "nonrefundable": { "name": "Non-refundable", "terms": "No refund" }
+      "flexible": {
+        "name": "Flexible",
+        "terms": "Full refund until 24 h before check-in, then 50%"
+      },
+      "standard": {
+        "name": "Standard",
+        "terms": "Full refund until 7 days before, 50% until 3 days, then none"
+      },
+      "nonrefundable": {
+        "name": "Non-refundable",
+        "terms": "No refund"
+      }
     },
-    "learnMore": "How the model works and how well it is calibrated"
+    "learnMore": "How the model works"
   },
   "trust": {
     "eyebrow": "Trust",
     "title": "Where the money sits",
-    "lead": "Nobody has to hold the guest's money on trust.",
     "items": [
       {
         "title": "One escrow per booking",
-        "body": "The guest's USDC goes into an escrow on Solana created for that booking alone. It can pay out only to the guest, to your wallet, or a fee capped by the rate written into the booking."
+        "body": "The guest's USDC sits in an escrow on Solana made for that booking alone."
       },
       {
         "title": "Terms fixed before payment",
-        "body": "Price, refund schedule, check-in time and fee are written into the escrow before the guest pays. After that, the program's rules don't let you, the guest or Stumari change them. During the pilot Stumari can still upgrade the program itself: see “What we don't claim”."
+        "body": "Price, refunds and fee are written into the escrow before the guest pays. See “What we don't claim”."
       },
       {
         "title": "A disclosed arbiter",
-        "body": "If a guest opens a dispute in the 24 hours after check-in, Stumari's arbiter decides how the escrow is split. During the pilot the arbiter is a single Stumari key. We say so openly, and moving to a multi-signature group is on our roadmap."
+        "body": "Disputes in the 24 hours after check-in go to Stumari's arbiter: during the pilot, a single Stumari key."
       },
       {
         "title": "Unconfirmed means refunded",
-        "body": "Each booking stays pending until we re-check your calendars. If it isn't confirmed within 2 hours, the guest can take a full refund, so a double booking never costs the guest their money."
+        "body": "If a booking can't be confirmed within 2 hours, the guest gets a full refund."
       }
     ],
     "limits": {
       "title": "What we don't claim",
-      "body": "During the pilot, Stumari can still upgrade the escrow program; it moves to a multi-signature group or is frozen before it holds meaningful funds. Disputed bookings depend on Stumari's arbiter key."
+      "body": "During the pilot Stumari can still upgrade the escrow program, and disputed bookings depend on Stumari's arbiter key."
     }
   },
   "pilot": {
     "eyebrow": "Pilot offer",
     "title": "Founding-hotel pilot",
-    "lead": "The exact terms, with nothing hidden in the small print.",
+    "lead": "For the first 10 independent hotels in Tbilisi.",
+    "big": "0%",
+    "bigNote": "Stumari fee until 31 December 2026. Then a flat 1.5%.",
+    "cta": "Apply for one of 10 places",
+    "termsToggle": "Read the full pilot terms",
     "terms": [
       "Founding-hotel pilot for the first 10 independent hotels in Tbilisi.",
       "0% Stumari fee on every booking until 31 December 2026. After that, a flat 1.5% of what the hotel receives, written into each booking on-chain before the guest pays.",
@@ -154,8 +159,7 @@
       "Per-booking limit of 1,500 USDC during the pilot.",
       "No exclusivity, no minimums, leave anytime.",
       "We help you set up a wallet and point you to licensed providers for converting USDC to lari. We don't give legal, tax or financial advice."
-    ],
-    "cta": "Apply for one of 10 places"
+    ]
   },
   "faq": {
     "title": "Questions hotels ask",
@@ -192,7 +196,7 @@
   },
   "cta": {
     "title": "Be one of the first 10 hotels",
-    "body": "Tell us about your property. We'll message you on WhatsApp or Telegram within 24 hours to book a 20-minute setup call.",
+    "body": "We reply on WhatsApp or Telegram within 24 hours.",
     "button": "Apply for the pilot",
     "demoButton": "Book a demo"
   },
@@ -222,7 +226,11 @@
       "roomsCount": "Number of rooms",
       "contactName": "Your name",
       "role": "Your role",
-      "roles": { "owner": "Owner", "manager": "Manager", "other": "Other" },
+      "roles": {
+        "owner": "Owner",
+        "manager": "Manager",
+        "other": "Other"
+      },
       "phone": "WhatsApp phone number",
       "phoneHint": "With country code, e.g. +995 5XX XXX XXX",
       "telegram": "Telegram username",
@@ -243,9 +251,17 @@
       "hasIcal": "Can you export an iCal calendar link from Booking.com or Airbnb?",
       "icalSingleUnit": "Is each room you sell on Booking.com or Airbnb its own listing or room type?",
       "icalSingleUnitHint": "If several identical rooms share one room type, we'll check your extranet together before connecting.",
-      "yesNo": { "yes": "Yes", "no": "No", "unsure": "Not sure" },
+      "yesNo": {
+        "yes": "Yes",
+        "no": "No",
+        "unsure": "Not sure"
+      },
       "acceptsCrypto": "Do guests ask to pay in crypto today?",
-      "cryptoOptions": { "no": "No", "sometimes": "Sometimes", "often": "Often" },
+      "cryptoOptions": {
+        "no": "No",
+        "sometimes": "Sometimes",
+        "often": "Often"
+      },
       "message": "Anything we should know?",
       "messagePlaceholder": "Questions, best time to call, languages you prefer…",
       "consent": "I agree that Stumari may contact me about this pilot by WhatsApp, Telegram or email, and I have read the privacy notice.",

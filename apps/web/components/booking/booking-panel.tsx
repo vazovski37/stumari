@@ -16,15 +16,15 @@ type Action = "cancel" | "dispute" | "void";
 type BookingTx = { tx: string; refund_minor?: string };
 
 const STATUS: Record<PublicBookingView["status"], { label: string; tone: string }> = {
-  awaiting_signature: { label: "Waiting for payment", tone: "bg-amber-soft text-wine-deep" },
-  pending: { label: "Paid · confirming with the hotel", tone: "bg-amber-soft text-wine-deep" },
-  confirmed: { label: "Confirmed", tone: "bg-vine-soft text-vine" },
-  cancelled: { label: "Cancelled", tone: "bg-sand text-ink" },
-  released: { label: "Completed · paid to the hotel", tone: "bg-vine-soft text-vine" },
-  disputed: { label: "Disputed · awaiting the arbiter", tone: "bg-amber-soft text-wine-deep" },
-  resolved: { label: "Dispute resolved", tone: "bg-sand text-ink" },
-  voided: { label: "Not confirmed · fully refunded", tone: "bg-sand text-ink" },
-  failed: { label: "Payment did not go through", tone: "bg-clay/10 text-clay" },
+  awaiting_signature: { label: "Waiting for payment", tone: "bg-warn-soft text-brand-deep" },
+  pending: { label: "Paid · confirming with the hotel", tone: "bg-warn-soft text-brand-deep" },
+  confirmed: { label: "Confirmed", tone: "bg-positive-soft text-positive" },
+  cancelled: { label: "Cancelled", tone: "bg-surface text-ink" },
+  released: { label: "Completed · paid to the hotel", tone: "bg-positive-soft text-positive" },
+  disputed: { label: "Disputed · awaiting the arbiter", tone: "bg-warn-soft text-brand-deep" },
+  resolved: { label: "Dispute resolved", tone: "bg-surface text-ink" },
+  voided: { label: "Not confirmed · fully refunded", tone: "bg-surface text-ink" },
+  failed: { label: "Payment did not go through", tone: "bg-danger/10 text-danger" },
 };
 
 const pollMs = (s: PublicBookingView["status"]) =>
@@ -169,7 +169,7 @@ export function BookingPanel({ initial, initialNow }: { initial: PublicBookingVi
       <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
         <div className="card space-y-4 p-5">
           {view.refund_if_cancel_now_minor !== null && (
-            <div className="rounded-2xl bg-sand px-4 py-3">
+            <div className="rounded-2xl bg-surface px-4 py-3">
               <p className="text-xs font-medium text-ink-soft">
                 {view.status === "pending" ? "Guaranteed refund if you cancel now" : "Refund if you cancel now"}
               </p>
@@ -222,7 +222,7 @@ export function BookingPanel({ initial, initialNow }: { initial: PublicBookingVi
               ),
             )}
           {error && (
-            <p role="alert" className="rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay">
+            <p role="alert" className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">
               {error}
             </p>
           )}
@@ -248,7 +248,7 @@ export function BookingPanel({ initial, initialNow }: { initial: PublicBookingVi
 
 function ExplorerLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 font-medium text-wine underline underline-offset-2">
+    <a href={href} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 font-medium text-brand underline underline-offset-2">
       {children}
       <ExternalLink aria-hidden="true" className="size-3.5" />
     </a>
@@ -303,7 +303,7 @@ function Timeline({ view, now, at }: { view: PublicBookingView; now: number; at:
     <ol className="mt-4 space-y-0">
       {steps.map((step, i) => {
         const Icon = step.state === "done" ? CheckCircle2 : step.state === "stopped" ? XCircle : CircleDashed;
-        const color = step.state === "done" ? "text-vine" : step.state === "current" ? "text-amber" : step.state === "stopped" ? "text-clay" : "text-line";
+        const color = step.state === "done" ? "text-positive" : step.state === "current" ? "text-warn" : step.state === "stopped" ? "text-danger" : "text-line";
         return (
           <li key={step.label} className="relative flex gap-3 pb-5 last:pb-0">
             {i < steps.length - 1 && <span aria-hidden="true" className="absolute top-6 left-[11px] h-[calc(100%-1.25rem)] w-px bg-line" />}

@@ -28,7 +28,7 @@ export default async function DashboardIndexPage() {
         <ul className="space-y-2">
           {mine.map((h) => (
             <li key={h.id}>
-              <Link href={`/dashboard/${h.id}`} className="font-medium text-wine underline">
+              <Link href={`/dashboard/${h.id}`} className="font-medium text-brand underline">
                 {h.name}
               </Link>
             </li>
@@ -42,7 +42,7 @@ export default async function DashboardIndexPage() {
       {session.isAdmin && (
         <p>
           You are an admin:{" "}
-          <Link href="/admin?tab=hotels" className="text-wine underline">
+          <Link href="/admin?tab=hotels" className="text-brand underline">
             open any hotel from the admin console
           </Link>
           .

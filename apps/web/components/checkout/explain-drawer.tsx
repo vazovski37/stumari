@@ -61,18 +61,18 @@ export function ExplainDrawer({
               </h2>
               <p className="mt-1 text-sm text-ink-soft">{TEMPLATES[optionId].description}</p>
             </div>
-            <button type="button" onClick={onClose} className="rounded-full p-1.5 text-ink-soft hover:bg-sand" aria-label="Close">
+            <button type="button" onClick={onClose} className="rounded-full p-1.5 text-ink-soft hover:bg-surface" aria-label="Close">
               <X aria-hidden="true" className="size-5" />
             </button>
           </div>
 
           <div className="flex-1 space-y-7 overflow-y-auto px-6 py-6">
             <section className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-sand px-4 py-3">
+              <div className="rounded-2xl bg-surface px-4 py-3">
                 <p className="text-xs font-medium text-ink-soft">Chance this booking is cancelled</p>
                 <p className="mt-1 font-display text-3xl font-semibold tabular-nums">{pct(explain.p_cancel)}</p>
               </div>
-              <div className="rounded-2xl bg-sand px-4 py-3">
+              <div className="rounded-2xl bg-surface px-4 py-3">
                 <p className="text-xs font-medium text-ink-soft">Booked ahead</p>
                 <p className="mt-1 font-display text-3xl font-semibold tabular-nums">
                   {explain.lead_time} <span className="text-base font-medium text-ink-soft">days</span>
@@ -108,7 +108,7 @@ export function ExplainDrawer({
                         <td className="w-2/5 py-2">
                           {reachable ? (
                             <span className="flex items-center gap-2">
-                              <span className="h-2 rounded-full bg-wine" style={{ width: `${Math.max(3, (q / maxQ) * 100)}%` }} />
+                              <span className="h-2 rounded-full bg-brand" style={{ width: `${Math.max(3, (q / maxQ) * 100)}%` }} />
                               <span className="tabular-nums">{pct(q)}</span>
                             </span>
                           ) : (
@@ -152,7 +152,7 @@ export function ExplainDrawer({
             </section>
 
             {explain.options.some((o) => o.withheld) && (
-              <section className="rounded-2xl bg-sand px-4 py-3 text-sm text-ink-soft">
+              <section className="rounded-2xl bg-surface px-4 py-3 text-sm text-ink-soft">
                 {explain.options
                   .filter((o) => o.withheld)
                   .map((o) => (
@@ -167,7 +167,7 @@ export function ExplainDrawer({
                 {count(modelReport.training.trainBookings)} bookings at two Portuguese hotels (2015–2017) and evaluated on{" "}
                 {count(modelReport.test.bookings)} held-out ones. It has not yet been recalibrated on this hotel&rsquo;s own bookings.
               </p>
-              <Link href="/model" className="inline-flex items-center gap-1 font-medium text-wine underline underline-offset-2">
+              <Link href="/model" className="inline-flex items-center gap-1 font-medium text-brand underline underline-offset-2">
                 How the model works and how well it is calibrated
                 <ArrowUpRight aria-hidden="true" className="size-4" />
               </Link>

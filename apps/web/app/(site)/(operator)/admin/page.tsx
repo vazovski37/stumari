@@ -63,7 +63,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
             key={t.id}
             href={`/admin?tab=${t.id}`}
             aria-current={t.id === tab ? "page" : undefined}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${t.id === tab ? "bg-wine text-paper" : "text-ink-soft hover:bg-sand"}`}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium ${t.id === tab ? "bg-brand text-paper" : "text-ink-soft hover:bg-surface"}`}
           >
             {t.label}
           </Link>
@@ -128,11 +128,11 @@ async function HotelsTab() {
                   <td className="px-4 py-3 font-mono text-xs">{h.payout_wallet ? shortAddress(h.payout_wallet) : "—"}</td>
                   <td className="px-4 py-3">{h.onchain_hotel ? <Pill tone="good">registered</Pill> : <Pill tone="plain">not yet</Pill>}</td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <Link href={`/admin/hotels/${h.id}`} className="font-medium text-wine hover:underline">
+                    <Link href={`/admin/hotels/${h.id}`} className="font-medium text-brand hover:underline">
                       Onboarding
                     </Link>
                     <span className="px-2 text-line">|</span>
-                    <Link href={`/dashboard/${h.id}`} className="font-medium text-wine hover:underline">
+                    <Link href={`/dashboard/${h.id}`} className="font-medium text-brand hover:underline">
                       Dashboard
                     </Link>
                   </td>
@@ -198,7 +198,7 @@ async function BookingsTab({ params }: { params: Record<string, string | string[
           Filter
         </button>
       </form>
-      {!parsed.success && <p className="text-sm text-clay">Some filters were invalid and were ignored.</p>}
+      {!parsed.success && <p className="text-sm text-danger">Some filters were invalid and were ignored.</p>}
       <BookingsTable bookings={bookings} now={unixNow()} actionsBase="/api/admin/bookings" admin />
     </Section>
   );

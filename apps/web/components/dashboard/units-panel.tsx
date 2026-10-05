@@ -73,7 +73,7 @@ function CopyField({ label, value }: { label: string; value: string }) {
             setTimeout(() => setCopied(false), 1_500);
           }}
         >
-          {copied ? <Check aria-hidden="true" className="size-4 text-vine" /> : <Copy aria-hidden="true" className="size-4" />}
+          {copied ? <Check aria-hidden="true" className="size-4 text-positive" /> : <Copy aria-hidden="true" className="size-4" />}
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
@@ -104,7 +104,7 @@ function UnitCard({ hotelId, unit, timeZone }: { hotelId: string; unit: Dashboar
           <Pill tone="warn">not synced yet</Pill>
         )}
       </div>
-      {unit.sync_error && <p className="rounded-lg bg-clay/10 px-3 py-2 text-sm text-clay">{unit.sync_error}</p>}
+      {unit.sync_error && <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{unit.sync_error}</p>}
 
       <CopyField label="Export feed (paste into Booking.com / Airbnb at go-live)" value={unit.export_url} />
 
@@ -135,7 +135,7 @@ function UnitCard({ hotelId, unit, timeZone }: { hotelId: string; unit: Dashboar
                 type="button"
                 disabled={busy !== null}
                 onClick={() => run(`del:${b.id}`, () => apiDelete(`${base}/blocks/${b.id}`))}
-                className="ml-auto inline-flex items-center gap-1 text-clay hover:underline disabled:opacity-60"
+                className="ml-auto inline-flex items-center gap-1 text-danger hover:underline disabled:opacity-60"
               >
                 <Trash2 aria-hidden="true" className="size-3.5" /> Remove
               </button>

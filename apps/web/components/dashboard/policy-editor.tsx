@@ -79,9 +79,9 @@ export function PolicyEditor({ hotelId, policy }: { hotelId: string; policy: Hot
         </p>
         <div className="grid gap-3 md:grid-cols-3">
           {TEMPLATE_IDS.map((id) => (
-            <div key={id} className={`rounded-xl border p-4 ${enabled.includes(id) ? "border-wine bg-white" : "border-line"}`}>
+            <div key={id} className={`rounded-xl border p-4 ${enabled.includes(id) ? "border-brand bg-white" : "border-line"}`}>
               <label className="flex items-center gap-2 font-semibold">
-                <input type="checkbox" checked={enabled.includes(id)} onChange={() => toggle(id)} className="size-4 accent-wine" />
+                <input type="checkbox" checked={enabled.includes(id)} onChange={() => toggle(id)} className="size-4 accent-brand" />
                 {TEMPLATES[id].name}
               </label>
               <p className="mt-1 text-sm text-ink-soft">{TEMPLATES[id].description}</p>
@@ -94,7 +94,7 @@ export function PolicyEditor({ hotelId, policy }: { hotelId: string; policy: Hot
                     setSaved(false);
                     setReference(id);
                   }}
-                  className="size-4 accent-wine"
+                  className="size-4 accent-brand"
                 />
                 My current policy (reference)
               </label>
@@ -150,7 +150,7 @@ export function PolicyEditor({ hotelId, policy }: { hotelId: string; policy: Hot
       </fieldset>
 
       {problem && (
-        <p role="status" className="rounded-xl bg-amber-soft px-4 py-3 text-sm text-wine-deep">
+        <p role="status" className="rounded-xl bg-warn-soft px-4 py-3 text-sm text-brand-deep">
           {problem}
         </p>
       )}
@@ -160,7 +160,7 @@ export function PolicyEditor({ hotelId, policy }: { hotelId: string; policy: Hot
           <Save aria-hidden="true" className="size-4" />
           {busy ? "Saving…" : "Save contracts"}
         </button>
-        {saved && <span className="text-sm text-vine">Saved. New quotes use these terms.</span>}
+        {saved && <span className="text-sm text-positive">Saved. New quotes use these terms.</span>}
       </div>
     </div>
   );

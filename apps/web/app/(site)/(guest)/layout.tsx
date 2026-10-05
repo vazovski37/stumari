@@ -28,7 +28,7 @@ export default function GuestLayout({ children }: LayoutProps<"/">) {
               <Logo />
             </Link>
             <nav aria-label="Guest" className="ml-auto">
-              <Link href="/model" className="text-sm font-medium text-ink-soft hover:text-wine">
+              <Link href="/model" className="text-sm font-medium text-ink-soft hover:text-brand">
                 How pricing works
               </Link>
             </nav>
@@ -44,7 +44,7 @@ export default function GuestLayout({ children }: LayoutProps<"/">) {
   return (
     <WalletProvider config={{ cluster: env.cluster, demoMode: env.demoMode }}>
       {env.cluster !== "mainnet-beta" && (
-        <p className="bg-wine-deep px-4 py-2 text-center text-xs font-medium text-paper">
+        <p className="bg-brand-deep px-4 py-2 text-center text-xs font-medium text-paper">
           Demo on {clusterName[env.cluster]}: payments use test USDC with no real value.
         </p>
       )}
@@ -56,12 +56,12 @@ export default function GuestLayout({ children }: LayoutProps<"/">) {
           <nav aria-label="Guest" className="ml-2 hidden sm:block">
             <ul className="flex items-center gap-5 text-sm font-medium text-ink-soft">
               <li>
-                <Link href="/my" className="hover:text-wine">
+                <Link href="/my" className="hover:text-brand">
                   My bookings
                 </Link>
               </li>
               <li>
-                <Link href="/model" className="hover:text-wine">
+                <Link href="/model" className="hover:text-brand">
                   How pricing works
                 </Link>
               </li>

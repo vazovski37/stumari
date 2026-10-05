@@ -5,32 +5,30 @@ const icons = [LockKeyhole, ScrollText, Scale, Hourglass];
 
 export function Trust({ trust }: { trust: Dictionary["trust"] }) {
   return (
-    <section id="trust" aria-labelledby="trust-title" className="arches scroll-mt-20 bg-wine-deep text-paper">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <p className="text-sm font-semibold tracking-[0.08em] text-amber uppercase">{trust.eyebrow}</p>
-        <h2 id="trust-title" className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+    <section id="trust" aria-labelledby="trust-title" className="on-dark scroll-mt-20">
+      <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:py-32">
+        <p className="eyebrow">{trust.eyebrow}</p>
+        <h2 id="trust-title" className="headline mt-4 text-4xl sm:text-5xl">
           {trust.title}
         </h2>
-        <p className="mt-4 max-w-2xl text-lg text-paper/85">{trust.lead}</p>
-        <ul className="mt-12 grid gap-5 sm:grid-cols-2">
+        <ul className="mt-16 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
           {trust.items.map((item, i) => {
             const Icon = icons[i % icons.length] ?? LockKeyhole;
             return (
-              <li key={item.title} className="rounded-[var(--radius-card)] border border-paper/15 bg-wine-deep/80 p-6 backdrop-blur-sm">
-                <Icon aria-hidden="true" className="size-6 text-amber" />
-                <h3 className="mt-4 font-sans text-lg font-semibold">{item.title}</h3>
-                <p className="mt-2 leading-relaxed text-paper/85">{item.body}</p>
+              <li key={item.title}>
+                <Icon aria-hidden="true" className="size-7" strokeWidth={1.5} />
+                <h3 className="mt-5 text-xl font-extrabold tracking-[-0.02em]">{item.title}</h3>
+                <p className="mt-2 leading-snug text-white/65">{item.body}</p>
               </li>
             );
           })}
         </ul>
-        <div className="mt-5 flex gap-4 rounded-[var(--radius-card)] border border-amber/40 bg-wine-deep/80 p-6">
-          <Info aria-hidden="true" className="size-6 shrink-0 text-amber" />
-          <div>
-            <h3 className="font-sans text-lg font-semibold">{trust.limits.title}</h3>
-            <p className="mt-2 leading-relaxed text-paper/85">{trust.limits.body}</p>
-          </div>
-        </div>
+        <p className="mt-16 flex gap-3 border-t border-white/20 pt-6 text-sm leading-relaxed text-white/65">
+          <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          <span>
+            <strong className="font-semibold text-white">{trust.limits.title}.</strong> {trust.limits.body}
+          </span>
+        </p>
       </div>
     </section>
   );

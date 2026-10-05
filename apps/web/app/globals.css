@@ -1,35 +1,42 @@
 @import "tailwindcss";
 
 /*
- * Stumari palette: warm Tbilisi paper and Saperavi wine for hospitality,
- * deep ink and vine green for the money parts. Text colours meet WCAG AA on
- * paper (ink 15:1, ink-soft 7:1, wine 11:1, clay 5.4:1, vine 5.9:1).
+ * Stumari brand (docs/product/brand.md): black and white from the wordmark; colour only where it
+ * means something (positive = money returned or released, warn = pending, danger = errors).
+ * Text colours meet WCAG AA on paper (ink 19.8:1, ink-soft 7.3:1, positive 5.4:1, warn 5.4:1, danger 6.5:1).
  */
 @theme {
-  --color-paper: #faf6ef;
-  --color-sand: #f2eadd;
-  --color-line: #e3d7c5;
-  --color-ink: #1f1a17;
-  --color-ink-soft: #5a5049;
-  --color-wine: #7a1f30;
-  --color-wine-deep: #4e121d;
-  --color-clay: #a8462a;
-  --color-amber: #d99a2b;
-  --color-amber-soft: #f4e3c1;
-  --color-vine: #2f6a4e;
-  --color-vine-soft: #dcebe2;
+  --color-paper: #ffffff;
+  --color-surface: #f4f4f4;
+  --color-line: #e2e2e2;
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #565656;
+  --color-brand: #000000;
+  --color-brand-deep: #000000;
+  --color-positive: #1d7a46;
+  --color-positive-soft: #e3f2e8;
+  --color-warn: #9a5b00;
+  --color-warn-soft: #fbefd6;
+  --color-danger: #b3261e;
 
-  --font-sans: var(--font-inter), var(--font-noto-sans-georgian), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-literata), var(--font-noto-serif-georgian), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), var(--font-google-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter-tight), var(--font-google-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-label: var(--font-martian-mono), var(--font-google-sans), ui-monospace, monospace;
 
-  --radius-card: 1.25rem;
-  --shadow-card: 0 1px 0 rgb(31 26 23 / 0.04), 0 12px 32px -12px rgb(78 18 29 / 0.18);
+  --radius-card: 0.5rem;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.05);
 }
 
 @layer base {
   html {
     color-scheme: light;
     -webkit-text-size-adjust: 100%;
+  }
+
+  /* Georgian pages: Google Sans first everywhere, so Latin words in a Georgian line ("USDC", "24") match it. */
+  html:lang(ka) {
+    --font-sans: var(--font-google-sans), ui-sans-serif, system-ui, sans-serif;
+    --font-display: var(--font-google-sans), ui-sans-serif, system-ui, sans-serif;
   }
 
   body {
@@ -52,14 +59,14 @@
   }
 
   ::selection {
-    background: var(--color-wine);
+    background: var(--color-brand);
     color: var(--color-paper);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-wine);
+    outline: 2px solid var(--focus-ring, var(--color-ink));
     outline-offset: 3px;
-    border-radius: 0.375rem;
+    border-radius: 0.25rem;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -70,13 +77,34 @@
 }
 
 @layer components {
+  /* Black bands (hero, trust, closing CTA, footer): white text, labels and focus rings. */
+  .on-dark {
+    --focus-ring: var(--color-paper);
+    --eyebrow: rgb(255 255 255 / 0.6);
+    background: var(--color-brand);
+    color: var(--color-paper);
+  }
+
+  /* A white panel inside a black band (the hero's example booking). */
+  .on-light {
+    --focus-ring: var(--color-ink);
+    --eyebrow: var(--color-ink-soft);
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  .on-dark ::selection {
+    background: var(--color-paper);
+    color: var(--color-brand);
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-radius: 999px;
-    padding: 0.8rem 1.4rem;
+    border-radius: 0.375rem;
+    padding: 0.8rem 1.35rem;
     font-weight: 600;
     font-size: 0.975rem;
     line-height: 1.2;
@@ -92,12 +120,12 @@
   }
 
   .btn-primary {
-    background: var(--color-wine);
+    background: var(--color-brand);
     color: var(--color-paper);
   }
 
   .btn-primary:hover {
-    background: var(--color-wine-deep);
+    background: #2b2b2b;
   }
 
   .btn-secondary {
@@ -107,17 +135,27 @@
   }
 
   .btn-secondary:hover {
-    border-color: var(--color-ink-soft);
-    background: var(--color-sand);
+    border-color: var(--color-ink);
   }
 
+  /* On black: white fill, and a white outline variant. */
   .btn-light {
     background: var(--color-paper);
-    color: var(--color-wine-deep);
+    color: var(--color-brand);
   }
 
   .btn-light:hover {
-    background: var(--color-amber-soft);
+    background: #dcdcdc;
+  }
+
+  .btn-outline-light {
+    border: 1px solid rgb(255 255 255 / 0.4);
+    color: var(--color-paper);
+  }
+
+  .btn-outline-light:hover {
+    border-color: var(--color-paper);
+    background: rgb(255 255 255 / 0.08);
   }
 
   /* Form control used by checkout and booking pages. */
@@ -126,7 +164,7 @@
     display: block;
     width: 100%;
     border: 1px solid var(--color-line);
-    border-radius: 0.75rem;
+    border-radius: 0.375rem;
     background: #fff;
     padding: 0.6rem 0.8rem;
     color: var(--color-ink);
@@ -135,29 +173,48 @@
   }
 
   .field:focus {
-    border-color: var(--color-wine);
-    outline: 2px solid color-mix(in srgb, var(--color-wine) 25%, transparent);
+    border-color: var(--color-ink);
+    outline: 2px solid color-mix(in srgb, var(--color-ink) 15%, transparent);
     outline-offset: 0;
   }
 
+  /* Small uppercase label in the wide mono (eyebrows, chips, step numbers). */
   .eyebrow {
+    font-family: var(--font-label);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--eyebrow, var(--color-ink-soft));
+  }
+
+  /* Georgian has no mono or capitals: mono spaces between Georgian glyphs read as gaps. */
+  :lang(ka) .eyebrow {
+    font-family: var(--font-sans);
     font-size: 0.8rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-clay);
+    letter-spacing: 0;
+  }
+
+  /* Display headline: heavy and tight, like the wordmark's weight. */
+  .headline {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+  }
+
+  /* Google Sans tops out at 700, the right weight for Georgian; its letters need normal tracking and more line height. */
+  :lang(ka) .headline {
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.14;
   }
 
   .card {
     border: 1px solid var(--color-line);
     border-radius: var(--radius-card);
-    background: #fffdf9;
+    background: var(--color-paper);
     box-shadow: var(--shadow-card);
-  }
-
-  /* Tbilisi balcony arches, used as a quiet texture on dark bands. */
-  .arches {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='40' viewBox='0 0 48 40'%3E%3Cpath d='M4 40V18a20 20 0 0 1 40 0v22' fill='none' stroke='%23d99a2b' stroke-opacity='.14' stroke-width='1.5'/%3E%3C/svg%3E");
-    background-size: 48px 40px;
   }
 }

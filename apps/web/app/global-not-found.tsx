@@ -23,7 +23,7 @@ export default function GlobalNotFound() {
                 <li key={locale} lang={locale}>
                   <Heading className="text-2xl font-semibold tracking-tight">{notFound.title}</Heading>
                   <p className="mt-1 text-ink-soft">{notFound.body}</p>
-                  <Link href={localePath(locale)} className="mt-2 inline-block font-medium text-wine underline underline-offset-2">
+                  <Link href={localePath(locale)} className="mt-2 inline-block font-medium text-brand underline underline-offset-2">
                     {notFound.home}
                   </Link>
                 </li>

@@ -3,8 +3,8 @@ import { formatHotelTime, refundLabel, refundSteps } from "@/lib/bookings/terms"
 
 /** Refund level → one hue, light to dark (magnitude), always paired with a text label. */
 function tone(refundBps: number): string {
-  if (refundBps >= 10_000) return "bg-vine";
-  if (refundBps > 0) return "bg-vine/45";
+  if (refundBps >= 10_000) return "bg-positive";
+  if (refundBps > 0) return "bg-positive/45";
   return "bg-line";
 }
 

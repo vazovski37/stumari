@@ -5,12 +5,12 @@ import type { ReliabilityBin } from "@/lib/model-report";
 
 /**
  * Reliability diagram: predicted vs observed cancellation rate per equal-count bin, before and
- * after Platt calibration. Two series in a validated pair (clay, ochre) with distinct marker
+ * after Platt calibration. Two series in brand black and mid grey (3.4:1 on white) with distinct marker
  * shapes, a legend, per-point hover and a table view.
  */
 const SERIES = [
-  { key: "after", label: "Platt-calibrated (used for prices)", color: "#a8462a", shape: "circle" },
-  { key: "before", label: "Uncalibrated model", color: "#b98a2e", shape: "square" },
+  { key: "after", label: "Platt-calibrated (used for prices)", color: "#0a0a0a", shape: "circle" },
+  { key: "before", label: "Uncalibrated model", color: "#8a8a8a", shape: "square" },
 ] as const;
 
 const W = 560;
@@ -105,7 +105,7 @@ export function ReliabilityChart({ before, after }: { before: ReliabilityBin[]; 
         )}
       </div>
       <details className="text-sm">
-        <summary className="cursor-pointer font-medium text-wine">Show the numbers</summary>
+        <summary className="cursor-pointer font-medium text-brand">Show the numbers</summary>
         <table className="mt-2 w-full text-left tabular-nums">
           <thead>
             <tr className="text-xs text-ink-soft">

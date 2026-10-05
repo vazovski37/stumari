@@ -51,7 +51,7 @@ export default function AdsPage() {
                         key={format}
                         href={`/ads/${locale}/${adFileName(variant, format)}`}
                         download
-                        className="font-medium text-wine underline underline-offset-2"
+                        className="font-medium text-brand underline underline-offset-2"
                       >
                         {adFormats[format].width}×{adFormats[format].height}
                       </a>

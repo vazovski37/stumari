@@ -18,7 +18,7 @@ export default async function OperatorLayout({ children }: LayoutProps<"/">) {
   return (
     <WalletProvider config={{ cluster: env.cluster, demoMode: env.demoMode }}>
       {env.cluster !== "mainnet-beta" && (
-        <p className="bg-wine-deep px-4 py-2 text-center text-xs font-medium text-paper">
+        <p className="bg-brand-deep px-4 py-2 text-center text-xs font-medium text-paper">
           Running on {clusterName[env.cluster]}: amounts are test USDC with no real value.
         </p>
       )}
@@ -30,13 +30,13 @@ export default async function OperatorLayout({ children }: LayoutProps<"/">) {
           <nav aria-label="Operator" className="ml-2">
             <ul className="flex items-center gap-5 text-sm font-medium text-ink-soft">
               <li>
-                <Link href="/dashboard" className="hover:text-wine">
+                <Link href="/dashboard" className="hover:text-brand">
                   Dashboard
                 </Link>
               </li>
               {session?.isAdmin && (
                 <li>
-                  <Link href="/admin" className="hover:text-wine">
+                  <Link href="/admin" className="hover:text-brand">
                     Admin
                   </Link>
                 </li>

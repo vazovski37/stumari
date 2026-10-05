@@ -21,7 +21,7 @@ const num = (v: number) => v.toLocaleString("en-US");
 function Stat({ value, label, detail }: { value: string; label: string; detail: string }) {
   return (
     <div className="card p-5">
-      <p className="font-display text-3xl font-semibold tracking-tight text-wine tabular-nums">{value}</p>
+      <p className="font-display text-3xl font-semibold tracking-tight text-brand tabular-nums">{value}</p>
       <p className="mt-1 font-semibold">{label}</p>
       <p className="mt-1 text-sm text-ink-soft">{detail}</p>
     </div>
@@ -59,7 +59,7 @@ export default function ModelPage() {
         </header>
 
         <Section id="how-title" title="From a request to a price">
-          <ol className="list-decimal space-y-3 pl-5 leading-relaxed text-ink-soft marker:font-semibold marker:text-wine">
+          <ol className="list-decimal space-y-3 pl-5 leading-relaxed text-ink-soft marker:font-semibold marker:text-brand">
             <li>
               <span className="text-ink">Hazard per window.</span> A gradient-boosted model scores six windows before check-in
               (30+ days, 14–30, 7–14, 3–7, 1–3, last day) from what is known at quote time: lead time, dates, nights, party
@@ -107,7 +107,7 @@ export default function ModelPage() {
           <div className="card p-4 sm:p-6">
             <ReliabilityChart before={r.reliability.before} after={r.reliability.after} />
           </div>
-          <div className="rounded-2xl bg-sand px-5 py-4 text-sm leading-relaxed text-ink-soft">
+          <div className="rounded-2xl bg-surface px-5 py-4 text-sm leading-relaxed text-ink-soft">
             <p className="font-semibold text-ink">Why Platt scaling and not isotonic regression</p>
             <p className="mt-1">
               Isotonic regression calibrates slightly better on paper (error {t.isotonic.ece.toFixed(3)} vs {t.ece.toFixed(3)})
@@ -141,7 +141,7 @@ export default function ModelPage() {
                     </th>
                     <td className="px-3 py-2 text-right">{pct(w.predicted_q, 2)}</td>
                     <td className="px-3 py-2 text-right">{pct(w.observed_q, 2)}</td>
-                    <td className={`px-3 py-2 text-right ${w === worst ? "font-semibold text-clay" : ""}`}>{w.ratio.toFixed(2)}×</td>
+                    <td className={`px-3 py-2 text-right ${w === worst ? "font-semibold text-danger" : ""}`}>{w.ratio.toFixed(2)}×</td>
                   </tr>
                 ))}
               </tbody>
@@ -176,8 +176,8 @@ export default function ModelPage() {
             </li>
           </ul>
           <p className="text-sm text-ink-soft">
-            Full report and reproduction steps: <code className="rounded bg-sand px-1.5 py-0.5">ml/reports/metrics.md</code> in
-            the Stumari repository. <Link href="/" className="font-medium text-wine underline underline-offset-2">Back to Stumari</Link>
+            Full report and reproduction steps: <code className="rounded bg-surface px-1.5 py-0.5">ml/reports/metrics.md</code> in
+            the Stumari repository. <Link href="/" className="font-medium text-brand underline underline-offset-2">Back to Stumari</Link>
           </p>
         </Section>
       </main>

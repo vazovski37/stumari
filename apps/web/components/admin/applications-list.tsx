@@ -111,7 +111,7 @@ function ApplicationCard({ a }: { a: ApplicationItem }) {
           </div>
         )}
       </dl>
-      {a.message && <p className="rounded-xl bg-sand/70 px-4 py-3 text-sm whitespace-pre-line">{a.message}</p>}
+      {a.message && <p className="rounded-xl bg-surface/70 px-4 py-3 text-sm whitespace-pre-line">{a.message}</p>}
 
       <div className="grid gap-3 md:grid-cols-[12rem_1fr_auto] md:items-end">
         <label className="text-sm font-medium">

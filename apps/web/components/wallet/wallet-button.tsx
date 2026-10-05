@@ -56,7 +56,7 @@ export function FaucetButton() {
   return (
     <div className="flex flex-col items-start gap-1.5">
       <button type="button" onClick={fund} disabled={state.busy} className="btn btn-secondary !px-4 !py-2 text-sm disabled:opacity-60">
-        <Coins aria-hidden="true" className="size-4 text-amber" />
+        <Coins aria-hidden="true" className="size-4 text-warn" />
         {state.busy ? "Minting test USDC…" : "Get 500 test USDC"}
       </button>
       {demoBalance !== null && !state.error && (
@@ -65,7 +65,7 @@ export function FaucetButton() {
         </span>
       )}
       {state.error && (
-        <span role="alert" className="text-xs text-clay">
+        <span role="alert" className="text-xs text-danger">
           {state.error}
         </span>
       )}

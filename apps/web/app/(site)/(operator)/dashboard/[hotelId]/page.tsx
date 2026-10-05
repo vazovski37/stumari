@@ -42,7 +42,7 @@ export default async function HotelDashboardPage({ params }: PageProps<"/dashboa
       <NotAllowed title="Not your hotel">
         <p>
           The wallet {shortAddress(session.wallet)} does not manage this hotel. Sign in with the hotel&apos;s payout wallet, or open{" "}
-          <Link href="/dashboard" className="text-wine underline">
+          <Link href="/dashboard" className="text-brand underline">
             your dashboard
           </Link>
           .

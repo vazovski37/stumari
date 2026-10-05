@@ -218,7 +218,7 @@ function MewsResult({ result }: { result: MewsTestResult }) {
   return (
     <div className="space-y-3 text-sm">
       {result.problems.length > 0 ? (
-        <ul className="list-disc space-y-0.5 pl-5 text-wine">
+        <ul className="list-disc space-y-0.5 pl-5 text-brand">
           {result.problems.map((p) => (
             <li key={p}>{p}</li>
           ))}
@@ -247,7 +247,7 @@ function MewsResult({ result }: { result: MewsTestResult }) {
             {result.room_types.map((rt) => (
               <tr key={rt.id} className="border-t border-line">
                 <td className="py-1 pr-3">
-                  {rt.name} → {rt.mews_name ?? <span className="text-wine">{rt.mews_room_type_id ? "unknown id" : "not mapped"}</span>}
+                  {rt.name} → {rt.mews_name ?? <span className="text-brand">{rt.mews_room_type_id ? "unknown id" : "not mapped"}</span>}
                 </td>
                 {result.nights.map((n, i) => (
                   <td key={n} className="px-1 py-1 font-mono">
@@ -536,12 +536,12 @@ export function RegisterStep({ hotel, explorer }: { hotel: HotelRow; explorer: {
         <p className="flex flex-wrap items-center gap-3 text-sm">
           <Pill tone="good">registered</Pill>
           {explorer.hotel && (
-            <a href={explorer.hotel} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-wine hover:underline">
+            <a href={explorer.hotel} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand hover:underline">
               Hotel account <ExternalLink aria-hidden="true" className="size-3.5" />
             </a>
           )}
           {explorer.tx && (
-            <a href={explorer.tx} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-wine hover:underline">
+            <a href={explorer.tx} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand hover:underline">
               Transaction <ExternalLink aria-hidden="true" className="size-3.5" />
             </a>
           )}
@@ -581,7 +581,7 @@ export function StatusStep({ hotel }: { hotel: HotelRow }) {
           {busy === "paused" ? "Pausing…" : "Pause"}
         </button>
         {hotel.status === "active" && (
-          <a href={`/h/${hotel.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-wine hover:underline">
+          <a href={`/h/${hotel.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-brand hover:underline">
             <Link2 aria-hidden="true" className="size-4" /> Open the booking page
           </a>
         )}

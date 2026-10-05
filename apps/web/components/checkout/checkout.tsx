@@ -172,7 +172,7 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
   const code = error instanceof ClientApiError ? error.code : null;
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-10 px-4 pb-20 sm:px-6 lg:grid-cols-[1fr_24rem]">
+    <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-10 pb-20 sm:px-6 lg:grid-cols-[1fr_24rem]">
       <div className="space-y-8">
         <section aria-labelledby="stay-title" className="card p-5 sm:p-6">
           <h2 id="stay-title" className="font-sans text-lg font-semibold">
@@ -226,16 +226,16 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
           <h2 id="rooms-title" className="text-2xl font-semibold tracking-tight">
             Rooms
           </h2>
-          {availabilityError && <p className="text-sm text-clay">{availabilityError}</p>}
+          {availabilityError && <p className="text-sm text-danger">{availabilityError}</p>}
           <ul className="space-y-3">
             {hotel.room_types.map((rt) => {
               const row = rows?.find((r) => r.room_type_id === rt.id);
               const selected = quote?.quote.room_type_id === rt.id;
               return (
-                <li key={rt.id} className={`card flex flex-col gap-4 p-5 sm:flex-row sm:items-center ${selected ? "ring-2 ring-wine" : ""}`}>
+                <li key={rt.id} className={`card flex flex-col gap-4 p-5 sm:flex-row sm:items-center ${selected ? "ring-2 ring-brand" : ""}`}>
                   <div className="flex-1">
                     <h3 className="flex items-center gap-2 font-sans text-lg font-semibold">
-                      <BedDouble aria-hidden="true" className="size-5 text-clay" />
+                      <BedDouble aria-hidden="true" className="size-5 text-ink" />
                       {rt.name}
                     </h3>
                     {rt.description && <p className="mt-1 text-sm text-ink-soft">{rt.description}</p>}
@@ -291,7 +291,7 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
                   price is for these terms only, signed by Stumari.
                 </p>
               </div>
-              <p className={`inline-flex items-center gap-1.5 text-sm ${quoteLive ? "text-ink-soft" : "font-medium text-clay"}`} aria-live="polite">
+              <p className={`inline-flex items-center gap-1.5 text-sm ${quoteLive ? "text-ink-soft" : "font-medium text-danger"}`} aria-live="polite">
                 <Clock aria-hidden="true" className="size-4" />
                 {quoteLive
                   ? `Room held for ${Math.floor(expiresIn / 60)}:${String(expiresIn % 60).padStart(2, "0")}`
@@ -326,12 +326,12 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
                       setOptionIndex(next);
                       cards.current[next]?.focus();
                     }}
-                    className={`card flex cursor-pointer flex-col gap-3 p-5 transition-shadow ${chosen ? "ring-2 ring-wine" : "hover:border-ink-soft"}`}
+                    className={`card flex cursor-pointer flex-col gap-3 p-5 transition-shadow ${chosen ? "ring-2 ring-brand" : "hover:border-ink-soft"}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-sans text-base font-semibold">{TEMPLATES[o.id].name}</h3>
                       {o.id === quote.explain.reference_template && (
-                        <span className="rounded-full bg-sand px-2 py-0.5 text-[0.7rem] font-medium text-ink-soft">Hotel&rsquo;s usual</span>
+                        <span className="rounded-full bg-surface px-2 py-0.5 text-[0.7rem] font-medium text-ink-soft">Hotel&rsquo;s usual</span>
                       )}
                     </div>
                     <p>
@@ -352,7 +352,7 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
                         e.stopPropagation();
                         setExplainFor(o.id);
                       }}
-                      className="mt-auto inline-flex items-center gap-1 self-start text-sm font-medium text-wine underline underline-offset-2"
+                      className="mt-auto inline-flex items-center gap-1 self-start text-sm font-medium text-brand underline underline-offset-2"
                     >
                       <Info aria-hidden="true" className="size-4" />
                       Why this price
@@ -413,7 +413,7 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
                 </p>
               )}
               <p className="flex gap-2 text-xs text-ink-soft">
-                <LockKeyhole aria-hidden="true" className="size-4 shrink-0 text-vine" />
+                <LockKeyhole aria-hidden="true" className="size-4 shrink-0 text-positive" />
                 Your USDC goes into an escrow for this booking alone. Refunds follow the schedule above automatically; the hotel
                 is paid after check-in.
               </p>
@@ -422,12 +422,12 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
             <p className="text-sm text-ink-soft">Pick dates and a room, then &ldquo;See prices&rdquo; to get your options.</p>
           )}
           {error && (
-            <div role="alert" className="space-y-2 rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay">
+            <div role="alert" className="space-y-2 rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">
               <p>{error.message}</p>
               {errorHint(code) && <p>{errorHint(code)}</p>}
               {code === "INSUFFICIENT_FUNDS" && wallet.connected?.kind === "demo" && <FaucetButton />}
               {(code === "WALLET_MISMATCH" || code === "QUOTE_EXPIRED" || code === "HOLD_LOST") && roomTypeId && (
-                <button type="button" onClick={() => seePrices(roomTypeId)} className="font-medium text-wine underline">
+                <button type="button" onClick={() => seePrices(roomTypeId)} className="font-medium text-brand underline">
                   Get new prices{wallet.connected ? " for this wallet" : ""}
                 </button>
               )}

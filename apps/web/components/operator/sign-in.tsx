@@ -49,7 +49,7 @@ export function SignIn({ title, children }: { title: string; children?: React.Re
           {busy ?? "Sign in with wallet"}
         </button>
         {error && (
-          <p role="alert" className="rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay">
+          <p role="alert" className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">
             {error}
           </p>
         )}

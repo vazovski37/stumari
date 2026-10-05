@@ -7,7 +7,7 @@ import type { HotelOverview } from "@/lib/dashboard/bookings";
 function Stat({ icon, label, value, note }: { icon: ReactNode; label: string; value: string; note: string }) {
   return (
     <div className="card flex gap-4 p-5">
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-sand text-wine">{icon}</span>
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-surface text-brand">{icon}</span>
       <div>
         <p className="text-sm text-ink-soft">{label}</p>
         <p className="font-display text-2xl font-semibold tracking-tight">{value}</p>
@@ -41,8 +41,8 @@ export function Overview({ overview }: { overview: HotelOverview }) {
       </div>
 
       {conflicts.length > 0 && (
-        <div role="alert" className="space-y-2 rounded-[var(--radius-card)] border border-clay/40 bg-clay/5 p-5">
-          <p className="flex items-center gap-2 font-semibold text-clay">
+        <div role="alert" className="space-y-2 rounded-[var(--radius-card)] border border-danger/40 bg-danger/5 p-5">
+          <p className="flex items-center gap-2 font-semibold text-danger">
             <AlertTriangle aria-hidden="true" className="size-5" /> Calendar conflicts
           </p>
           <p className="text-sm text-ink-soft">

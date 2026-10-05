@@ -5,7 +5,7 @@ import { withUtm, type Utm } from "@/lib/utm";
 const shortNames: Record<Locale, string> = { en: "EN", ka: "KA", ru: "RU" };
 
 /**
- * Links to the same page in every locale. Server-rendered; no client JS. `utm` (the apply page's own
+ * Links to the same page in every locale, styled for the black site header. Server-rendered; no client JS. `utm` (the apply page's own
  * utm_* / ref) is carried over so switching language keeps the ad attribution.
  */
 export function LanguageSwitcher({
@@ -21,7 +21,7 @@ export function LanguageSwitcher({
 }) {
   return (
     <nav aria-label={label}>
-      <ul className="flex items-center rounded-full border border-line bg-paper p-0.5 text-xs font-semibold">
+      <ul className="flex items-center rounded-full border border-white/20 p-0.5 font-label text-[0.68rem] font-medium">
         {locales.map((l) => (
           <li key={l}>
             <Link
@@ -31,7 +31,7 @@ export function LanguageSwitcher({
               title={localeNames[l]}
               aria-current={l === locale ? "page" : undefined}
               className={`block rounded-full px-2.5 py-1.5 transition-colors ${
-                l === locale ? "bg-ink text-paper" : "text-ink-soft hover:text-ink"
+                l === locale ? "bg-paper text-brand" : "text-white/65 hover:text-white"
               }`}
             >
               <span aria-hidden="true">{shortNames[l]}</span>

@@ -60,19 +60,19 @@ function DisputeCard({ b }: { b: OperatorBooking }) {
           step={50}
           value={guestBps}
           onChange={(e) => setGuestBps(Number(e.target.value))}
-          className="mt-2 w-full accent-wine"
+          className="mt-2 w-full accent-brand"
         />
       </label>
       <dl className="grid grid-cols-3 gap-3 text-center text-sm">
-        <div className="rounded-xl bg-sand/70 p-3">
+        <div className="rounded-xl bg-surface/70 p-3">
           <dt className="text-ink-soft">Refund to guest</dt>
           <dd className="font-mono font-semibold">{usdc(split.refund)}</dd>
         </div>
-        <div className="rounded-xl bg-vine-soft p-3">
+        <div className="rounded-xl bg-positive-soft p-3">
           <dt className="text-ink-soft">To the hotel</dt>
           <dd className="font-mono font-semibold">{usdc(split.hotelNet)}</dd>
         </div>
-        <div className="rounded-xl bg-sand/70 p-3">
+        <div className="rounded-xl bg-surface/70 p-3">
           <dt className="text-ink-soft">Fee ({b.fee_bps ?? 0} bps)</dt>
           <dd className="font-mono font-semibold">{usdc(split.fee)}</dd>
         </div>
