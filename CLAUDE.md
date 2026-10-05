@@ -7,6 +7,14 @@ Stumari (სტუმარი, "guest"): stablecoin checkout for merchants with
 - `docs/product/mvp-scope.md` — what is in / stubbed / cut. Do not build cut features.
 - `docs/architecture/*.md` — **specs are contracts.** If code must diverge, update the spec (and add an ADR in `docs/decisions/README.md`) in the same change.
 - `spec/vectors/refund.json` — Rust and TS must both pass every case.
+- `docs/research/crypto-legality-georgia.md`. Under Georgian law (NBG Organic Law Art. 39¹), a hotel taking USDC directly is a prohibited payment. Decision pending. Don't promise hotels that accepting USDC is legal.
+
+## Project memory (versioned)
+Claude's memory for this project is kept in the repo so every laptop has it. The index is imported below.
+- On a new machine run `scripts/claude-memory.sh pull` once after cloning. When you save or change a memory, run `scripts/claude-memory.sh push` and commit `.claude/memory/`.
+- The repo will be public: no secrets or personal contacts in memory.
+
+@.claude/memory/MEMORY.md
 
 ## Layout
 `onchain/` Anchor 1.1.2 workspace · `packages/core` pure TS domain logic (no Solana deps) · `packages/escrow-client` Codama Kit client · `packages/mews-client` Mews Connector API client (demo env by default; production only with `MEWS_ALLOW_PRODUCTION`) · `apps/web` Next.js (landing, checkout, dashboard, admin, API) · `apps/mcp` MCP server · `ml/` Python training · `scripts/` bootstrap/E2E/build helpers · `docs/` specs, ADRs, plan, sales, submission.
@@ -17,6 +25,7 @@ Stumari (სტუმარი, "guest"): stablecoin checkout for merchants with
 - bps everywhere for percentages (`10000` = 100%).
 - Server builds every transaction (v0, operator = fee payer); browser only signs via Wallet Standard (ADR-0009, ADR-0010).
 - Positioning language: "stablecoin checkout for merchants", never "travel app" or "escrow app" in user-facing copy (see docs/product/vision-and-positioning.md).
+- Brand: black-and-white stumari wordmark, generated from `docs/product/brand/logo-master.png` by `scripts/brand-logo.py`. Never redraw it. Use the semantic colour tokens (`brand`, `surface`, `positive`, `warn`, `danger`) and see `docs/product/brand.md`.
 - Default cluster **devnet**. Never touch mainnet without an explicit instruction from the user.
 
 ## Toolchain (Windows host + WSL)
