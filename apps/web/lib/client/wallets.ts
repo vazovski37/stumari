@@ -132,7 +132,7 @@ export async function connectStandardWallet(wallet: Wallet, cluster: Cluster): P
 // ---------------------------------------------------------------- demo wallet (ADR-0009)
 
 export const DEMO_KEY = "stumari_demo_sk";
-export const DEMO_LABEL = "Test wallet — devnet, not real money";
+export const DEMO_LABEL = "Test wallet — test USDC, not real money";
 
 const hex = {
   from: (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(""),

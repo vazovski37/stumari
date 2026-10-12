@@ -123,6 +123,28 @@ balances and the amounts stored on the Booking against `splitCancel` from `@stum
 the vault is closed, and that the guest never held SOL. On devnet it costs the operator the
 Booking account rent (≈ 0.0034 SOL, never returned by design).
 
+## demo-seed
+
+Seeds the **local** demo for a screen recording, with real bookings made through the web API and
+the escrow program (no rows written by hand). Run it after `bootstrap --cluster localnet`, with
+the web app running at `--url` (default `NEXT_PUBLIC_SITE_URL`):
+
+```bash
+pnpm --filter @stumari/scripts demo-seed -- --url http://localhost:3210
+```
+
+- **Guest B**: a same-day Double-room stay that is released to the hotel 2 minutes after check-in.
+  The script moves the hotel's check-in time a few minutes ahead and puts it back right after
+  payment, so the chain clock is never moved and new quotes keep working. Its wallet is kept in
+  `onchain/keys/demo-guest-b.json`, so the recording can use it as the repeat guest.
+- **Guest C**: a confirmed Flexible stay in the Family suite next week.
+- **Guest D**: a Standard Twin-room stay 5 days out, cancelled with the scheduled refund.
+
+It writes `onchain/keys/demo-browser-wallets.txt` (gitignored). The file holds one console line each to
+load Guest B and the demo hotel's payout wallet into a browser's Test wallet. The hotel wallet
+must also be in `ADMIN_WALLETS` to open `/admin`. Re-running skips Guest B once it has a released
+stay. Localnet only.
+
 ## mews
 
 A CLI over `@stumari/mews-client` (`packages/mews-client/README.md`) for the Mews Connector API.

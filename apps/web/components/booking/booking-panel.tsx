@@ -294,7 +294,11 @@ function Timeline({ view, now, at }: { view: PublicBookingView; now: number; at:
     } else {
       steps.push({
         label: "Paid to the hotel",
-        detail: view.release_after_ts ? `${s === "released" ? "Released" : "Scheduled"} ${at(view.release_after_ts)}, unless you report a problem before then.` : "After check-in.",
+        detail: !view.release_after_ts
+          ? "After check-in."
+          : s === "released"
+            ? `Paid to the hotel's wallet after the dispute window closed (${at(view.release_after_ts)}).`
+            : `Scheduled ${at(view.release_after_ts)}, unless you report a problem before then.`,
         state: s === "released" ? "done" : "todo",
       });
     }

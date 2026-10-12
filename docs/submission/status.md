@@ -40,6 +40,8 @@ Aim to submit on **2026-10-11** so there is a day of slack. Last updated: 2026-1
 | 11 | Accelerator decision | founders | 2026-10-08 | Currently **"Hackathon only"**. Decide whether to opt in to the accelerator before submitting. |
 | 12 | Pitch deck | founders (Claude drafts) | 2026-10-05 | Promised in the Georgian community form ([georgia-community-form.md](georgia-community-form.md)); also useful at Build Station (Oct 5–13). |
 
+**2026-10-13 (00:30 Tbilisi):** devnet is still not set up. The operator wallet holds 0 SOL, and the RPC airdrop was rate-limited from the laptop and from Azure. The demo video is recorded on the **local chain** instead: real program and transactions, seeded by `demo-seed` ([demo-video-script.md](demo-video-script.md#recording-on-the-local-chain-when-devnet-is-not-funded)). `https://stumari.azurewebsites.net` runs the current landing; its checkout shows "Checkout is not open yet" until devnet is funded and bootstrapped. Access instructions (#6) must say that plainly, not promise a working devnet checkout.
+
 ## Final check (on submission day)
 
 - [ ] Live link opens in a private window and the demo wallet flow works on devnet.

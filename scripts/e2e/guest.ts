@@ -69,6 +69,11 @@ export class Guest {
     return new Guest(name, await generateKeyPairSigner(), baseUrl);
   }
 
+  /** A guest with a known wallet (scripts/demo-seed.ts keeps one so a browser can load it later). */
+  static fromSigner(name: string, signer: KeyPairSigner, baseUrl: string): Guest {
+    return new Guest(name, signer, baseUrl);
+  }
+
   get wallet(): string {
     return this.signer.address;
   }
@@ -86,19 +91,24 @@ export class Guest {
     });
   }
 
-  payBody(optionIndex: number) {
-    return { option_index: optionIndex, payer: this.wallet, guest_name: `E2E ${this.name}`, guest_email: "e2e@example.com" };
+  payBody(optionIndex: number, contact?: { name: string; email: string }) {
+    return {
+      option_index: optionIndex,
+      payer: this.wallet,
+      guest_name: contact?.name ?? `E2E ${this.name}`,
+      guest_email: contact?.email ?? "e2e@example.com",
+    };
   }
 
   /** /pay → the wallet signs the server-built transaction → /api/tx/send. */
-  async pay(quote: QuoteEnvelope, optionId: QuoteOption["id"]): Promise<Booked> {
+  async pay(quote: QuoteEnvelope, optionId: QuoteOption["id"], contact?: { name: string; email: string }): Promise<Booked> {
     const index = quote.quote.options.findIndex((o) => o.id === optionId);
     assert.ok(index >= 0, `${optionId} is not offered in quote ${quote.quote.id}`);
     const option = quote.quote.options[index]!;
     const pay = await this.http.ok<{ booking_id: string; tx: string; signer: string }>(
       "POST",
       `/api/quotes/${quote.quote.id}/pay`,
-      this.payBody(index),
+      this.payBody(index, contact),
     );
     assert.equal(pay.signer, this.wallet, "the guest is the only signer the server leaves missing");
     const sent = await this.send(pay.tx);

@@ -52,7 +52,7 @@ Follow this order. Each step matches an admin endpoint in [api.md](../architectu
 
 - [ ] The owner signs in to their dashboard (`/dashboard/{hotelId}`) with their Phantom. Check that the rooms, rates and export URLs are right.
 - [ ] Set the hotel `active` for the test only (`status: active`).
-- [ ] Open `/h/{slug}` and make a **test booking with the devnet test wallet** ("Test wallet — devnet, not real money"). Use dates far in the future.
+- [ ] Open `/h/{slug}` and make a **test booking with the devnet test wallet** ("Test wallet — test USDC, not real money"). Use dates far in the future.
 - [ ] Show them the booking in the dashboard and in the export feed (open the export URL in the browser), then **cancel it right away**.
 - [ ] Show the refund on Explorer.
 - [ ] Set the hotel back to `paused` before you hang up.

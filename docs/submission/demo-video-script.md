@@ -18,6 +18,19 @@ Show the **live product on devnet**: real screens and real transactions, no slid
 - [ ] Claude Desktop with the Stumari MCP server configured and a funded devnet agent key ([runbook](../plan/runbook.md#8-mcp-server-for-claude-desktop)).
 - [ ] Solana Explorer on `?cluster=devnet`. Browser zoom 125%. Close notifications.
 
+## Recording on the local chain (when devnet is not funded)
+
+On 2026-10-13 the devnet operator had no SOL and the faucets were rate-limited, so the demo was prepared on the **local Solana chain** instead: the same program, real transactions and test USDC, running in Docker on the recording laptop. Nothing is faked. The guest pages show "Demo on a local test chain" in their banner.
+
+1. Docker Desktop running. Then `pnpm --filter @stumari/scripts bootstrap --cluster localnet --reset` for a fresh chain whose clock matches wall time.
+2. Start the web app on the port in `NEXT_PUBLIC_SITE_URL` (Sign-In With Solana checks that host). Only one `next dev` can run per app folder.
+3. `pnpm --filter @stumari/scripts demo-seed -- --url <that URL>` seeds a released stay (Guest B), a confirmed stay and a cancelled stay ([scripts/README.md](../../scripts/README.md#demo-seed)).
+4. Browser profiles: **Guest A** is a fresh profile with the Test wallet. Load **Guest B** and **Hotel** with the console lines in `onchain/keys/demo-browser-wallets.txt` (gitignored).
+5. Explorer links use `?cluster=custom&customUrl=http://127.0.0.1:8899`. Chrome may ask to allow access to devices on the local network: allow it once before recording.
+6. Never move the chain clock (`timetravel`) before recording: quotes would fail with `QuoteExpired` until the next `--reset`.
+
+Narration: say "a local Solana test chain" wherever the script says devnet, and keep the honest-limits beat. The public link (`https://stumari.azurewebsites.net`) shows the landing only until devnet is funded, so the submission's access instructions must say so.
+
 ## Script
 
 | Time | Beat | On screen (action) | Narration |
