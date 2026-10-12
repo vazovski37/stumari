@@ -27,6 +27,11 @@ az webapp deploy --resource-group stumari-rg --name stumari --src-path dist/azur
 
 `build-web.sh` builds in WSL, because the libsql driver needs its Linux binary. It makes a clean copy of the sources, runs `pnpm install --frozen-lockfile`, and then `next build` with `NEXT_OUTPUT=standalone` (opt-in in `next.config.ts`). It dereferences pnpm's symlinks and lifts the hoisted packages to a plain top-level `node_modules`, since zip deploys don't keep symlinks. Then it bundles the migrate script with esbuild and zips the result into `dist/azure/web.zip` (gitignored; about 100 MB, about 280 MB unpacked). `NEXT_PUBLIC_SITE_URL` is baked in at build time, so pass the real site URL: if the domain changes, rebuild.
 
+Three quirks seen on the 2026-10-12 redeploy:
+- `az webapp deploy` can end with "Kudu Status : 400" even though the deploy went through. Check with `az webapp log deployment show -g stumari-rg -n stumari`: the last entry should say "Deployment successful". Then load the site.
+- SCM basic auth is off for this app, so Kudu (`https://stumari.scm.azurewebsites.net`, for example `/api/vfs/data/stumari.db` to copy the database) rejects publishing credentials with 401. Send an Entra token instead: `curl -H "Authorization: Bearer $(az account get-access-token --resource https://management.azure.com --query accessToken -o tsv)" …`.
+- If `build-web.sh` stops with "Another next build process is already running" and no build is running, run it again. The second run on 2026-10-12 built cleanly.
+
 ## Turn on the remaining pieces
 
 Run these yourself in PowerShell or Git Bash; values you type there never pass through Claude.

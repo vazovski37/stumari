@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { MyBookings } from "@/components/booking/my-bookings";
 
 export const metadata: Metadata = { title: "My bookings", robots: { index: false } };
+// Rendered per request: the guest layout decides from runtime chain settings whether checkout is open,
+// and a build without them (Azure bundle) must not freeze this page in its "coming soon" state.
+export const dynamic = "force-dynamic";
 
 export default function MyBookingsPage() {
   return (
