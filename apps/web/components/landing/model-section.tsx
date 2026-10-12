@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { contractExamples, EXAMPLE_BASE_MINOR } from "@/lib/contract-examples";
 import { contractTemplates } from "@/lib/db/schema";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -25,19 +26,19 @@ export function ModelSection({ model }: { model: Dictionary["model"] }) {
 
   return (
     <section id="pricing" aria-labelledby="pricing-title" className="scroll-mt-20">
-      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-24 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:py-32">
-        <div>
+      <div className="mx-auto grid max-w-7xl gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-20 lg:py-36">
+        <div data-reveal>
           <p className="eyebrow">{model.eyebrow}</p>
-          <h2 id="pricing-title" className="headline mt-4 text-4xl sm:text-5xl">
+          <h2 id="pricing-title" className="display mt-5 text-5xl sm:text-6xl">
             {model.title}
           </h2>
-          <p className="mt-5 max-w-md text-lg leading-snug text-ink-soft">{model.lead}</p>
-          <Link href="/model" className="mt-7 inline-flex items-center gap-1.5 font-semibold text-ink underline decoration-2 underline-offset-4 hover:decoration-ink/40">
+          <p className="mt-6 max-w-md text-lg leading-snug text-ink-soft">{model.lead}</p>
+          <Link href="/model" className="mt-8 inline-flex items-center gap-2 border-b border-ink pb-1 text-sm font-semibold tracking-wide uppercase transition-[gap] hover:gap-3">
             {model.learnMore}
             <ArrowRight aria-hidden="true" className="size-4" />
           </Link>
         </div>
-        <div>
+        <div data-reveal style={{ "--d": "0.12s" } as CSSProperties}>
           <ContractCompare
             guests={guests}
             labels={{

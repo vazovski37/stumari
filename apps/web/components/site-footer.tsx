@@ -7,7 +7,7 @@ import { Wordmark } from "./logo";
 export function SiteFooter({ locale, footer }: { locale: Locale; footer: Dictionary["footer"] }) {
   return (
     <footer className="on-dark">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid gap-8 border-t border-white/15 py-12 md:grid-cols-[1.4fr_1fr]">
           <div className="space-y-3">
             <p className="max-w-md text-sm leading-relaxed text-white/70">{footer.tagline}</p>

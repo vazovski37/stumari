@@ -37,7 +37,9 @@
         "Paid to your wallet 24 h after check-in"
       ],
       "cancel": "Cancels early? Refunded by the terms they chose."
-    }
+    },
+    "scroll": "Scroll",
+    "place": "Tbilisi · Old Town"
   },
   "problems": {
     "title": "Why hotels lose money today",
@@ -72,7 +74,8 @@
         "title": "Get paid after check-in",
         "body": "USDC reaches your wallet 24 hours after check-in."
       }
-    ]
+    ],
+    "bigNumber": "24 h"
   },
   "model": {
     "eyebrow": "Pricing",
@@ -206,6 +209,15 @@
     "apply": "Apply",
     "disclaimer": "Stumari does not give legal, tax or financial advice.",
     "georgian": "სტუმარი means “guest” in Georgian."
+  },
+  "images": {
+    "hero": "Narikala fortress above Tbilisi's old town at night",
+    "panorama": "Tbilisi at night, with the Bridge of Peace over the Mtkvari",
+    "alley": "A lit alley of restaurants in Tbilisi at night",
+    "street": "Lit shopfronts on a Tbilisi street at night",
+    "room": "A bright guest room with a metal bed and framed photographs",
+    "lamp": "A bedside lamp beside a made bed",
+    "window": "A window seat with the blinds down"
   },
   "apply": {
     "title": "Apply for the founding-hotel pilot",

@@ -103,8 +103,8 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-radius: 0.375rem;
-    padding: 0.8rem 1.35rem;
+    border-radius: 999px;
+    padding: 0.85rem 1.5rem;
     font-weight: 600;
     font-size: 0.975rem;
     line-height: 1.2;
@@ -211,10 +211,176 @@
     line-height: 1.14;
   }
 
+  /* Cinematic display type (landing): light and oversized, against the heavy wordmark. */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 300;
+    letter-spacing: -0.045em;
+    line-height: 0.98;
+  }
+
+  .display strong,
+  .display b {
+    font-weight: 800;
+  }
+
+  :lang(ka) .display {
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.12;
+  }
+
+  :lang(ka) .display strong,
+  :lang(ka) .display b {
+    font-weight: 700;
+  }
+
+  /* Frosted panel over photography. */
+  .glass {
+    border: 1px solid rgb(255 255 255 / 0.18);
+    background: rgb(20 20 20 / 0.42);
+    backdrop-filter: blur(18px) saturate(1.1);
+    -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  }
+
+  /* Rounded photo card with a soft shadow (landing). */
+  .photo-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.45);
+  }
+
   .card {
     border: 1px solid var(--color-line);
     border-radius: var(--radius-card);
     background: var(--color-paper);
     box-shadow: var(--shadow-card);
+  }
+}
+
+/*
+ * Landing motion. Everything here is decoration: without JS or with reduced motion the page
+ * renders complete and still.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  /* The hero photo opens from a rounded tile to full bleed, then settles from a slow zoom. */
+  .hero-open {
+    animation: hero-open 1.5s cubic-bezier(0.76, 0, 0.24, 1) both;
+  }
+
+  .hero-zoom {
+    animation: hero-zoom 9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Hero text and cards rise in after the photo opens; --d staggers them. */
+  .rise {
+    animation: rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(0.9s + var(--d, 0s));
+  }
+
+  /* Scroll-triggered reveal: RevealObserver marks html.reveal-ready, then each [data-reveal] as "in". */
+  .reveal-ready [data-reveal] {
+    transition:
+      opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--d, 0s);
+  }
+
+  .reveal-ready [data-reveal]:not([data-reveal="in"]) {
+    opacity: 0;
+    transform: translateY(28px);
+    filter: blur(6px);
+  }
+
+  /* Scroll cue: a short line that keeps falling. */
+  .scroll-line::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    animation: scroll-line 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  /* Floating photo cards drift against the scroll where the browser supports scroll timelines. */
+  @supports (animation-timeline: view()) {
+    .drift {
+      animation: drift linear both;
+      animation-timeline: view();
+    }
+
+    .drift-reverse {
+      animation: drift-reverse linear both;
+      animation-timeline: view();
+    }
+  }
+}
+
+@keyframes hero-open {
+  from {
+    clip-path: inset(22% 30% 22% 30% round 28px);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 0);
+  }
+}
+
+@keyframes hero-zoom {
+  from {
+    transform: scale(1.18);
+  }
+  to {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes scroll-line {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+
+@keyframes drift {
+  from {
+    translate: 0 60px;
+  }
+  to {
+    translate: 0 -60px;
+  }
+}
+
+@keyframes drift-reverse {
+  from {
+    translate: 0 -40px;
+  }
+  to {
+    translate: 0 50px;
   }
 }
