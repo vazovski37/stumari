@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "de-slopify": {
+      "source": "aiskillstore/marketplace",
+      "sourceType": "github",
+      "skillPath": "skills/dicklesworthstone/de-slopify/SKILL.md",
+      "computedHash": "6f736ce461b2ab4e384caa8d1a5fd6f345ca0365cf711700cadd5704094448a9"
+    },
+    "pitch-deck-visuals": {
+      "source": "inference-sh/skills",
+      "sourceType": "github",
+      "skillPath": "guides/design/pitch-deck-visuals/SKILL.md",
+      "computedHash": "21b5e9eeef27b164d6b09aa3f8371675ab3dbc6549f6739c9b3ecbffa232b51a"
+    },
+    "yc-pitch-deck": {
+      "source": "guia-matthieu/clawfu-skills",
+      "sourceType": "github",
+      "skillPath": "skills/startup/yc-pitch-deck/SKILL.md",
+      "computedHash": "d8ded4f5875c6ae7321783f9aa945dce3d17381433dba3e75075ef5563627704"
+    }
+  }
+}
