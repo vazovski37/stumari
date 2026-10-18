@@ -1,12 +1,14 @@
 # Files the Vercel CLI uploads for `vercel deploy` from the repo root (docs/plan/go-live-landing.md).
-# Git-connected deploys build from committed files only; this file matters for CLI deploys, which
-# would otherwise upload everything not in Vercel's default list (keys, local databases, ml/ data).
+# Vercel applies this file to Git-connected builds too (it removed ml/ and broke the 2026-10-18 build), so every
+# folder the build imports from must be re-included below. For CLI deploys it also keeps keys, local databases
+# and ml/ data out of the upload.
 # Allowlist: every top-level entry is ignored unless re-included below.
 /*
 !apps
 !packages
 !scripts
 !onchain
+!ml
 !package.json
 !pnpm-lock.yaml
 !pnpm-workspace.yaml
@@ -16,6 +18,12 @@
 onchain/*
 !onchain/artifacts
 onchain/artifacts/*.so
+
+# ml: only the committed evaluation reports (apps/web/lib/model-report.ts imports ml/reports/*.json)
+ml/*
+!ml/reports
+ml/reports/*.png
+ml/reports/*.md
 
 # never upload secrets, keypairs, local databases or build output
 .env

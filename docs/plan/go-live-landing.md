@@ -36,7 +36,7 @@ Vercel's fair-use rules limit **Hobby to non-commercial personal use**. They lis
 2. **Turso:** https://app.turso.tech. Sign up with GitHub.
 3. **Telegram:** you already have it (step 6).
 
-The repository has **no git remote** yet, so Vercel cannot import it from GitHub today. Use the CLI path in step 5. You can switch to a GitHub import later (step 5b). The Colosseum submission needs a repo link anyway.
+The repository now has a GitHub remote (`vazovski37/stumari`, `main` pushed), so the GitHub import in step 5b is the easiest path. The CLI path in step 5 still works.
 
 ### 2. Create the Turso database and token (about 3 min)
 
@@ -53,15 +53,18 @@ LIBSQL_URL='libsql://stumari-<org>.<region>.turso.io' LIBSQL_AUTH_TOKEN='<paste 
 
 Expect `migrations applied to libsql://…`. Re-run it after every pull that adds a file under `apps/web/drizzle/`. It is idempotent.
 
-**Before go-live, Turso must have all three migrations**, including the two added after the first draft of this guide:
+**Before go-live, Turso must have every migration** in `apps/web/drizzle/` (six as of 2026-10-18). The command applies whatever is missing, so run it again whenever a pull adds a file there:
 
 | File | Change |
 |---|---|
 | `0000_init.sql` | all tables |
 | `0001_boring_princess_powerful.sql` | `hotels.confirm_mode` (`auto` / `manual`, for manual confirm mode) |
 | `0002_application_intent.sql` | `applications.intent` (`pilot` / `demo`, set by the "Book a 15-minute demo" form) |
+| `0003_mews_inventory.sql` | Mews inventory provider columns on hotels, room types and bookings |
+| `0004_mews_customer_at.sql` | `bookings.mews_customer_at` |
+| `0005_hotel_attributes.sql` | `hotels.description`, `neighborhood`, `amenities` |
 
-If you ran step 3 before these files existed, run it again. Without `0002`, every submit on `/apply` answers 500.
+Without `0002`, every submit on `/apply` answers 500.
 
 Tip: start the line with a space so Git Bash does not save the token in history (needs `HISTCONTROL=ignorespace`). Or clear it afterwards with `history -c`.
 
@@ -104,10 +107,10 @@ Run these in **your own terminal**. You log in; Claude never types credentials.
    - Optional: **Settings → Functions → Function Region** `fra1` (Frankfurt), next to the Turso database.
 4. Add the variables from step 4 (**Settings → Environment Variables**). Set `NEXT_PUBLIC_SITE_URL` to `https://<project-name>.vercel.app`. If step 7 shows a different production domain, fix the variable and redeploy.
 5. Deploy from the repo root: `npx vercel@latest deploy --prod`.
-   - The root `.vercelignore` limits the upload to `apps/`, `packages/`, `scripts/`, the lockfile, the workspace files and `onchain/artifacts` (program id + IDL). It never uploads `onchain/keys/`, `.env*`, local `*.db` files or `ml/`.
+   - The root `.vercelignore` limits the upload (and Git-connected builds too) to `apps/`, `packages/`, `scripts/`, the lockfile, the workspace files, `onchain/artifacts` (program id + IDL) and `ml/reports` (the `/model` page imports its JSON). A build that imports from a new top-level folder needs that folder re-included there. It never uploads `onchain/keys/`, `.env*`, local `*.db` files or `ml/`.
    - The build log should show pnpm 9 or 10 and Node 24. If install fails because of a pnpm version, add the variable `ENABLE_EXPERIMENTAL_COREPACK=1`, so Vercel uses `pnpm@9.12.0` from `packageManager`. Then redeploy.
 
-**5b. Later, GitHub import instead of the CLI.** Create a GitHub repo and push `main` (your call: public or private). Then Vercel → Project → Settings → Git → connect it. Git deploys build from committed files only, and every push to `main` deploys to production. Nothing else changes, and `vercel.json` is not needed. Every setting above lives in the dashboard.
+**5b. Later, GitHub import instead of the CLI.** Create a GitHub repo and push `main` (your call: public or private). Then Vercel → Project → Settings → Git → connect it. Git deploys build from committed files only (and `.vercelignore` still applies), and every push to `main` deploys to production. Nothing else changes, and `vercel.json` is not needed. Every setting above lives in the dashboard.
 
 ### 6. Telegram alerts for new applications (about 3 min)
 
