@@ -74,10 +74,63 @@ export async function listPublicHotels(db: Db, city?: string) {
       slug: h.slug,
       name: h.name,
       city: h.city ?? "",
+      description: h.description,
+      neighborhood: h.neighborhood,
+      amenities: h.amenities,
       from_price_minor: from === null ? null : from.toString(),
       room_types: own.map(roomTypeSummary),
     };
   });
+}
+
+export type PublicHotelSummary = Awaited<ReturnType<typeof listPublicHotels>>[number];
+
+export interface HotelFilters {
+  /** Free text: every word must appear in the name, area, description or amenities. */
+  text?: string;
+  neighborhood?: string;
+  /** Amenity keys (case and spaces are normalised, so "Air conditioning" matches "air-conditioning"). */
+  amenities?: string[];
+  /** Highest acceptable base nightly rate, in USDC base units (decimal string). */
+  max_nightly_minor?: string;
+  meal?: RoomTypeRow["meal"];
+}
+
+export const amenityKey = (s: string) => s.trim().toLowerCase().replace(/[\s_]+/g, "-");
+
+const haystack = (h: PublicHotelSummary) =>
+  [h.name, h.neighborhood, h.description, ...h.amenities.map((a) => a.replace(/-/g, " "))].join(" ").toLowerCase();
+
+/**
+ * Narrows hotels to a guest's stated requirements (AI concierge, ADR-0020). Filters are exact and
+ * explainable: the assistant turns a sentence into these fields, the server never guesses.
+ * Cheapest first. Hotels with no priced room type never match a price or meal filter.
+ */
+export function filterHotels(hotels: PublicHotelSummary[], f: HotelFilters): PublicHotelSummary[] {
+  const words = (f.text ?? "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 1);
+  const wanted = (f.amenities ?? []).map(amenityKey).filter(Boolean);
+  const area = f.neighborhood?.trim().toLowerCase();
+  const max = f.max_nightly_minor === undefined ? null : BigInt(f.max_nightly_minor);
+  return hotels
+    .filter((h) => {
+      if (area && !(h.neighborhood ?? "").toLowerCase().includes(area) && !(h.description ?? "").toLowerCase().includes(area)) return false;
+      if (!wanted.every((a) => h.amenities.map(amenityKey).includes(a))) return false;
+      if (words.length > 0) {
+        const text = haystack(h);
+        if (!words.every((w) => text.includes(w))) return false;
+      }
+      if (max !== null && (h.from_price_minor === null || BigInt(h.from_price_minor) > max)) return false;
+      if (f.meal && !h.room_types.some((rt) => rt.meal === f.meal)) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      const pa = a.from_price_minor === null ? null : BigInt(a.from_price_minor);
+      const pb = b.from_price_minor === null ? null : BigInt(b.from_price_minor);
+      if (pa === pb) return a.name.localeCompare(b.name);
+      if (pa === null) return 1;
+      if (pb === null) return -1;
+      return pa < pb ? -1 : 1;
+    });
 }
 
 /** `GET /api/hotels/{slug}`: public profile — never the payout wallet or contact data. */
@@ -88,6 +141,9 @@ export function hotelProfile(hotel: HotelRow, types: RoomTypeRow[]) {
     city: hotel.city ?? "",
     country: hotel.country,
     address: hotel.address,
+    description: hotel.description,
+    neighborhood: hotel.neighborhood,
+    amenities: hotel.amenities,
     phone: hotel.phone,
     timezone: hotel.timezone,
     checkin_time: hotel.checkin_time,

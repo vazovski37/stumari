@@ -1,5 +1,7 @@
 - [User profile](user-profile.md) — Giorgi Papidze (Vazovski), full-stack/ML dev in Georgia; teammate luka; Windows+WSL, C: nearly full
 - [Stumari project](project-stumari.md) — Colosseum World's Fair entry, deadlines Oct 6/12 2026, positioning + submission status
-- [Colosseum Copilot API](reference-colosseum-copilot.md) — official skill + copilot-connect helper, API v2; v1 PAT retired; token not stored
+- [Colosseum Copilot API](reference-colosseum-copilot.md) — skill removed 2026-10-13; copilot-connect helper, API v2; v1 PAT retired; token not stored
 - [Docs first](feedback-docs-first.md) — plan and document in repo before building; keep docs/ + CLAUDE.md current
 - [Georgian community](project-georgia-community.md) — Tally form 2026-09-27; Build Station Oct 5–13; promised pitch deck + demo link
+- [Pitch style](feedback-pitch-style.md) — hook first, AI search/booking leads, light on tech, no Stripe argument
+- [AI concierge](project-ai-concierge.md) — 2nd hackathon, deadline 2026-10-19: own-AI-app remote MCP, built 2026-10-18, devnet not live yet

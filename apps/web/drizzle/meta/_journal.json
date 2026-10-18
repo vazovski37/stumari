@@ -36,6 +36,13 @@
       "when": 1790550255598,
       "tag": "0004_mews_customer_at",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792280550461,
+      "tag": "0005_hotel_attributes",
+      "breakpoints": true
     }
   ]
 }

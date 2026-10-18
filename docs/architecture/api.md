@@ -136,3 +136,24 @@ Scheduling: Vercel Hobby runs cron at most once a day, so production uses an ext
 | `book` | `{ quote_id, option_index, wallet? }` | with agent key: `{ booking_id, signature, booking_url }`; without: `{ booking_id, tx, signer }` |
 | `cancel` | `{ booking_id, wallet? }` | refund preview + signature (agent key) or tx; without an agent key `wallet` is required (the public booking view omits it) |
 | `booking_status` | `{ booking_id }` | status, terms, refund-if-cancel-now, booking_url, explorer link |
+
+## AI concierge: requirement search and the remote MCP endpoint (ADR-0020)
+
+**Hotel filters.** `GET /api/hotels` takes optional `text`, `neighborhood`, `amenities` (comma list; case and spaces are normalised, `Air conditioning` matches `air-conditioning`), `max_nightly_minor` (decimal string, the hotel's cheapest base rate) and `meal` (`BB|HB|FB|SC`). With any filter, results are cheapest first. Every hotel row now also carries `description`, `neighborhood` and `amenities`. `GET /api/hotels/{slug}` carries the same three fields.
+
+**Connector link.** `POST /api/me/connector` (session) returns `{ wallet, url, expires_at }`. The URL is `{site}/api/mcp/{token}`; the token is `v1.{wallet}.{exp}.{base64url hmac-sha256(AUTH_SECRET + ":mcp-connector")}`, valid 30 days. It is minted on a click, never rendered into a page. Invalid or expired token: `401 INVALID_CONNECTOR`.
+
+**Remote MCP `POST /api/mcp/{token}`** (stateless Streamable HTTP with JSON responses, SDK `WebStandardStreamableHTTPServerTransport`; `GET` and `DELETE` answer through the same handler). The assistant shops for the token's wallet. No tool signs or sends a transaction.
+
+| Tool | Input | Result |
+|---|---|---|
+| `find_hotels` | `checkin`, `checkout`, `adults`, `children?`, `neighborhood?`, `amenities?[]`, `max_nightly_usdc?`, `meal?`, `text?` | hotels with at least one free room, cheapest first; each room with base price and per-night price. The budget holds per night for the dates (weekend rates included). `known_amenities` lists the keys in use. Never holds a room. |
+| `get_quote` | `hotel_slug`, `room_type_id`, `checkin`, `checkout`, `adults`, `children?` | the signed menu for the linked wallet (10-minute hold, only that wallet may pay): per option index, id, price, plain terms, `checkout_url` |
+| `book` | `quote_id`, `option_index` | validates the quote (active, not expired, the linked wallet) and returns `checkout_url`, status `awaiting_payment_on_website`. Pays nothing. |
+| `booking_status` | `booking_id` | status, terms, refund-if-cancel-now, booking link |
+| `my_bookings` | none | bookings of the linked wallet |
+| `cancel` | `booking_id` | refund preview and the booking link where the guest cancels. Cancels nothing. |
+
+Errors are `isError` results with `structuredContent.error = { code, message }`: app codes pass through (`UNAVAILABLE`, `INVALID_DATES`, `AMOUNT_CAP`, `RATE_LIMITED`, `HOLD_LIMIT`, ...); the tool layer adds `QUOTE_NOT_FOUND`, `QUOTE_EXPIRED`, `ALREADY_BOOKED`, `WALLET_MISMATCH`, `NO_SUCH_OPTION`. Hotel text (names, descriptions, room names) is stripped of control characters and length-limited before it reaches the model; terms and links are built by the server.
+
+**Checkout from a link.** `/h/{slug}?quote={id}&option={n}` opens the checkout on an existing quote: it loads `GET /api/quotes/{id}`, selects the option, and the guest pays as usual. A quote that expired, was used, or belongs to another hotel shows an error instead.

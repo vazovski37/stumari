@@ -56,6 +56,11 @@ export default function GuestLayout({ children }: LayoutProps<"/">) {
           <nav aria-label="Guest" className="ml-2 hidden sm:block">
             <ul className="flex items-center gap-5 text-sm font-medium text-ink-soft">
               <li>
+                <Link href="/connect-ai" className="hover:text-brand">
+                  Use my AI
+                </Link>
+              </li>
+              <li>
                 <Link href="/my" className="hover:text-brand">
                   My bookings
                 </Link>

@@ -18,6 +18,7 @@ Claude's memory for this project is kept in the repo so every laptop has it. The
 
 ## Layout
 `onchain/` Anchor 1.1.2 workspace · `packages/core` pure TS domain logic (no Solana deps) · `packages/escrow-client` Codama Kit client · `packages/mews-client` Mews Connector API client (demo env by default; production only with `MEWS_ALLOW_PRODUCTION`) · `apps/web` Next.js (landing, checkout, dashboard, admin, API) · `apps/mcp` MCP server · `ml/` Python training · `scripts/` bootstrap/E2E/build helpers · `docs/` specs, ADRs, plan, sales, submission.
+- **AI concierge** (second hackathon, ADR-0020): the guest's own AI app connects to the remote MCP endpoint `/api/mcp/{token}` (`apps/web/lib/mcp`, link minted at `/connect-ai` after Sign In With Solana). Its tools search, quote and prepare; they never pay. Payment stays on the website (`/h/{slug}?quote=&option=`). Plan and go-live: `docs/plan/ai-concierge-proposal.md`.
 
 ## Conventions
 - Money: `bigint` in TS, `u64` on-chain, **decimal strings** in JSON/DB (`"123450000"` = 123.45 USDC, 6 decimals). Never floats for money.

@@ -45,6 +45,9 @@ The chain is the source of truth for money and booking status; the DB mirrors it
 | id | text pk | UUID (see ID encoding) |
 | slug | text unique | public URL `/h/{slug}` |
 | name, city, country, address, phone | text | |
+| description | text null | plain facts guests and AI assistants read (ADR-0020), at most 1,000 chars |
+| neighborhood | text null | district, matched case-insensitively by search (`Sololaki`, `Vera`) |
+| amenities | text (JSON array) | lower-case keys, default `[]`; `Air conditioning` is stored as `air-conditioning` |
 | timezone | text | IANA, default `Asia/Tbilisi` (UTC+4, no DST) |
 | checkin_time, checkout_time | text | `HH:MM`, defaults `14:00` / `12:00` |
 | hotel_type | text | `City Hotel` \| `Resort Hotel` (model feature) |

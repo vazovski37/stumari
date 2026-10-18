@@ -15,7 +15,7 @@ import type { Db } from "../db/client";
 import type { ServerEnv } from "../env-schema";
 import { DEFAULT_HOTEL_POLICY, hotels, inventoryProviders, rooms, roomTypes } from "../db/schema";
 import { exportUrl, importUrls } from "../dashboard/units";
-import { SLUG, type HotelRow, type RoomTypeRow } from "../hotels";
+import { amenityKey, SLUG, type HotelRow, type RoomTypeRow } from "../hotels";
 import type { Chain } from "../solana/context";
 import { slugify } from "./slug";
 
@@ -57,6 +57,14 @@ const hotelFields = {
   city: text(80),
   country: text(80),
   address: text(200),
+  /** What AI assistants and guests read to choose (ADR-0020). */
+  description: text(1_000),
+  neighborhood: text(80),
+  /** Amenity keys, normalised ("Air conditioning" → "air-conditioning"), at most 30. */
+  amenities: z
+    .array(z.string().trim().min(1).max(40))
+    .max(30)
+    .transform((a) => [...new Set(a.map(amenityKey))]),
   phone: text(40),
   timezone: timeZone,
   checkin_time: hhmm,

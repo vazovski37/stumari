@@ -180,28 +180,30 @@ async function ensureDemoHotel(rpc: SolanaRpc, operator: KeyPairSigner, env: Env
   log("db", `migrations applied (${configuredDbUrl(env).split("?")[0]})`);
   const db = openWebDb(env);
   try {
-    const { hotel, changes: seeded } = await seedDemoHotel(db, wallet);
+    const { hotels, changes: seeded } = await seedDemoHotel(db, wallet);
     for (const c of seeded) changed("db", `seeded ${c}`);
-    if (seeded.length === 0) log("db", `${DEMO_SLUG} present (${hotel.id})`);
+    if (seeded.length === 0) log("db", `${DEMO_SLUG} and ${hotels.length - 1} more demo hotels present`);
 
     const ctx = { rpc, operator, admin: operator };
-    const hotelId = uuidToBytes(hotel.id);
-    const hotelPda = await findHotelPda(hotelId);
-    const onchain = await fetchMaybeHotel(rpc, hotelPda);
-    let registeredSig: string | null = null;
-    if (!onchain) {
-      const { signature } = await sendBuiltTx(rpc, await buildRegisterHotelTx({ ...ctx, hotelId, authority: wallet }));
-      registeredSig = signature;
-      changed("hotel", `registered ${hotelPda} -> payout ${wallet} (${signature})`);
-    } else if (onchain.authority !== wallet || !onchain.active) {
-      const { signature } = await sendBuiltTx(rpc, await buildUpdateHotelTx({ ...ctx, hotelId, authority: wallet, active: true }));
-      changed("hotel", `updated ${hotelPda} -> payout ${wallet}, active (${signature})`);
-    } else {
-      const { ata, created } = await ensureAta(rpc, operator, wallet, mint);
-      if (created) changed("hotel", `created payout ATA ${ata}`);
-      log("hotel", `${hotelPda} registered, payout ${wallet}`);
+    for (const hotel of hotels) {
+      const hotelId = uuidToBytes(hotel.id);
+      const hotelPda = await findHotelPda(hotelId);
+      const onchain = await fetchMaybeHotel(rpc, hotelPda);
+      let registeredSig: string | null = null;
+      if (!onchain) {
+        const { signature } = await sendBuiltTx(rpc, await buildRegisterHotelTx({ ...ctx, hotelId, authority: wallet }));
+        registeredSig = signature;
+        changed("hotel", `${hotel.slug}: registered ${hotelPda} -> payout ${wallet} (${signature})`);
+      } else if (onchain.authority !== wallet || !onchain.active) {
+        const { signature } = await sendBuiltTx(rpc, await buildUpdateHotelTx({ ...ctx, hotelId, authority: wallet, active: true }));
+        changed("hotel", `${hotel.slug}: updated ${hotelPda} -> payout ${wallet}, active (${signature})`);
+      } else {
+        const { ata, created } = await ensureAta(rpc, operator, wallet, mint);
+        if (created) changed("hotel", `created payout ATA ${ata}`);
+        log("hotel", `${hotel.slug}: ${hotelPda} registered, payout ${wallet}`);
+      }
+      if (await recordRegistration(db, hotel, hotelPda, registeredSig)) changed("db", `${hotel.slug}: recorded on-chain hotel ${hotelPda}`);
     }
-    if (await recordRegistration(db, hotel, hotelPda, registeredSig)) changed("db", `recorded on-chain hotel ${hotelPda}`);
   } finally {
     db.$client.close();
   }

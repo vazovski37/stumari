@@ -20,11 +20,15 @@ export async function generateMetadata({ params }: PageProps<"/h/[slug]">): Prom
 }
 
 /** Guest checkout: dates → availability → signed quote menu → pay with a wallet (api.md Pages). */
-export default async function HotelPage({ params }: PageProps<"/h/[slug]">) {
+export default async function HotelPage({ params, searchParams }: PageProps<"/h/[slug]">) {
   const found = await findPublicHotel(getDb(), (await params).slug);
   if (!found) notFound();
   const profile = hotelProfile(found.hotel, found.roomTypes);
   const today = localDate(unixNow(), profile.timezone);
+  // A link from the guest's AI assistant (ADR-0020): `?quote=<id>&option=<n>` opens the checkout on that quote.
+  const sp = await searchParams;
+  const quoteParam = typeof sp.quote === "string" && /^[0-9a-f-]{36}$/.test(sp.quote) ? sp.quote : null;
+  const optionParam = typeof sp.option === "string" && /^\d$/.test(sp.option) ? Number(sp.option) : 0;
 
   return (
     <>
@@ -47,6 +51,16 @@ export default async function HotelPage({ params }: PageProps<"/h/[slug]">) {
               </span>
             )}
           </p>
+          {profile.description && <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-soft">{profile.description}</p>}
+          {profile.amenities.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-2" aria-label="Amenities">
+              {profile.amenities.map((a) => (
+                <li key={a} className="rounded-full bg-paper px-3 py-1 text-xs font-medium text-ink-soft ring-1 ring-line">
+                  {a.replace(/-/g, " ")}
+                </li>
+              ))}
+            </ul>
+          )}
           <p className="mt-5 flex max-w-2xl gap-2 text-sm leading-relaxed text-ink-soft">
             <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-positive" />
             You choose your cancellation terms; each option is priced for your dates. Your payment waits in an escrow on
@@ -54,7 +68,7 @@ export default async function HotelPage({ params }: PageProps<"/h/[slug]">) {
           </p>
         </div>
       </section>
-      <Checkout hotel={profile} today={today} />
+      <Checkout hotel={profile} today={today} initial={quoteParam ? { quoteId: quoteParam, option: optionParam } : undefined} />
     </>
   );
 }

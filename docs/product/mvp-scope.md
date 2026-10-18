@@ -38,7 +38,7 @@ Deadline: Colosseum final submission 2026-10-12 11:59 PM PDT (submission opens 2
 - Bandit / RL pricing policy (menu pricing is deterministic and explainable instead — ADR-0003).
 - Pooled learning across hotels (outcomes are already recorded on-chain as events; retraining is roadmap).
 - Tour-operator RFQ negotiation, group bookings.
-- x402 pay-per-call (MCP `book` returns a transaction to sign instead).
+- x402 pay-per-call (MCP `book` returns a transaction to sign instead). The remote concierge MCP (ADR-0020) goes further: its `book` returns a website payment link and signs nothing.
 - Channex / PMS adapters (iCal only).
 - Partial deposits (full prepay into escrow; `deposit_bps` stays in the quote format for later — ADR-0002).
 - Card payments, fiat off-ramp, multi-currency.

@@ -27,6 +27,7 @@
 - [Deploy on Azure](plan/deploy-azure.md) — **live at https://stumari.azurewebsites.net**: resources, redeploy command, admin/Telegram/pixel settings, F1→B1 before ads
 - [Go live with the landing](plan/go-live-landing.md) — put the landing + apply/demo forms on a public URL before devnet (Vercel + Turso, env vars, Telegram alerts, pixel)
 - [E2E report](plan/e2e-report.md) — the full loop on localnet (20 steps), screenshots, demo-recording checklist
+- [AI concierge](plan/ai-concierge-proposal.md) — **second hackathon (deadline 2026-10-19, devnet demo):** the guest's own AI app finds and prepares a booking over a remote MCP link tied to their wallet, payment on the website (ADR-0020); what is built, what is cut, devnet go-live steps
 
 ## Model
 - [Model report](../ml/reports/metrics.md) — held-out 2017 metrics: AUC 0.713 vs 0.634 for lead time alone, Brier 0.1917 vs 0.2136 base rate, expected calibration error 0.038
@@ -41,10 +42,11 @@
 - [Status tracker](submission/status.md) — filled and missing fields, final check
 - [Weekly update 2026-09-28](submission/weekly-update-2026-09-28.md) — 1-minute video script
 - [Georgian community form](submission/georgia-community-form.md) — answers given to the Georgian Colosseum group (Build Station Oct 5–13, promised materials)
-- [Demo video script](submission/demo-video-script.md) (≤ 3:00, live product) · [Pitch video script](submission/pitch-video-script.md) (≤ 2:00)
+- [Demo video script](submission/demo-video-script.md) (≤ 3:00, live product) · [Pitch video script](submission/pitch-video-script.md) (≤ 2:00) · [Live pitch (3:00) and deck](submission/live-pitch-3min.md)
 
 ## Research
 - [Crypto legality in Georgia](research/crypto-legality-georgia.md) — **read before onboarding a real hotel:** Organic Law on the NBG Art. 39¹ prohibits paying with virtual assets (stablecoins included) outside NBG-defined VASP cases; the lawful pattern is a registered VASP settling the merchant in GEL; tax, AML, sanctions, open questions for a lawyer
 - [Mews](research/mews.md) — connecting a Mews hotel: private integration (Enterprise or Connectivity Add-on, certification), demo environment, Connector API operations; never automate a staff login
 - [Double booking and channel managers](research/channel-managers.md) — iCal latency and eligibility, gaps in today's design, Georgian PMS/CM market (OtelMS, Exely), integration routes (Exely Connect, Channex, Beds24, SiteMinder), no unified API
 - [Competitive landscape](research/landscape.md) — Copilot API data: win rates by cluster, tag lift, precedents, threats
+- [AI booking competitors](research/ai-booking-competitors.md) — SiteMinder, Lighthouse, Agentic Hospitality, Travala, Google AI Mode and more (2026-10-14); Georgian stablecoin rules and GELT

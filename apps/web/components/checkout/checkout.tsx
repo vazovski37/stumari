@@ -39,7 +39,16 @@ function useNow(intervalMs: number): number {
 /** An error after signing where the create may still have landed (we just could not see it confirm). */
 const UNSEEN_OUTCOME = new Set(["CONFIRMATION_TIMEOUT"]);
 
-export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string }) {
+export function Checkout({
+  hotel,
+  today,
+  initial,
+}: {
+  hotel: HotelProfile;
+  today: string;
+  /** Open on an existing quote: the link the guest's AI assistant sent (ADR-0020). */
+  initial?: { quoteId: string; option: number };
+}) {
   const router = useRouter();
   const wallet = useWallet();
   const [dates, setDates] = useState({ checkin: addDays(today, 14), checkout: addDays(today, 16) });
@@ -82,6 +91,33 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
       cancelled = true;
     };
   }, [hotel.slug, query, nights]);
+
+  // Opened from an assistant's link: load that quote and show its menu with the chosen option selected.
+  const initialQuoteId = initial?.quoteId;
+  const initialOption = initial?.option ?? 0;
+  const [fromLink, setFromLink] = useState<"loading" | "done" | null>(initialQuoteId ? "loading" : null);
+  useEffect(() => {
+    if (!initialQuoteId) return;
+    let cancelled = false;
+    apiGet<{ envelope: QuoteEnvelope; status: string }>(`/api/quotes/${initialQuoteId}`)
+      .then(({ envelope, status }) => {
+        if (cancelled) return;
+        const q = envelope.quote;
+        if (q.hotel_slug !== hotel.slug) throw new Error("This payment link belongs to another hotel.");
+        if (status === "used") throw new ClientApiError(409, "ALREADY_PAID", "This quote has already been paid. Open My bookings to see it.", {});
+        setDates({ checkin: q.checkin_date, checkout: q.checkout_date });
+        setGuests({ adults: q.adults, children: q.children });
+        setRoomTypeId(q.room_type_id);
+        setQuote(envelope);
+        setOptionIndex(initialOption < q.options.length ? initialOption : 0);
+        if (status !== "active") setError(new ClientApiError(410, "QUOTE_EXPIRED", "These prices expired. Ask again to get fresh ones.", {}));
+      })
+      .catch((e: unknown) => !cancelled && setError(e instanceof Error ? e : new Error(String(e))))
+      .finally(() => !cancelled && setFromLink("done"));
+    return () => {
+      cancelled = true;
+    };
+  }, [initialQuoteId, initialOption, hotel.slug]);
 
   // The pilot cap is named only when the menu withholds an option above it.
   const needsCap = quote?.explain.options.some((o) => o.withheld === "over_amount_cap") ?? false;
@@ -231,6 +267,9 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
             {hotel.room_types.map((rt) => {
               const row = rows?.find((r) => r.room_type_id === rt.id);
               const selected = quote?.quote.room_type_id === rt.id;
+              // A quote held by the guest's assistant is not this browser's hold, so the availability
+              // call counts that unit as taken. The room being paid for is available while its hold lasts.
+              const available = row?.available === true || (selected && quoteLive);
               return (
                 <li key={rt.id} className={`card flex flex-col gap-4 p-5 sm:flex-row sm:items-center ${selected ? "ring-2 ring-brand" : ""}`}>
                   <div className="flex-1">
@@ -253,7 +292,7 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
                   </div>
                   <div className="flex items-center gap-4 sm:flex-col sm:items-end sm:gap-2">
                     {row ? (
-                      row.available ? (
+                      available ? (
                         <p className="text-sm">
                           <span className="font-display text-xl font-semibold">{formatUsdc(BigInt(row.base_price_minor))}</span>{" "}
                           <span className="text-ink-soft">USDC base</span>
@@ -267,7 +306,7 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
                     <button
                       type="button"
                       onClick={() => seePrices(rt.id)}
-                      disabled={!row?.available || busyQuote || stage !== "idle"}
+                      disabled={!available || busyQuote || stage !== "idle"}
                       className="btn btn-primary !px-4 !py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {busyQuote && roomTypeId === rt.id ? "Pricing…" : "See prices"}
@@ -419,7 +458,11 @@ export function Checkout({ hotel, today }: { hotel: HotelProfile; today: string 
               </p>
             </>
           ) : (
-            <p className="text-sm text-ink-soft">Pick dates and a room, then &ldquo;See prices&rdquo; to get your options.</p>
+            <p className="text-sm text-ink-soft">
+              {fromLink === "loading"
+                ? "Loading the prices your assistant found…"
+                : "Pick dates and a room, then “See prices” to get your options."}
+            </p>
           )}
           {error && (
             <div role="alert" className="space-y-2 rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">

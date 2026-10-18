@@ -38,6 +38,8 @@ Never commit keys. `.gitignore` covers `*.json` keypairs under `onchain/keys/`, 
 | Forged exit signature via `/submitted` | the booking PDA must sit at the instruction's IDL `booking` position (generated parser); columns are written once and only when the chain shows the step |
 | Paying twice after a confirmation timeout | `/pay` reads the chain before re-validating the quote (`ALREADY_PAID`); the checkout and the MCP agent go to the booking instead of re-quoting |
 | Prompt injection via on-chain data / iCal summaries (MCP) | tools return structured data; iCal `SUMMARY` never shown to the model verbatim beyond a length-limited, escaped field |
+| Prompt injection via hotel descriptions (AI concierge, ADR-0020) | the remote MCP tools strip control characters and length-limit hotel names, descriptions and room names; terms and links are built by the server; the server's instructions tell the assistant that hotel text is information, not instructions; and no tool can pay or cancel, so the worst case is a wrong recommendation the guest still reviews on the checkout page |
+| Leaked connector link (`/api/mcp/{token}`) | the token only names a wallet: it can search and hold rooms for that wallet (10-minute holds, 10 quotes per 10 minutes per wallet) and read public booking data, never sign or spend. It expires in 30 days, is minted only after Sign In With Solana, and is domain-separated from the session cookie. Rotating AUTH_SECRET revokes all of them. Path tokens can reach access logs: do not log the path of `/api/mcp/*` |
 | RPC lies / stale reads | server verifies booking account owner = program id, discriminator, and fields before trusting; confirmed commitment |
 
 ## Honest limits of the trust property (say these out loud)

@@ -49,6 +49,8 @@ type Details = Pick<
   | "city"
   | "country"
   | "address"
+  | "description"
+  | "neighborhood"
   | "phone"
   | "checkin_time"
   | "checkout_time"
@@ -69,6 +71,8 @@ export function DetailsStep({ hotel }: { hotel: HotelRow }) {
     city: hotel.city ?? "",
     country: hotel.country ?? "",
     address: hotel.address ?? "",
+    description: hotel.description ?? "",
+    neighborhood: hotel.neighborhood ?? "",
     phone: hotel.phone ?? "",
     checkin_time: hotel.checkin_time,
     checkout_time: hotel.checkout_time,
@@ -80,6 +84,7 @@ export function DetailsStep({ hotel }: { hotel: HotelRow }) {
     contact_email: hotel.contact_email ?? "",
     contact_telegram: hotel.contact_telegram ?? "",
   });
+  const [amenities, setAmenities] = useState(hotel.amenities.join(", "));
   const bind = (k: keyof Details) => ({ value: d[k], onChange: (e: { target: { value: string } }) => setD({ ...d, [k]: e.target.value }) });
 
   return (
@@ -87,7 +92,8 @@ export function DetailsStep({ hotel }: { hotel: HotelRow }) {
       className="space-y-4"
       onSubmit={(e: FormEvent) => {
         e.preventDefault();
-        void run("details", () => apiPatch(`/api/admin/hotels/${hotel.id}`, d));
+        const list = amenities.split(",").map((a) => a.trim()).filter(Boolean);
+        void run("details", () => apiPatch(`/api/admin/hotels/${hotel.id}`, { ...d, amenities: list }));
       }}
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -108,6 +114,15 @@ export function DetailsStep({ hotel }: { hotel: HotelRow }) {
         </Field>
         <Field label="City">
           <input maxLength={80} className="field" {...bind("city")} />
+        </Field>
+        <Field label="Area" hint="District guests and AI assistants search by, e.g. Sololaki, Vera, Rustaveli">
+          <input maxLength={80} className="field" {...bind("neighborhood")} />
+        </Field>
+        <Field label="Amenities" hint="Comma-separated: wifi, air-conditioning, breakfast, quiet, parking, pets-allowed, kitchen…">
+          <input className="field" value={amenities} onChange={(e) => setAmenities(e.target.value)} />
+        </Field>
+        <Field label="Description (read by guests and AI assistants)" hint="Plain facts: location, noise, what is nearby, who it suits. Up to 1,000 characters.">
+          <textarea maxLength={1000} rows={3} className="field" {...bind("description")} />
         </Field>
         <Field label="Country">
           <input maxLength={80} className="field" {...bind("country")} />

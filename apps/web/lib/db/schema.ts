@@ -100,6 +100,12 @@ export const hotels = sqliteTable("hotels", {
   city: text("city"),
   country: text("country"),
   address: text("address"),
+  /** What a guest or an AI assistant reads to choose a hotel (AI concierge, ADR-0020). Plain text. */
+  description: text("description"),
+  /** District or area, e.g. "Sololaki" or "Vera"; matched case-insensitively by search. */
+  neighborhood: text("neighborhood"),
+  /** Lower-case amenity keys, e.g. ["wifi","air-conditioning","quiet","pets-allowed"]. */
+  amenities: text("amenities", { mode: "json" }).$type<string[]>().notNull().default([]),
   phone: text("phone"),
   timezone: text("timezone").notNull().default("Asia/Tbilisi"),
   checkin_time: text("checkin_time").notNull().default("14:00"),

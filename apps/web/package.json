@@ -36,7 +36,8 @@
     "@noble/hashes": "^1.8.0",
     "date-fns": "^4.1.0",
     "@date-fns/tz": "^1.2.0",
-    "lucide-react": "latest"
+    "lucide-react": "latest",
+    "@modelcontextprotocol/sdk": "1.30.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
