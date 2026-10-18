@@ -43,6 +43,7 @@
 - [Weekly update 2026-09-28](submission/weekly-update-2026-09-28.md) — 1-minute video script
 - [Georgian community form](submission/georgia-community-form.md) — answers given to the Georgian Colosseum group (Build Station Oct 5–13, promised materials)
 - [Demo video script](submission/demo-video-script.md) (≤ 3:00, live product) · [Pitch video script](submission/pitch-video-script.md) (≤ 2:00) · [Live pitch (3:00) and deck](submission/live-pitch-3min.md)
+- [Pitch deck (PDF, 8 slides)](submission/stumari-pitch.pdf) — the deck shown in the pitch
 
 ## Research
 - [Crypto legality in Georgia](research/crypto-legality-georgia.md) — **read before onboarding a real hotel:** Organic Law on the NBG Art. 39¹ prohibits paying with virtual assets (stablecoins included) outside NBG-defined VASP cases; the lawful pattern is a registered VASP settling the merchant in GEL; tax, AML, sanctions, open questions for a lawyer
